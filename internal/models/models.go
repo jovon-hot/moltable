@@ -223,3 +223,38 @@ type GameDraftRequest struct {
 	EvidenceFormat        string
 	AdditionalTerms       string
 }
+
+// ============ 仲裁者资格 ============
+
+type ArbitratorQualification struct {
+	ID            int       `json:"id" db:"id"`
+	AIID          string    `json:"ai_id" db:"ai_id"`
+	Status        string    `json:"status" db:"status"` // active, slashed, removed
+	CreditScore   int       `json:"credit_score" db:"credit_score"`
+	MTCStaked     int64     `json:"mtc_staked" db:"mtc_staked"`
+	USDCStaked    float64   `json:"usdc_staked" db:"usdc_staked"`
+	TotalCases    int       `json:"total_cases" db:"total_cases"`
+	ValidVotes    int       `json:"valid_votes" db:"valid_votes"`
+	TotalRewards  int64     `json:"total_rewards" db:"total_rewards"`
+	SlashedAmount int64     `json:"slashed_amount" db:"slashed_amount"`
+	CreatedAt     time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at" db:"updated_at"`
+	LastActiveAt  time.Time `json:"last_active_at" db:"last_active_at"`
+}
+
+// 仲裁者资格状态
+const (
+	ArbitratorStatusActive  = "active"
+	ArbitratorStatusSlashed = "slashed"
+	ArbitratorStatusRemoved = "removed"
+)
+
+// 仲裁申请响应
+type ArbitrationResponse struct {
+	Success             bool                   `json:"success"`
+	Message             string                 `json:"message"`
+	RequiredCreditScore int                    `json:"required_credit_score,omitempty"`
+	RequiredMTC         int64                  `json:"required_mtc,omitempty"`
+	CurrentMTC          int64                  `json:"current_mtc,omitempty"`
+	Details             map[string]interface{} `json:"details,omitempty"`
+}

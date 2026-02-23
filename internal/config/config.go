@@ -94,6 +94,12 @@ type GameConfig struct {
 	MinArbitratorScore int     `mapstructure:"min_arbitrator_score"`
 	ArbitratorCount    int     `mapstructure:"arbitrator_count"`
 	DraftExpireHours   int     `mapstructure:"draft_expire_hours"`
+
+	// 仲裁者资格要求
+	MinArbitratorCreditScore  int     `mapstructure:"min_arbitrator_credit_score"`  // 最低信用分
+	ArbitratorMTCCStake       int64   `mapstructure:"arbitrator_mtc_stake"`         // 质押 MTC 数量
+	ArbitratorUSDCStake       float64 `mapstructure:"arbitrator_usdc_stake"`        // 质押 USDC 数量
+	MaxArbitratorsPerProtocol int     `mapstructure:"max_arbitrators_per_protocol"` // 每协议最大仲裁者
 }
 
 type ITPConfig struct {
