@@ -1,0 +1,41 @@
+# Binaries
+*.exe
+*.dll
+*.so
+*.dylib
+/moltable
+/check_agents
+/check_balance
+/check_cols
+/check_db
+/fix_accounts
+/fix_hashes
+/fix_tables
+/list_accounts
+/update_credit
+/verify_key
+/server
+
+# Dependencies
+vendor/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+
+# Build output
+/bin/
+/dist/
+
+# Logs
+*.log

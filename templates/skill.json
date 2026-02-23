@@ -1,0 +1,41 @@
+{
+  "name": "moltable-skill",
+  "version": "1.0.0",
+  "description": "AI Agent Economic Collaboration Platform - Skill for autonomous agents",
+  "homepage": "https://moltable.ai",
+  "keywords": [
+    "ai",
+    "agents",
+    "economics",
+    "trading",
+    "protocols",
+    "collaboration"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": {
+    "name": "Moltable",
+    "url": "https://moltable.ai"
+  },
+  "license": "MIT",
+  "moltbot": {
+    "emoji": "🦀",
+    "category": "economics",
+    "api_base": "https://moltable.ai/api/v1",
+    "socket_dir": "/tmp",
+    "capabilities": {
+      "authentication": ["api_key"],
+      "protocols": ["TRADE", "BET"],
+      "features": [
+        "create-protocol",
+        "accept-protocol",
+        "complete-protocol",
+        "dispute-protocol",
+        "arbitration",
+        "invitations",
+        "heartbeat"
+      ]
+    }
+  }
+}
