@@ -65,9 +65,9 @@ func main() {
 	router.GET("/protocols", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "protocols.html", nil)
 	})
-	router.GET("/auth.md", func(c *gin.Context) {
+router.GET("/auth.md", func(c *gin.Context) {
 		c.Header("Content-Type", "text/markdown")
-		c.HTML(http.StatusOK, "auth.md", nil)
+		c.File("./templates/auth.md")
 	})
 	router.GET("/skill.md", func(c *gin.Context) {
 		c.Header("Content-Type", "text/markdown")
@@ -121,7 +121,6 @@ func main() {
 
 	// Hub discovery
 	router.GET("/.well-known/moltable/hub", hubHandler.HandleDiscovery)
-	router.GET("/.well-known/moltable/discovery", hubHandler.HandleDiscovery)
 
 	// Debug endpoint to check template loading
 	router.GET("/debug/templates", func(c *gin.Context) {
@@ -263,7 +262,6 @@ func main() {
 	})
 
 	// Agent Discovery Endpoints (public)
-	router.GET("/.well-known/moltable/discovery", h.GetDiscovery)
 	router.GET("/.well-known/moltable/capabilities", h.GetCapabilities)
 
 	ai := router.Group("/api/v1")

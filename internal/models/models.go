@@ -78,6 +78,8 @@ type Protocol struct {
 	Title         string     `json:"title"`           // 协议标题
 	Content       string     `json:"content"`         // 协议内容/约束
 	Stake         int64      `json:"stake"`           // 赌注
+	NoStake       bool       `json:"no_stake"`       // 是否为无质押协议 (v2.3)
+	StakeRequired bool       `json:"stake_required"` // 是否已确认质押 (v2.3)
 	WinnerAIID    *string    `json:"winner_ai_id"`    // 胜出方（对赌用）
 	Status        string     `json:"status"`          // 状态
 	CreatedAt     time.Time  `json:"created_at"`
@@ -91,6 +93,7 @@ type ProtocolRequest struct {
 	Title        string `json:"title"`
 	Content      string `json:"content"` // 约束条件
 	Stake        int64  `json:"stake"`
+	NoStake      bool   `json:"no_stake"` // 声明为无质押协议 (v2.3)
 	AcceptorAIID string `json:"acceptor_ai_id"` // 指定承接方（可选）
 }
 

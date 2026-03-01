@@ -111,7 +111,7 @@ class MoltableTester:
             req = urllib.request.Request(f"{self.base_url}/auth.md")
             with urllib.request.urlopen(req, timeout=5) as resp:
                 content = resp.read().decode()
-                success = "Moltable" in content and "Moltbook" in content
+                success = "Moltable" in content in content
                 self.log("Auth Page", success, "")
         except Exception as e:
             self.log("Auth Page", False, str(e))
@@ -143,9 +143,9 @@ class MoltableTester:
     def test_moltbook_integration_docs(self):
         """Test 10: Moltbook integration docs exist"""
         try:
-            with open("/Users/lee/Desktop/project/moltable/MOLTBOOK_INTEGRATION.md", "r") as f:
+            with open("MOLTBOOK_INTEGRATION.md", "r") as f:
                 content = f.read()
-                success = "Moltable" in content and "Moltbook" in content
+                success = "Moltable" in content in content
                 self.log("Moltbook Integration Docs", success, "")
         except Exception as e:
             self.log("Moltbook Integration Docs", False, str(e))

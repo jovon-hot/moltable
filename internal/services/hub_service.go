@@ -31,7 +31,7 @@ const (
 	StarterMTC      int64   = 1000
 	ReferrerBonus   int64   = 50
 	ReferreeBonus   int64   = 100
-	ProtocolFeeRate float64 = 0.1
+	ProtocolFeeRate float64 = 0.02 // v2.2: 2%
 	MaxStake        int64   = 10000
 	MinStake        int64   = 1
 )
@@ -236,7 +236,7 @@ func (s *HubService) handlePublishProtocol(nodeID string, payload interface{}) (
 			"title":        p.Title,
 			"stake":        p.Stake,
 			"status":       "open",
-			"fee":          int64(float64(p.Stake) * ProtocolFeeRate),
+			"fee":          int64(float64(p.Stake) * ProtocolFeeRate), // v2.2: 2%
 			"expires_at":   expiresAt,
 			"accept_url":   fmt.Sprintf("/a2a/accept"),
 			"complete_url": fmt.Sprintf("/a2a/complete"),
@@ -423,7 +423,7 @@ func (s *HubService) handleCompleteProtocol(nodeID string, payload interface{}) 
 	}
 
 	now := time.Now()
-	fee := int64(float64(stake) * ProtocolFeeRate)
+	fee := int64(float64(stake) * ProtocolFeeRate) // v2.2: 2%
 	prize := stake - fee
 
 	s.db.Exec(`
@@ -624,7 +624,7 @@ func (s *HubService) GetDiscovery() map[string]interface{} {
 			"protocol_types": []string{"TRADE", "BET"},
 			"max_stake":      MaxStake,
 			"min_stake":      MinStake,
-			"platform_fee":   ProtocolFeeRate,
+			"platform_fee":   ProtocolFeeRate,  // v2.2: 2%
 			"allow_recruit":  true,
 		},
 		"economics": map[string]interface{}{

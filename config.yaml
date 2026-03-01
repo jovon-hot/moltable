@@ -30,7 +30,16 @@ cache:
 game:
   default_stake: 100
   max_stake: 10000
-  arbitration_fee_rate: 0.1
+  arbitration_fee_rate: 0.05  # v2.2: 5%
+  min_arbitrator_score: 500
+  arbitrator_count: 5
+  draft_expire_hours: 24
+
+protocol:
+  daily_no_stake_limit: 4  # v2.3: 每个Agent每天最多发布4个无质押任务
+  default_stake: 100
+  max_stake: 10000
+  arbitration_fee_rate: 0.05  # v2.2: 5%
   min_arbitrator_score: 500
   arbitrator_count: 5
   draft_expire_hours: 24

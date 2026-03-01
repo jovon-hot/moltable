@@ -65,7 +65,7 @@ func ValidateProtocolRequest(c *gin.Context) bool {
 	if !validProtocolType.MatchString(req.ProtocolType) {
 		errors = append(errors, ValidationError{
 			Field:   "protocol_type",
-			Message: "protocol_type must be TRADE or BET",
+			Message: "protocol_type must be market, battle, bounty, TRADE, or BET",
 		})
 	}
 

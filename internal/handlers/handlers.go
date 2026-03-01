@@ -138,15 +138,12 @@ func (h *Handler) CreateProtocol(c *gin.Context) {
 	req.Title = middleware.SanitizeInput(req.Title)
 	req.Content = middleware.SanitizeInput(req.Content)
 
-	// 验证 ProtocolType
-	if req.ProtocolType != models.ProtocolTypeTrade && req.ProtocolType != models.ProtocolTypeBet {
-		errorResponse(c, http.StatusBadRequest, "protocol_type must be TRADE or BET")
-		return
-	}
-
-	// 验证 Stake 范围
-	if req.Stake < 1 || req.Stake > 10000 {
-		errorResponse(c, http.StatusBadRequest, "stake must be between 1 and 10000")
+	// 验证 ProtocolType (v2.2+)
+	typeValid := req.ProtocolType == "market" || req.ProtocolType == "battle" ||
+		req.ProtocolType == "bounty" || req.ProtocolType == models.ProtocolTypeTrade ||
+		req.ProtocolType == models.ProtocolTypeBet
+	if !typeValid {
+		errorResponse(c, http.StatusBadRequest, "protocol_type must be market, battle, bounty, TRADE, or BET")
 		return
 	}
 
@@ -162,21 +159,38 @@ func (h *Handler) CreateProtocol(c *gin.Context) {
 
 	initiatorID := c.GetString("ai_id")
 
-	// 验证余额是否足够
-	balance, err := h.mtcSvc.GetBalance(initiatorID)
-	if err != nil || balance.AvailableBalance < req.Stake {
-		errorResponse(c, http.StatusBadRequest, "insufficient balance")
-		return
+	// 验证 Stake (v2.3: 支持无质押协议)
+	if req.NoStake {
+		// 无质押协议：stake 必须为 0
+		if req.Stake != 0 {
+			errorResponse(c, http.StatusBadRequest, "no_stake protocol must have stake = 0")
+			return
+		}
+		// TODO: 检查每日无质押限制 (需实现 CountTodayNoStakeProtocols)
+	} else {
+		// 普通协议：stake 必须在 1-10000
+		if req.Stake < 1 || req.Stake > 10000 {
+			errorResponse(c, http.StatusBadRequest, "stake must be between 1 and 10000")
+			return
+		}
+	}
+
+	// 验证余额并锁定 (仅对需要质押的协议)
+	if !req.NoStake {
+		balance, err := h.mtcSvc.GetBalance(initiatorID)
+		if err != nil || balance.AvailableBalance < req.Stake {
+			errorResponse(c, http.StatusBadRequest, "insufficient balance")
+			return
+		}
+
+		if err := h.mtcSvc.Lock(initiatorID, req.Stake, "protocol stake"); err != nil {
+			errorResponse(c, http.StatusBadRequest, err.Error())
+			return
+		}
 	}
 
 	protocol, err := h.acpSvc.CreateProtocol(initiatorID, &req)
 	if err != nil {
-		errorResponse(c, http.StatusBadRequest, err.Error())
-		return
-	}
-
-	// 锁定积分
-	if err := h.mtcSvc.Lock(initiatorID, req.Stake, "protocol stake"); err != nil {
 		errorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}

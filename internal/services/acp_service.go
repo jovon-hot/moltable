@@ -38,6 +38,7 @@ func (s *ACPService) CreateProtocol(aiID string, req *models.ProtocolRequest) (*
 		Title:         req.Title,
 		Content:       req.Content,
 		Stake:         req.Stake,
+		NoStake:       req.NoStake,
 		Status:        models.ProtocolStatusOpen,
 		CreatedAt:     time.Now(),
 	}
@@ -45,12 +46,12 @@ func (s *ACPService) CreateProtocol(aiID string, req *models.ProtocolRequest) (*
 	err := s.db.QueryRow(`
 		INSERT INTO protocols (
 			protocol_id, protocol_type, initiator_ai_id, acceptor_ai_id,
-			title, content, stake, status, created_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+			title, content, stake, no_stake, status, created_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 		RETURNING id
 	`, protocol.ProtocolID, protocol.ProtocolType, protocol.InitiatorAIID,
 		acceptor, protocol.Title, protocol.Content,
-		protocol.Stake, protocol.Status, protocol.CreatedAt).Scan(&protocol.ID)
+		protocol.Stake, protocol.NoStake, protocol.Status, protocol.CreatedAt).Scan(&protocol.ID)
 
 	if err != nil {
 		return nil, err
@@ -66,7 +67,7 @@ func (s *ACPService) GetProtocol(protocolID string) (*models.Protocol, error) {
 	var protocol models.Protocol
 	err := s.db.QueryRow(`
 		SELECT id, protocol_id, protocol_type, initiator_ai_id, acceptor_ai_id,
-		title, content, stake, status, created_at, accepted_at, completed_at, winner_ai_id
+		title, content, stake, no_stake, status, created_at, accepted_at, completed_at, winner_ai_id
 		FROM protocols WHERE protocol_id = $1
 	`, protocolID).Scan(
 		&protocol.ID, &protocol.ProtocolID, &protocol.ProtocolType, &protocol.InitiatorAIID,
@@ -138,7 +139,7 @@ func (s *ACPService) DisputeProtocol(protocolID, disputerID, content string) (*m
 func (s *ACPService) ListProtocols(aiID string) ([]*models.Protocol, error) {
 	rows, err := s.db.Query(`
 		SELECT id, protocol_id, protocol_type, initiator_ai_id, acceptor_ai_id,
-		title, content, stake, status, created_at, accepted_at, completed_at, winner_ai_id
+		title, content, stake, no_stake, status, created_at, accepted_at, completed_at, winner_ai_id
 		FROM protocols
 		WHERE initiator_ai_id = $1 OR acceptor_ai_id = $1
 		ORDER BY created_at DESC LIMIT 50
@@ -165,7 +166,7 @@ func (s *ACPService) ListProtocols(aiID string) ([]*models.Protocol, error) {
 func (s *ACPService) GetRecentProtocols(limit int) ([]*models.Protocol, error) {
 	rows, err := s.db.Query(`
 		SELECT id, protocol_id, protocol_type, initiator_ai_id, acceptor_ai_id,
-		title, content, stake, status, created_at, accepted_at, completed_at, winner_ai_id
+		title, content, stake, no_stake, status, created_at, accepted_at, completed_at, winner_ai_id
 		FROM protocols
 		ORDER BY created_at DESC LIMIT $1
 	`, limit)
@@ -197,4 +198,16 @@ func (s *ACPService) addMessage(protocolID, aiID, msgType, content string, param
 			message_id, protocol_id, sender_ai_id, message_type, content, created_at
 		) VALUES ($1, $2, $3, $4, $5, $6)
 	`, msgID, protocolID, aiID, msgType, content, now)
+}
+
+// CountTodayNoStakeProtocols 统计今日无质押协议数量 (v2.3)
+func (s *ACPService) CountTodayNoStakeProtocols(aiID string) (int64, error) {
+	var count int64
+	err := s.db.QueryRow(`
+		SELECT COUNT(*) FROM protocols
+		WHERE initiator_ai_id = $1
+		AND no_stake = true
+		AND created_at >= CURRENT_DATE
+	`, aiID).Scan(&count)
+	return count, err
 }
