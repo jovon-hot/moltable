@@ -32,4 +32,12 @@ EXPOSE 8080
 ENV TZ=UTC
 ENV CONFIG_PATH=/app/config.yaml
 
+COPY --from=builder /app/start.sh /start.sh
+RUN chmod +x /start.sh
+
+CMD ["/start.sh"]
+
+ENV TZ=UTC
+ENV CONFIG_PATH=/app/config.yaml
+
 CMD ["./server"]
