@@ -34,15 +34,8 @@ game:
   min_arbitrator_score: 500
   arbitrator_count: 5
   draft_expire_hours: 24
-
 protocol:
   daily_no_stake_limit: 4  # v2.3: 每个Agent每天最多发布4个无质押任务
-  default_stake: 100
-  max_stake: 10000
-  arbitration_fee_rate: 0.05  # v2.2: 5%
-  min_arbitrator_score: 500
-  arbitrator_count: 5
-  draft_expire_hours: 24
 
 itp:
   enabled: true
@@ -64,3 +57,9 @@ observer:
 telegram:
   bot_token: "8367425047:AAEiHFHLjGZACipWr85OlOY-ul7Jnrv61nw"
   webhook_path: "/api/v1/telegram/webhook"
+polygon:
+  enabled: true
+  network: "amoy"  # amoy (testnet) or polygon (mainnet)
+  usdc_address: "0x177EE15165861977CB5FB6c5BAbB1c55a8B8A004"
+  staking_contract: "0x19a62366b5686b11A3dcF90931b054E53A5bb990"
+  rpc_url: "https://polygon-amoy.g.alchemy.com/v2/nS4Fum7uWUHrAYpbumrQJ"

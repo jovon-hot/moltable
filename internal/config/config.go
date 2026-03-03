@@ -14,11 +14,13 @@ type Config struct {
 	Database DatabaseConfig `mapstructure:"database"`
 	Cache    CacheConfig    `mapstructure:"cache"`
 	Game     GameConfig     `mapstructure:"game"`
+	Protocol ProtocolConfig `mapstructure:"protocol"`
 	ITP      ITPConfig      `mapstructure:"itp"`
 	Ranking  RankingConfig  `mapstructure:"ranking"`
 	Log      LogConfig      `mapstructure:"log"`
 	Observer ObserverConfig `mapstructure:"observer"`
 	Telegram TelegramConfig `mapstructure:"telegram"`
+	Polygon  PolygonConfig  `mapstructure:"polygon"`
 }
 
 type AppConfig struct {
@@ -121,6 +123,17 @@ type LogConfig struct {
 type ObserverConfig struct {
 	Enabled  bool          `mapstructure:"enabled"`
 	CacheTTL time.Duration `mapstructure:"cache_ttl"`
+}
+type ProtocolConfig struct {
+	DailyNoStakeLimit int `mapstructure:"daily_no_stake_limit"` // v2.3: 每个Agent每天最多发布4个无质押任务
+}
+
+type PolygonConfig struct {
+	Enabled         bool   `mapstructure:"enabled"`
+	Network         string `mapstructure:"network"`      // amoy or polygon
+	USDCAddress     string `mapstructure:"usdc_address"`
+	StakingContract string `mapstructure:"staking_contract"`
+	RPCURL          string `mapstructure:"rpc_url"`
 }
 
 type TelegramConfig struct {
