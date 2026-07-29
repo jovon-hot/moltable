@@ -1,0 +1,406 @@
+/* ============================================================
+   Moltable Chrome Extension — Toolbar Styles
+   Dark theme floating toolbar for AI chat pages.
+   ============================================================ */
+
+/* --- Root container (avoids style conflicts) --- */
+#moltable-toolbar-root {
+  all: initial;
+  position: fixed;
+  z-index: 2147483647;
+  bottom: 24px;
+  right: 24px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #e8e8f0;
+  pointer-events: none;
+}
+
+#moltable-toolbar-root * {
+  all: unset;
+  box-sizing: border-box;
+  display: revert;
+}
+
+/* --- Floating Action Button --- */
+#moltable-toolbar-root .moltable-fab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #7170ff;
+  color: #fff;
+  font-size: 22px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(113, 112, 255, 0.4);
+  transition: all 0.25s ease;
+  pointer-events: auto;
+  position: relative;
+  margin-left: auto;
+  user-select: none;
+}
+
+#moltable-toolbar-root .moltable-fab:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 24px rgba(113, 112, 255, 0.55);
+}
+
+#moltable-toolbar-root .moltable-fab:active {
+  transform: scale(0.94);
+}
+
+#moltable-toolbar-root .moltable-fab.moltable-active {
+  background: #5f5ee8;
+  box-shadow: 0 4px 20px rgba(113, 112, 255, 0.6);
+}
+
+/* --- Panel (expanded state) --- */
+#moltable-toolbar-root .moltable-panel {
+  position: absolute;
+  bottom: 64px;
+  right: 0;
+  width: 380px;
+  max-height: 520px;
+  background: #1a1a2e;
+  border: 1px solid #3a3a5a;
+  border-radius: 16px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  pointer-events: auto;
+  transition: all 0.2s ease;
+}
+
+#moltable-toolbar-root .moltable-panel.moltable-hidden {
+  display: none;
+}
+
+/* --- Header --- */
+#moltable-toolbar-root .moltable-header {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid #2d2d4a;
+  background: #1e1e34;
+  flex-shrink: 0;
+}
+
+#moltable-toolbar-root .moltable-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: #7170ff;
+  border-radius: 7px;
+  font-weight: 700;
+  font-size: 14px;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+#moltable-toolbar-root .moltable-title {
+  flex: 1;
+  margin-left: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #e8e8f0;
+}
+
+#moltable-toolbar-root .moltable-close-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: #9898b0;
+  font-size: 20px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+#moltable-toolbar-root .moltable-close-btn:hover {
+  background: #2d2d4a;
+  color: #e8e8f0;
+}
+
+/* --- Search Input --- */
+#moltable-toolbar-root .moltable-search-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 10px 14px;
+  border-bottom: 1px solid #2d2d4a;
+  background: #1a1a2e;
+  flex-shrink: 0;
+}
+
+#moltable-toolbar-root .moltable-search-icon {
+  font-size: 14px;
+  margin-right: 8px;
+  color: #9898b0;
+  flex-shrink: 0;
+}
+
+#moltable-toolbar-root .moltable-search-input {
+  flex: 1;
+  background: #252542;
+  border: 1px solid #3a3a5a;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13px;
+  color: #e8e8f0;
+  outline: none;
+  transition: border-color 0.2s;
+  display: block;
+  width: 100%;
+}
+
+#moltable-toolbar-root .moltable-search-input:focus {
+  border-color: #7170ff;
+}
+
+#moltable-toolbar-root .moltable-search-input::placeholder {
+  color: #6b6b88;
+}
+
+#moltable-toolbar-root .moltable-clear-btn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: #9898b0;
+  font-size: 16px;
+  cursor: pointer;
+  margin-left: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+#moltable-toolbar-root .moltable-clear-btn:hover {
+  background: #2d2d4a;
+  color: #e8e8f0;
+}
+
+#moltable-toolbar-root .moltable-clear-btn.moltable-hidden,
+#moltable-toolbar-root .moltable-loading.moltable-hidden,
+#moltable-toolbar-root .moltable-empty.moltable-hidden {
+  display: none !important;
+}
+
+/* --- Loading --- */
+#moltable-toolbar-root .moltable-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  color: #9898b0;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+#moltable-toolbar-root .moltable-loading::before {
+  content: '';
+  width: 18px;
+  height: 18px;
+  border: 2px solid #3a3a5a;
+  border-top-color: #7170ff;
+  border-radius: 50%;
+  animation: moltable-spin 0.7s linear infinite;
+  margin-right: 10px;
+}
+
+@keyframes moltable-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* --- Empty State --- */
+#moltable-toolbar-root .moltable-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 16px;
+  color: #6b6b88;
+  flex-shrink: 0;
+}
+
+#moltable-toolbar-root .moltable-empty-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+#moltable-toolbar-root .moltable-empty-text {
+  font-size: 13px;
+  text-align: center;
+}
+
+/* --- Results Container (scrollable) --- */
+#moltable-toolbar-root .moltable-results {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 10px 10px;
+  scrollbar-width: thin;
+  scrollbar-color: #3a3a5a transparent;
+}
+
+#moltable-toolbar-root .moltable-results::-webkit-scrollbar {
+  width: 5px;
+}
+
+#moltable-toolbar-root .moltable-results::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#moltable-toolbar-root .moltable-results::-webkit-scrollbar-thumb {
+  background: #3a3a5a;
+  border-radius: 10px;
+}
+
+/* --- Memory Card --- */
+#moltable-toolbar-root .moltable-card {
+  background: #252542;
+  border: 1px solid #323252;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+#moltable-toolbar-root .moltable-card:hover {
+  border-color: #4a4a7a;
+  background: #2a2a4a;
+}
+
+#moltable-toolbar-root .moltable-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  margin-bottom: 6px;
+  background: #3a3a6a;
+  color: #b8b8f0;
+}
+
+/* Category-specific badge colors */
+#moltable-toolbar-root .moltable-badge-technical,
+#moltable-toolbar-root .moltable-badge-code,
+#moltable-toolbar-root .moltable-badge-tech {
+  background: rgba(52, 211, 153, 0.15);
+  color: #34d399;
+}
+
+#moltable-toolbar-root .moltable-badge-personal,
+#moltable-toolbar-root .moltable-badge-general,
+#moltable-toolbar-root .moltable-badge-default {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+}
+
+#moltable-toolbar-root .moltable-badge-idea,
+#moltable-toolbar-root .moltable-badge-ideas,
+#moltable-toolbar-root .moltable-badge-creative {
+  background: rgba(244, 114, 182, 0.15);
+  color: #f472b6;
+}
+
+#moltable-toolbar-root .moltable-badge-research,
+#moltable-toolbar-root .moltable-badge-reference,
+#moltable-toolbar-root .moltable-badge-knowledge {
+  background: rgba(96, 165, 250, 0.15);
+  color: #60a5fa;
+}
+
+#moltable-toolbar-root .moltable-badge-task,
+#moltable-toolbar-root .moltable-badge-todo {
+  background: rgba(251, 146, 60, 0.15);
+  color: #fb923c;
+}
+
+/* Card content */
+#moltable-toolbar-root .moltable-card-content {
+  font-size: 13px;
+  line-height: 1.55;
+  color: #d0d0e0;
+  word-break: break-word;
+  margin-bottom: 8px;
+  white-space: pre-wrap;
+}
+
+/* Card footer (meta + inject) */
+#moltable-toolbar-root .moltable-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#moltable-toolbar-root .moltable-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#moltable-toolbar-root .moltable-score {
+  font-size: 11px;
+  color: #6b6b88;
+  font-weight: 500;
+}
+
+/* Inject button */
+#moltable-toolbar-root .moltable-inject-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  background: #7170ff;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+#moltable-toolbar-root .moltable-inject-btn:hover {
+  background: #5f5ee8;
+  transform: translateY(-1px);
+}
+
+#moltable-toolbar-root .moltable-inject-btn:active {
+  transform: translateY(0);
+}
+
+#moltable-toolbar-root .moltable-inject-btn.moltable-injected {
+  background: #34d399;
+  color: #1a1a2e;
+  cursor: default;
+}
+
+/* --- Responsive: shrink on smaller screens --- */
+@media (max-width: 480px) {
+  #moltable-toolbar-root .moltable-panel {
+    width: calc(100vw - 32px);
+    right: -8px;
+    max-height: 460px;
+  }
+
+  #moltable-toolbar-root {
+    bottom: 16px;
+    right: 16px;
+  }
+}

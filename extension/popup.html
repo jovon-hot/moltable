@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Moltable - Settings</title>
+  <style>
+    :root {
+      --primary: #7170ff;
+      --primary-hover: #5f5ee8;
+      --bg: #1a1a2e;
+      --surface: #252542;
+      --surface-2: #2d2d4a;
+      --text: #e8e8f0;
+      --text-muted: #9898b0;
+      --border: #3a3a5a;
+      --success: #34d399;
+      --error: #f87171;
+      --radius: 10px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 360px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 20px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .header .logo {
+      width: 36px; height: 36px;
+      background: var(--primary);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: bold;
+      color: white;
+      flex-shrink: 0;
+    }
+    .header h1 { font-size: 18px; font-weight: 700; }
+    .header .badge {
+      font-size: 10px;
+      background: var(--surface-2);
+      color: var(--text-muted);
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+    .section-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+    label { display: block; font-size: 13px; margin-bottom: 6px; color: var(--text-muted); }
+    input[type="password"] {
+      width: 100%;
+      padding: 10px 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+      font-family: monospace;
+    }
+    input[type="password"]:focus { border-color: var(--primary); }
+    .row { display: flex; gap: 8px; align-items: center; }
+    .row input { flex: 1; }
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-secondary {
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { background: var(--border); }
+    .btn-danger {
+      background: transparent;
+      color: var(--error);
+      border: 1px solid var(--error);
+    }
+    .btn-danger:hover { background: rgba(248,113,113,0.1); }
+    .btn-small {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+    .status {
+      margin-top: 8px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      display: none;
+    }
+    .status.success { display: block; background: rgba(52,211,153,0.12); color: var(--success); }
+    .status.error { display: block; background: rgba(248,113,113,0.12); color: var(--error); }
+    .status.info { display: block; background: rgba(113,112,255,0.12); color: var(--primary); }
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 13px;
+      margin-bottom: 14px;
+    }
+    .status-bar .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot.connected { background: var(--success); }
+    .dot.disconnected { background: var(--error); }
+    .dot.unknown { background: #fbbf24; }
+    .server-url {
+      color: var(--text-muted);
+      font-size: 11px;
+      margin-top: 6px;
+      word-break: break-all;
+    }
+    .footer-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">M</div>
+    <h1>Moltable</h1>
+    <span class="badge">v1.0</span>
+  </div>
+
+  <!-- Status bar -->
+  <div class="status-bar" id="statusBar">
+    <span class="dot unknown" id="statusDot"></span>
+    <span id="statusText">Checking connection...</span>
+  </div>
+
+  <!-- API Key Section -->
+  <div class="section">
+    <div class="section-title">API Key (legacy)</div>
+    <div class="row">
+      <input type="password" id="apiKeyInput" placeholder="Enter Moltable API Key or Identity Token" />
+    </div>
+    <div style="margin-top: 8px; display: flex; gap: 8px;">
+      <button class="btn btn-primary btn-small" id="saveKeyBtn">Save</button>
+      <button class="btn btn-danger btn-small hidden" id="clearKeyBtn">Clear</button>
+    </div>
+    <div class="status" id="keyStatus"></div>
+    <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">
+      To get a key: Login → Dashboard → Connect Agent → Copy code
+    </div>
+  </div>
+
+  <!-- Server URL Section -->
+  <div class="section">
+    <div class="section-title">Server</div>
+    <div class="row">
+      <input type="password" id="serverUrlInput" placeholder="http://localhost:8642" />
+    </div>
+    <div style="margin-top: 8px; display: flex; gap: 8px;">
+      <button class="btn btn-primary btn-small" id="saveServerBtn">Save</button>
+      <button class="btn btn-secondary btn-small" id="resetServerBtn">Reset</button>
+    </div>
+    <div class="server-url" id="currentServerUrl">Current: http://localhost:8642</div>
+    <div class="status" id="serverStatus"></div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="section">
+    <div class="section-title">Actions</div>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+      <button class="btn btn-secondary btn-small" id="openSearchBtn">🔍 Open Search</button>
+      <button class="btn btn-secondary btn-small" id="testApiBtn">🧪 Test Connection</button>
+    </div>
+  </div>
+
+  <div class="footer-actions">
+    <span style="font-size: 11px; color: var(--text-muted);">Supported: ChatGPT · Claude · Gemini · DeepSeek</span>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

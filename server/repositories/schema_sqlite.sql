@@ -1,0 +1,173 @@
+-- ============================================
+-- Moltable · SQLite Schema (开发模式)
+-- ============================================
+
+-- 用户表
+CREATE TABLE IF NOT EXISTS users (
+    id TEXT PRIMARY KEY,
+    email TEXT UNIQUE,
+    name TEXT,
+    timezone TEXT DEFAULT 'Asia/Shanghai',
+    password_hash TEXT,
+    plan TEXT DEFAULT 'free',
+    created_at TEXT DEFAULT (datetime('now'))
+);
+
+-- API 密钥 (legacy, deprecated)
+CREATE TABLE IF NOT EXISTS api_keys (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id),
+    name TEXT,
+    key_prefix TEXT,
+    key_hash TEXT UNIQUE NOT NULL,
+    is_active INTEGER DEFAULT 1,
+    created_at TEXT DEFAULT (datetime('now')),
+    last_used_at TEXT
+);
+
+-- 匿名会话
+CREATE TABLE IF NOT EXISTS sessions (
+    id TEXT PRIMARY KEY,
+    session_uuid TEXT UNIQUE NOT NULL,
+    token TEXT UNIQUE NOT NULL,
+    user_id TEXT REFERENCES users(id),
+    expires_at TEXT NOT NULL,
+    migrated_at TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+);
+
+-- 记忆
+CREATE TABLE IF NOT EXISTS memories (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    content TEXT NOT NULL,
+    category TEXT DEFAULT 'fact',
+    tags TEXT DEFAULT '[]',
+    embedding TEXT DEFAULT '[]',
+    source TEXT DEFAULT 'agent',
+    confidence REAL DEFAULT 1.0,
+    is_archived INTEGER DEFAULT 0,
+    source_session_id TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_memories_user ON memories(user_id);
+CREATE INDEX IF NOT EXISTS idx_memories_category ON memories(category);
+CREATE INDEX IF NOT EXISTS idx_memories_user_archived ON memories(user_id, is_archived);
+CREATE VIRTUAL TABLE IF NOT EXISTS memories_fts USING fts5(content, content_rowid='rowid');
+
+-- Persona
+CREATE TABLE IF NOT EXISTS personas (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id),
+    name TEXT NOT NULL,
+    description TEXT,
+    type TEXT DEFAULT 'constructed',
+    definition TEXT,
+    is_active INTEGER DEFAULT 1,
+    created_at TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_personas_user ON personas(user_id);
+
+-- 项目
+CREATE TABLE IF NOT EXISTS projects (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id),
+    name TEXT NOT NULL,
+    description TEXT,
+    is_active INTEGER DEFAULT 1,
+    created_at TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_projects_user ON projects(user_id);
+
+-- 决策
+CREATE TABLE IF NOT EXISTS decisions (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id),
+    content TEXT NOT NULL,
+    decided_at TEXT DEFAULT (datetime('now')),
+    created_at TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_decisions_user ON decisions(user_id);
+
+-- 审计日志
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id TEXT PRIMARY KEY,
+    user_id TEXT,
+    action TEXT NOT NULL,
+    ip_address TEXT,
+    details TEXT DEFAULT '{}',
+    created_at TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_logs(user_id);
+
+-- Challenge (DID+VC 防重放)
+CREATE TABLE IF NOT EXISTS challenges (
+    id TEXT PRIMARY KEY,
+    challenge TEXT UNIQUE NOT NULL,
+    agent_did TEXT,
+    used_at TEXT,
+    expires_at TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now'))
+);
+
+-- DID 注册表
+CREATE TABLE IF NOT EXISTS did_registry (
+    did TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id),
+    public_key TEXT NOT NULL,
+    key_type TEXT DEFAULT 'Ed25519',
+    platform TEXT,
+    agent_name TEXT,
+    status TEXT DEFAULT 'active',
+    last_seen_at TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_did_user ON did_registry(user_id);
+CREATE INDEX IF NOT EXISTS idx_did_status ON did_registry(status);
+
+-- VC 凭证记录
+CREATE TABLE IF NOT EXISTS credentials (
+    id TEXT PRIMARY KEY,
+    credential_jwt TEXT NOT NULL,
+    claims TEXT DEFAULT '{}',
+    type TEXT,
+    subject_did TEXT,
+    revoked_at TEXT,
+    replaced_by TEXT,
+    expires_at TEXT,
+    issued_at TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_cred_did ON credentials(subject_did);
+
+-- 一次性注册 Token
+CREATE TABLE IF NOT EXISTS enrollment_tokens (
+    token TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id),
+    platform TEXT,
+    agent_name TEXT,
+    consumed_at TEXT,
+    expires_at TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now'))
+);
+
+-- VP 提交记录
+CREATE TABLE IF NOT EXISTS presentations (
+    id TEXT PRIMARY KEY,
+    agent_did TEXT NOT NULL REFERENCES did_registry(did),
+    vp_jwt TEXT NOT NULL,
+    verified_at TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_pr_did ON presentations(agent_did);
+
+
+-- 订阅表
+CREATE TABLE IF NOT EXISTS subscriptions (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    stripe_subscription_id TEXT,
+    plan TEXT NOT NULL DEFAULT 'free',
+    status TEXT NOT NULL DEFAULT 'active',
+    billing_cycle TEXT DEFAULT 'monthly',
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);

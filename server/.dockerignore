@@ -1,0 +1,16 @@
+__pycache__
+*.pyc
+*.pyo
+.pytest_cache
+tests/
+*.db
+*.db-shm
+*.db-wal
+.env
+.env.local
+.git
+.gitignore
+*.md
+!README.md
+railway.json
+migration*.sql

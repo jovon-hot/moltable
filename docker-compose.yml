@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # ── PostgreSQL 16 + pgvector ──────────────────────
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: moltable
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-moltable_dev}
+      POSTGRES_DB: moltable
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./server/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U moltable -d moltable"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ── API Server (FastAPI) ──────────────────────────
+  api:
+    build: ./server
+    ports:
+      - "${API_PORT:-8700}:8000"
+    env_file:
+      - ./server/.env
+    environment:
+      SUPABASE_URL: ${SUPABASE_URL:-}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-}
+      DATABASE_URL: postgresql://moltable:${POSTGRES_PASSWORD:-moltable_dev}@postgres:5432/moltable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ── Web Frontend (Next.js) ────────────────────────
+  web:
+    build: ./web
+    ports:
+      - "8701:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://api:8000}
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:

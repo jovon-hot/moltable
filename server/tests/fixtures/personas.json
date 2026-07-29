@@ -1,0 +1,26 @@
+{
+  "personas": [
+    {
+      "id": "pers-001",
+      "user_id": "test-user-001",
+      "name": "Claude",
+      "type": "constructed",
+      "description": "Thoughtful AI assistant",
+      "system_prompt": "You are Claude, a helpful AI.",
+      "traits": {"style": "thoughtful", "tone": "friendly"},
+      "model_preference": "claude-3-opus",
+      "is_active": true
+    },
+    {
+      "id": "pers-002",
+      "user_id": "test-user-002",
+      "name": "Alice",
+      "type": "synthetic",
+      "description": "AI persona for Alice",
+      "system_prompt": "",
+      "traits": {},
+      "model_preference": null,
+      "is_active": true
+    }
+  ]
+}
