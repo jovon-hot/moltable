@@ -11,10 +11,13 @@ const aboutLayerIcons = [Shield, Users, Layers]
 const privacyIcons = [Shield, Download, Trash2, Mail]
 
 export default function LandingPage() {
-  const { t } = useLang()
+  const { t, lang } = useLang()
   const [checkoutLoading, setCheckoutLoading] = useState(false)
   const [checkoutError, setCheckoutError] = useState('')
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly')
+
+  const p = t.pricing as any
+  const pricingFeatures = (t.pricing as any).features || {}
 
   const handleProCheckout = async () => {
     setCheckoutLoading(true)
@@ -41,33 +44,33 @@ export default function LandingPage() {
 
   const pricingPlans = [
     {
-      name: t.pricing.free.name, 
-      price: t.pricing.free.price, 
+      name: p.free.name,
+      price: p.free.price,
       period: '',
-      desc: t.pricing.free.desc,
-      cta: t.pricing.free.cta, 
+      desc: p.free.desc,
+      cta: p.free.cta,
       href: '/register',
-      features: ['1 个 AI 身份', '2 个 Persona', '100 条记忆', '1 个 Agent', '基础 MCP 工具'],
+      features: pricingFeatures.free || [],
     },
     {
-      name: t.pricing.pro.name, 
-      price: billingCycle === 'yearly' ? (t.pricing.pro as any).priceYearlyMonthly : t.pricing.pro.price,
-      period: billingCycle === 'yearly' ? '' : '',
-      yearPrice: (t.pricing.pro as any).priceYearly,
-      desc: billingCycle === 'yearly' ? (t.pricing.pro as any).descShort : t.pricing.pro.desc,
-      cta: billingCycle === 'yearly' ? (t.pricing.pro as any).ctaYearly : t.pricing.pro.cta,
-      badge: (t.pricing.pro as any).badge,
-      accent: true,
-      features: ['3 个 AI 身份', '10 个 Persona', '10,000 条记忆', '5 个 Agent', '浏览器插件', '优先支持'],
-    },
-    {
-      name: t.pricing.team.name, 
-      price: t.pricing.team.price, 
+      name: p.pro.name,
+      price: billingCycle === 'yearly' ? p.pro.priceYearlyMonthly : p.pro.priceMonthly,
       period: '',
-      desc: (t.pricing.team as any).descShort || t.pricing.team.desc,
-      cta: t.pricing.team.cta, 
+      yearPrice: p.pro.priceYearly,
+      desc: billingCycle === 'yearly' ? p.pro.descShort : p.pro.desc,
+      cta: billingCycle === 'yearly' ? p.pro.ctaYearly : p.pro.cta,
+      badge: p.pro.badge,
+      accent: true,
+      features: pricingFeatures.pro || [],
+    },
+    {
+      name: p.team.name,
+      price: p.team.price,
+      period: '',
+      desc: p.team.descShort || p.team.desc,
+      cta: p.team.cta,
       href: 'mailto:hi@moltable.ai',
-      features: ['10 个 AI 身份', '无限 Persona', '50,000 条记忆', '团队记忆库', '共享 Persona', '管理面板'],
+      features: pricingFeatures.team || [],
     },
   ]
 
@@ -78,16 +81,16 @@ export default function LandingPage() {
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs mb-6" 
           style={{ background: 'rgba(113,112,255,0.1)', color: '#9d9cff' }}>
           <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#7170ff' }} />
-          DID+VC · 开源 MIT
+          {t.hero.tagline}
         </div>
         <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight" style={{ fontWeight: 590, letterSpacing: '-0.5px' }}>
-          你的 AI 为什么每次<br />都要重新认识你？
+          {t.hero.title}
         </h1>
         <p className="text-lg mb-3" style={{ color: '#8a8f98' }}>
-          一次注册，所有 AI 都认识你。
+          {t.hero.subtitle}
         </p>
         <p className="text-sm mb-8" style={{ color: '#5a5f68' }}>
-          加载 Moltable Skill → Hermes / Claude / ChatGPT / Cursor / OpenClaw 全通
+          {t.hero.desc}
         </p>
         <div className="flex items-center justify-center gap-3">
           <Link href="/register" className="px-6 py-2.5 rounded-[6px] text-sm font-medium transition-all hover:opacity-90"
@@ -96,24 +99,17 @@ export default function LandingPage() {
           </Link>
           <Link href="/login" className="px-6 py-2.5 rounded-[6px] text-sm font-medium transition-all hover:opacity-90"
             style={{ background: 'rgba(255,255,255,0.06)', color: '#f7f8f8', fontWeight: 510 }}>
-            登录
+            {t.nav.login}
           </Link>
         </div>
       </section>
 
       {/* Features */}
       <section className="px-6 py-16 max-w-5xl mx-auto">
-        <h2 className="text-2xl text-center mb-12" style={{ fontWeight: 590 }}>核心能力</h2>
+        <h2 className="text-2xl text-center mb-12" style={{ fontWeight: 590 }}>{t.features.title}</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            { icon: Layers, title: '跨 AI 身份', desc: '一个身份通用于 Hermes、Claude、ChatGPT、Cursor 等所有支持 MCP 的 AI 助手。' },
-            { icon: Zap, title: '自动配置', desc: '接入即完成。Agent 自动加载你的记忆、Persona 和规则，无需人工配置。' },
-            { icon: Users, title: '多 Persona', desc: '工作、生活、学习 — 不同场景切换不同人格，各自独立的记忆和偏好。' },
-            { icon: Brain, title: '渐进记忆', desc: 'AI 在工作中学到的偏好自动积累。用得越久，AI 越懂你。' },
-            { icon: Shield, title: '你拥有数据', desc: '随时随地导出或删除全部数据。我们永远不会用你的数据训练模型。' },
-            { icon: Code, title: '开放协议', desc: '基于 MCP 和 DID+VC 开放标准。任何 AI 都可以接入，不锁定平台。' },
-          ].map((f, i) => {
-            const Icon = f.icon
+          {t.features.items.map((f: any, i: number) => {
+            const Icon = featureIcons[i]
             return (
               <div key={i} className="p-6 rounded-[8px] transition-all duration-200"
                 style={{ background: '#0f1011', boxShadow: '0 0 0 1px rgba(255,255,255,0.06)' }}>
@@ -128,11 +124,11 @@ export default function LandingPage() {
 
       <hr style={{ borderColor: 'rgba(255,255,255,0.06)' }} />
 
-      {/* Pricing — Bait Design */}
+      {/* Pricing */}
       <section id="pricing" className="px-6 py-16 max-w-5xl mx-auto">
-        <h2 className="text-2xl text-center mb-3" style={{ fontWeight: 590 }}>{t.pricing.title}</h2>
+        <h2 className="text-2xl text-center mb-3" style={{ fontWeight: 590 }}>{p.title}</h2>
         <p className="text-sm text-center mb-8" style={{ color: '#8a8f98' }}>
-          免费开始，按需升级。7 天无理由退款。
+          {p.subtitle}
         </p>
 
         {/* Billing cycle toggle */}
@@ -144,7 +140,7 @@ export default function LandingPage() {
                 background: billingCycle === 'monthly' ? '#7170ff' : 'transparent',
                 color: billingCycle === 'monthly' ? '#fff' : '#8a8f98',
               }}>
-              月付
+              {p.monthly}
             </button>
             <button onClick={() => setBillingCycle('yearly')}
               className="px-4 py-1.5 rounded-[4px] text-xs font-medium transition-all flex items-center gap-1.5"
@@ -152,44 +148,41 @@ export default function LandingPage() {
                 background: billingCycle === 'yearly' ? '#7170ff' : 'transparent',
                 color: billingCycle === 'yearly' ? '#fff' : '#8a8f98',
               }}>
-              年付 <span style={{ color: billingCycle === 'yearly' ? '#c4ff6b' : '#7170ff', fontSize: 10 }}>省 35%</span>
+              {p.yearly} <span style={{ color: billingCycle === 'yearly' ? '#c4ff6b' : '#7170ff', fontSize: 10 }}>{p.savePercent}</span>
             </button>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {pricingPlans.map((p, i) => (
+          {pricingPlans.map((plan, i) => (
             <div key={i}
-              className={`p-6 rounded-[8px] flex flex-col relative transition-all duration-200 ${
-                p.accent ? 'md:-mt-2 md:mb-2' : ''
-              }`}
+              className={`p-6 rounded-[8px] flex flex-col relative transition-all duration-200 ${plan.accent ? 'md:-mt-2 md:mb-2' : ''}`}
               style={{ 
                 background: '#0f1011', 
-                boxShadow: p.accent 
+                boxShadow: plan.accent 
                   ? '0 0 0 1px #7170ff, 0 4px 24px rgba(113,112,255,0.15)' 
                   : '0 0 0 1px rgba(255,255,255,0.06)',
               }}
             >
-              {p.badge && (
+              {plan.badge && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-xs font-medium"
                   style={{ background: '#7170ff', color: '#fff' }}>
-                  {p.badge}
+                  {plan.badge}
                 </div>
               )}
-              <h3 className="text-lg mb-1" style={{ fontWeight: 590 }}>{p.name}</h3>
+              <h3 className="text-lg mb-1" style={{ fontWeight: 590 }}>{plan.name}</h3>
               <div className="mb-1">
-                <span className="text-3xl" style={{ fontWeight: 590 }}>{p.price}</span>
-                {p.period && <span className="text-sm" style={{ color: '#8a8f98' }}>{p.period}</span>}
+                <span className="text-3xl" style={{ fontWeight: 590 }}>{plan.price}</span>
+                {plan.period && <span className="text-sm" style={{ color: '#8a8f98' }}>{plan.period}</span>}
               </div>
-              {p.yearPrice && (
-                <p className="text-xs mb-4" style={{ color: '#7170ff' }}>{p.yearPrice}</p>
+              {plan.yearPrice && (
+                <p className="text-xs mb-4" style={{ color: '#7170ff' }}>{plan.yearPrice}</p>
               )}
-              {!p.yearPrice && <div className="mb-4" />}
-              <p className="text-xs mb-5 flex-1 leading-relaxed" style={{ color: '#8a8f98' }}>{p.desc}</p>
+              {!plan.yearPrice && <div className="mb-4" />}
+              <p className="text-xs mb-5 flex-1 leading-relaxed" style={{ color: '#8a8f98' }}>{plan.desc}</p>
 
-              {/* Feature list */}
               <ul className="mb-5 space-y-2">
-                {p.features.map((f, j) => (
+                {plan.features.map((f: string, j: number) => (
                   <li key={j} className="flex items-start gap-2 text-xs" style={{ color: '#b0b5bd' }}>
                     <Check size={14} style={{ color: '#7170ff', marginTop: 1, flexShrink: 0 }} />
                     {f}
@@ -197,22 +190,22 @@ export default function LandingPage() {
                 ))}
               </ul>
 
-              {p.accent ? (
+              {plan.accent ? (
                 <div>
                   <button onClick={handleProCheckout} disabled={checkoutLoading}
                     className="block w-full text-center px-4 py-2.5 rounded-[6px] text-sm font-medium transition-all duration-150 disabled:opacity-50"
                     style={{ background: '#7170ff', color: '#fff', fontWeight: 510 }}>
-                    {checkoutLoading ? '跳转中...' : p.cta}
+                    {checkoutLoading ? p.redirecting : plan.cta}
                   </button>
                   {checkoutError && (
                     <p className="text-xs mt-2 text-center" style={{ color: '#f87171' }}>{checkoutError}</p>
                   )}
                 </div>
               ) : (
-                <Link href={p.href || '#'}
+                <Link href={plan.href || '#'}
                   className="block w-full text-center px-4 py-2.5 rounded-[6px] text-sm font-medium transition-all duration-150"
                   style={{ background: 'rgba(255,255,255,0.06)', color: '#f7f8f8', fontWeight: 510 }}>
-                  {p.cta}
+                  {plan.cta}
                 </Link>
               )}
             </div>
@@ -260,7 +253,7 @@ export default function LandingPage() {
         <Link href="https://github.com/moltable/moltable" 
           className="inline-flex items-center gap-2 mx-auto mt-4 px-4 py-2 rounded-[6px] text-sm font-medium transition-all"
           style={{ background: 'rgba(255,255,255,0.06)', color: '#f7f8f8', display: 'inline-flex' }}>
-          <GitBranch size={14} /> GitHub → 查看源码
+          <GitBranch size={14} /> {t.about.github}
         </Link>
       </section>
 
@@ -289,24 +282,24 @@ export default function LandingPage() {
           <div>
             <h4 className="text-xs mb-3" style={{ color: '#8a8f98', fontWeight: 590 }}>{t.footer.product}</h4>
             <ul className="space-y-2">
-              <li><Link href="/#features" className="text-xs hover:underline" style={{ color: '#5a5f68' }}>功能</Link></li>
-              <li><Link href="/#pricing" className="text-xs hover:underline" style={{ color: '#5a5f68' }}>定价</Link></li>
-              <li><Link href="/docs" className="text-xs hover:underline" style={{ color: '#5a5f68' }}>文档</Link></li>
+              <li><Link href="/#features" className="text-xs hover:underline" style={{ color: '#5a5f68' }}>{t.footer.features}</Link></li>
+              <li><Link href="/#pricing" className="text-xs hover:underline" style={{ color: '#5a5f68' }}>{t.footer.pricing}</Link></li>
+              <li><Link href="/docs" className="text-xs hover:underline" style={{ color: '#5a5f68' }}>{t.footer.docs}</Link></li>
             </ul>
           </div>
           <div>
             <h4 className="text-xs mb-3" style={{ color: '#8a8f98', fontWeight: 590 }}>{t.footer.resources}</h4>
             <ul className="space-y-2">
-              <li><a href="https://github.com/moltable/moltable" className="text-xs hover:underline" style={{ color: '#5a5f68' }}>GitHub</a></li>
-              <li><Link href="/blog" className="text-xs hover:underline" style={{ color: '#5a5f68' }}>博客</Link></li>
-              <li><Link href="/docs" className="text-xs hover:underline" style={{ color: '#5a5f68' }}>更新日志</Link></li>
+              <li><a href="https://github.com/moltable/moltable" className="text-xs hover:underline" style={{ color: '#5a5f68' }}>{t.footer.github}</a></li>
+              <li><Link href="/blog" className="text-xs hover:underline" style={{ color: '#5a5f68' }}>{t.footer.blog}</Link></li>
+              <li><Link href="/docs" className="text-xs hover:underline" style={{ color: '#5a5f68' }}>{t.footer.changelog}</Link></li>
             </ul>
           </div>
           <div>
             <h4 className="text-xs mb-3" style={{ color: '#8a8f98', fontWeight: 590 }}>{t.footer.legal}</h4>
             <ul className="space-y-2">
-              <li><Link href="/privacy" className="text-xs hover:underline" style={{ color: '#5a5f68' }}>隐私政策</Link></li>
-              <li><a href="#" className="text-xs hover:underline" style={{ color: '#5a5f68' }}>服务条款</a></li>
+              <li><Link href="/privacy" className="text-xs hover:underline" style={{ color: '#5a5f68' }}>{t.footer.privacy}</Link></li>
+              <li><a href="#" className="text-xs hover:underline" style={{ color: '#5a5f68' }}>{t.footer.terms}</a></li>
             </ul>
           </div>
         </div>

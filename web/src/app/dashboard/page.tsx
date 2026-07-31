@@ -11,7 +11,8 @@ const DEMO_STATS = { memories: 128, personas: 3, projects: 5, decisions: 42 }
 
 export default function DashboardPage() {
   const { toast } = useToast()
-  const { t } = useLang()
+  const { t, lang } = useLang()
+  const d = t.dashboard as any
   const [stats, setStats] = useState({ memories: 0, personas: 0 })
   const [loading, setLoading] = useState(true)
   const [isDemo, setIsDemo] = useState(false)
@@ -50,16 +51,16 @@ export default function DashboardPage() {
   }
 
   const statCards = [
-    { label: t.dashboard.stats.memories, value: stats.memories, icon: Brain, href: '/dashboard/memories' },
-    { label: t.dashboard.stats.personas, value: stats.personas, icon: User, href: '/dashboard/personas' },
-    { label: t.dashboard.stats.projects, value: DEMO_STATS.projects, icon: Key, href: '/dashboard/memories' },
-    { label: t.dashboard.stats.decisions, value: DEMO_STATS.decisions, icon: Brain, href: '/dashboard/memories' },
+    { label: d.stats.memories, value: stats.memories, icon: Brain, href: '/dashboard/memories' },
+    { label: d.stats.personas, value: stats.personas, icon: User, href: '/dashboard/personas' },
+    { label: d.stats.projects, value: DEMO_STATS.projects, icon: Key, href: '/dashboard/memories' },
+    { label: d.stats.decisions, value: DEMO_STATS.decisions, icon: Brain, href: '/dashboard/memories' },
   ]
 
   const onboardingSteps = [
-    { step: 1, title: t.dashboard.step1, desc: '在设置页面生成你的 API Key' },
-    { step: 2, title: t.dashboard.step2, desc: '在 Hermes / Claude 中加载 Moltable Skill' },
-    { step: 3, title: t.dashboard.step3, desc: 'AI 自动认识你，开始积累记忆' },
+    { step: 1, title: d.step1, desc: d.step1desc },
+    { step: 2, title: d.step2, desc: d.step2desc },
+    { step: 3, title: d.step3, desc: d.step3desc },
   ]
 
   return (
@@ -72,13 +73,13 @@ export default function DashboardPage() {
               <Brain size={16} className="text-white" />
             </div>
             <div className="flex-1">
-              <h3 className="text-base font-heading text-ln-text mb-1">正在演示模式 — 注册后开始使用</h3>
+              <h3 className="text-base font-heading text-ln-text mb-1">{d.demoBanner}</h3>
               <p className="text-sm text-ln-secondary mb-3">
-                注册后你的 AI Agent 可以记住所有对话，跨设备同步偏好和记忆。当前显示的是演示数据。
+                {lang === 'zh' ? '注册后你的 AI Agent 可以记住所有对话，跨设备同步偏好和记忆。当前显示的是演示数据。' : 'After registering, your AI Agent remembers every conversation and syncs preferences across devices. Currently showing demo data.'}
               </p>
               <Link href="/register" 
                 className="inline-flex items-center gap-2 px-5 py-2 rounded-btn text-sm font-ui bg-ln-accent text-white hover:bg-ln-accent-hover transition-all">
-                立即注册 <ArrowRight size={14} />
+                {lang === 'zh' ? '立即注册' : 'Sign Up Now'} <ArrowRight size={14} />
               </Link>
             </div>
           </div>
@@ -88,13 +89,13 @@ export default function DashboardPage() {
       {/* Page header */}
       <div className="mb-10">
         <h1 className="text-2xl mb-1 font-heading tracking-[-0.3px] text-ln-text">
-          {isDemo ? 'Moltable Dashboard' : '欢迎回来'}
+          {isDemo ? 'Moltable Dashboard' : lang === 'zh' ? '欢迎回来' : 'Welcome Back'}
         </h1>
         <p className="text-sm text-ln-tertiary font-body">
           {isDemo ? (
-            <>演示数据 — <Link href="/login" className="text-ln-accent hover:text-ln-accent-hover transition-colors font-ui">注册后</Link> 开始使用</>
+            <>{lang === 'zh' ? '演示数据 — ' : 'Demo data — '}<Link href="/login" className="text-ln-accent hover:text-ln-accent-hover transition-colors font-ui">{lang === 'zh' ? '注册后' : 'Sign in'}</Link> {lang === 'zh' ? '开始使用' : 'to get started'}</>
           ) : (
-            '管理你的 AI 身份、记忆和 Persona'
+            lang === 'zh' ? '管理你的 AI 身份、记忆和 Persona' : 'Manage your AI identity, memories and personas'
           )}
         </p>
       </div>
@@ -126,7 +127,7 @@ export default function DashboardPage() {
       {/* Onboarding guide for first-time users */}
       {(stats.memories === 0 && stats.personas === 0 && !isDemo) && (
         <div className="mb-8 p-6 rounded-card bg-ln-surface shadow-accent-glow">
-          <h3 className="text-lg mb-4 font-heading text-ln-text">🚀 {t.dashboard.quickStart}</h3>
+          <h3 className="text-lg mb-4 font-heading text-ln-text">🚀 {d.quickStart}</h3>
           <div className="space-y-3">
             {onboardingSteps.map(s => (
               <div key={s.step} className="flex items-start gap-3">
@@ -138,7 +139,7 @@ export default function DashboardPage() {
                   <p className="text-xs mt-0.5 text-ln-tertiary font-body">
                     {s.step === 1 ? (
                       <>
-                        {s.desc} — <Link href="/dashboard/settings" className="text-ln-accent hover:text-ln-accent-hover transition-colors">前往设置 →</Link>
+                        {s.desc} — <Link href="/dashboard/settings" className="text-ln-accent hover:text-ln-accent-hover transition-colors">{lang === 'zh' ? '前往设置 →' : 'Go to settings →'}</Link>
                       </>
                     ) : s.desc}
                   </p>
@@ -152,13 +153,12 @@ export default function DashboardPage() {
       {/* Quick Start / API Integration */}
       <div className="p-8 rounded-panel bg-ln-surface shadow-accent-glow transition-all duration-200">
         <h2 className="text-lg mb-2 flex items-center gap-2 font-heading text-ln-text">
-          🚀 {t.dashboard.quickStart}
+          🚀 {d.quickStart}
         </h2>
         <p className="text-sm mb-6 text-ln-secondary font-body leading-relaxed">
-          在任何支持 MCP 的 AI Agent 中加载 Moltable Skill，AI 自动认识你。
+          {lang === 'zh' ? '在任何支持 MCP 的 AI Agent 中加载 Moltable Skill，AI 自动认识你。' : 'Load the Moltable Skill in any MCP-compatible AI Agent — your AI knows you instantly.'}
         </p>
 
-        {/* Code display */}
         <div className="rounded-card bg-ln-bg shadow-border p-4 text-sm font-mono text-ln-secondary">
           <p className="text-xs mb-2 text-ln-tertiary font-body"># Hermes</p>
           <p className="text-ln-accent-hover">/skill moltable</p>
@@ -170,7 +170,7 @@ export default function DashboardPage() {
           href="/dashboard/settings"
           className="inline-flex items-center gap-2 mt-6 px-5 py-2 rounded-btn text-sm font-ui bg-ln-accent text-white hover:bg-ln-accent-hover transition-all duration-150"
         >
-          {t.dashboard.getKey}
+          {d.getKey}
           <ArrowRight size={14} />
         </Link>
       </div>
