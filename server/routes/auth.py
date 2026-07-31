@@ -263,7 +263,7 @@ def local_register(request: Request, body: RegisterRequest):
     if existing.data:
         raise HTTPException(409, "该邮箱已注册")
 
-    user_id = _uuid.uuid4().hex[:8]
+    user_id = str(_uuid.uuid4())
     pw_hash = hashlib.sha256((_API_KEY_PEPPER + body.password).encode()).hexdigest()
 
     # 创建用户
@@ -278,7 +278,7 @@ def local_register(request: Request, body: RegisterRequest):
     # 自动生成 API Key (使用相同的 PBKDF2 哈希)
     raw_key = "molt_" + secrets.token_urlsafe(24)
     key_hash = hash_api_key(raw_key)
-    key_id = _uuid.uuid4().hex[:8]
+    key_id = str(_uuid.uuid4())
 
     supabase.table("api_keys").insert({
         "id": key_id,
@@ -320,7 +320,7 @@ def local_login(request: Request, body: LoginRequest):
     # 生成新的 API Key (使用相同的 PBKDF2 哈希)
     raw_key = "molt_" + secrets.token_urlsafe(24)
     key_hash = hash_api_key(raw_key)
-    key_id = _uuid.uuid4().hex[:8]
+    key_id = str(_uuid.uuid4())
 
     supabase.table("api_keys").insert({
         "id": key_id,

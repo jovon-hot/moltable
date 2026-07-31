@@ -11,6 +11,8 @@ create table users (
     id            uuid primary key default gen_random_uuid(),
     email         text unique not null,
     name          text,
+    password_hash text,
+    plan          text default 'free',
     timezone      text default 'Asia/Shanghai',
     language      text default 'zh',
     created_at    timestamptz default now(),
