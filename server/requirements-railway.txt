@@ -1,0 +1,11 @@
+# Railway 生产依赖 — 不含 sentence-transformers（~2GB），使用 trigram hash fallback
+fastapi>=0.110
+uvicorn[standard]>=0.29
+supabase>=2.7
+openai>=1.30
+python-dotenv>=1.0
+pydantic>=2.0
+slowapi>=0.1.10
+stripe>=10.0
+cryptography>=42.0
+pyjwt>=2.8
