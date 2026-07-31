@@ -276,34 +276,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="px-6 py-12 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-        <div className="max-w-5xl mx-auto grid grid-cols-3 gap-8">
-          <div>
-            <h4 className="text-xs mb-3" style={{ color: '#8a8f98', fontWeight: 590 }}>{t.footer.product}</h4>
-            <ul className="space-y-2">
-              <li><Link href="/#features" className="text-xs hover:underline" style={{ color: '#5a5f68' }}>{t.footer.features}</Link></li>
-              <li><Link href="/#pricing" className="text-xs hover:underline" style={{ color: '#5a5f68' }}>{t.footer.pricing}</Link></li>
-              <li><Link href="/docs" className="text-xs hover:underline" style={{ color: '#5a5f68' }}>{t.footer.docs}</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-xs mb-3" style={{ color: '#8a8f98', fontWeight: 590 }}>{t.footer.resources}</h4>
-            <ul className="space-y-2">
-              <li><a href="https://github.com/moltable/moltable" className="text-xs hover:underline" style={{ color: '#5a5f68' }}>{t.footer.github}</a></li>
-              <li><Link href="/blog" className="text-xs hover:underline" style={{ color: '#5a5f68' }}>{t.footer.blog}</Link></li>
-              <li><Link href="/docs" className="text-xs hover:underline" style={{ color: '#5a5f68' }}>{t.footer.changelog}</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-xs mb-3" style={{ color: '#8a8f98', fontWeight: 590 }}>{t.footer.legal}</h4>
-            <ul className="space-y-2">
-              <li><Link href="/privacy" className="text-xs hover:underline" style={{ color: '#5a5f68' }}>{t.footer.privacy}</Link></li>
-              <li><a href="#" className="text-xs hover:underline" style={{ color: '#5a5f68' }}>{t.footer.terms}</a></li>
-            </ul>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }
