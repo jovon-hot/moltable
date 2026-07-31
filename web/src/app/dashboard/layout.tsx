@@ -17,12 +17,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname()
   const router = useRouter()
   const { t, lang, setLang } = useLang()
+  const d = t.dashboard_ui as any
 
   useEffect(() => {
     if (local) {
       const localKey = getLocalKey()
       if (localKey) {
-        setUser({ email: '本地用户', id: 'local' })
+        setUser({ email: d.localUser, id: 'local' })
         setIsDemo(false)
       } else {
         setIsDemo(true)
@@ -32,10 +33,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
     supabase!.auth.getUser().then(({ data }) => {
       if (!data.user) {
-        // 本地模式：检查 localStorage
         const localKey = getLocalKey()
         if (localKey) {
-          setUser({ email: '本地用户', id: 'local' })
+          setUser({ email: d.localUser, id: 'local' })
           setIsDemo(false)
         } else {
           setIsDemo(true)
@@ -55,10 +55,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   const navLinks = [
-    { href: '/dashboard', label: '概览', icon: LayoutDashboard },
+    { href: '/dashboard', label: d.overview, icon: LayoutDashboard },
     { href: '/dashboard/memories', label: t.dashboard.stats.memories, icon: Brain },
     { href: '/dashboard/personas', label: t.dashboard.stats.personas, icon: User },
-    { href: '/dashboard/settings', label: '设置', icon: Settings },
+    { href: '/dashboard/settings', label: d.settings, icon: Settings },
   ]
 
   if (loading) {
@@ -80,7 +80,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           Moltable
         </Link>
       </div>
-      <nav role="navigation" aria-label="主导航" className="flex-1 px-3 space-y-0.5">
+      <nav role="navigation" aria-label={d.sidebar_arialabel} className="flex-1 px-3 space-y-0.5">
         {navLinks.map(link => {
           const isActive = pathname === link.href
           const Icon = link.icon
@@ -106,17 +106,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="text-xs text-ln-tertiary">
             <Link href="/login" className="text-ln-accent font-ui hover:text-ln-accent-hover transition-colors">
               {t.nav.login}
-            </Link> 以同步数据
+            </Link> {d.signin_sync}
           </div>
         ) : (
           <>
             <div className="text-xs text-ln-tertiary truncate mb-2 font-body">{user?.email}</div>
             <button
               onClick={handleSignOut}
-              aria-label="退出登录"
+              aria-label={d.signout}
               className="text-xs text-ln-tertiary hover:text-ln-error transition-colors duration-150 font-body"
             >
-              退出登录
+              {d.signout}
             </button>
           </>
         )}
@@ -126,7 +126,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen bg-ln-bg text-ln-text">
-      {/* Demo mode banner */}
       {isDemo && (
         <div className="flex items-center justify-center gap-2 py-2 px-4 text-sm bg-ln-accent-muted text-ln-accent-hover font-ui border-b border-ln-border-accent">
           <Eye size={16} />
@@ -134,7 +133,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       )}
 
-      {/* Top nav bar */}
       <nav
         className="h-12 px-4 flex items-center justify-between sticky top-0 z-40 bg-ln-bg/85 backdrop-blur-xl border-b border-ln-border"
       >
@@ -142,7 +140,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="md:hidden text-ln-tertiary hover:text-ln-text transition-colors p-1 rounded-btn"
-            aria-label={sidebarOpen ? '关闭菜单' : '打开菜单'}
+            aria-label={sidebarOpen ? t.common.closeMenu : t.common.openMenu}
           >
             {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
@@ -155,31 +153,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </Link>
         </div>
         <div className="flex items-center gap-3">
-          {/* Search bar (desktop) */}
           <div className="hidden sm:flex relative">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ln-tertiary" />
             <input
-              placeholder={t.common.search}
+              placeholder={d.search_placeholder}
               className="w-44 pl-9 pr-3 py-1.5 rounded-btn bg-ln-surface text-ln-text text-xs font-body shadow-border focus:shadow-border-accent outline-none transition-all placeholder:text-ln-tertiary"
               aria-label={t.common.search}
             />
           </div>
-          {/* Language Switch */}
           <button
             onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')}
             className="text-xs px-2 py-1 rounded-btn border border-ln-border text-ln-tertiary hover:text-ln-secondary transition-colors duration-150"
           >
             {lang === 'zh' ? 'EN' : '中文'}
           </button>
-          {/* Notification icon */}
-          <button className="p-1.5 rounded-btn text-ln-tertiary hover:text-ln-text hover:bg-ln-hover transition-all duration-150" aria-label="通知">
+          <button className="p-1.5 rounded-btn text-ln-tertiary hover:text-ln-text hover:bg-ln-hover transition-all duration-150" aria-label={d.notifications}>
             <Bell size={16} />
           </button>
           {isDemo ? (
-            <Link
-              href="/login"
-              className="text-xs px-3 py-1.5 rounded-btn bg-ln-accent text-white font-ui hover:bg-ln-accent-hover transition-all duration-150"
-            >
+            <Link href="/login" className="text-xs px-3 py-1.5 rounded-btn bg-ln-accent text-white font-ui hover:bg-ln-accent-hover transition-all duration-150">
               {t.nav.login}
             </Link>
           ) : (
@@ -192,10 +184,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </div>
               <button
                 onClick={handleSignOut}
-                aria-label="退出登录"
+                aria-label={d.signout}
                 className="text-xs px-2 py-1 rounded-[4px] text-ln-tertiary hover:text-ln-error hover:bg-ln-error/10 transition-all duration-150 font-body"
               >
-                退出
+                {d.signout_short}
               </button>
             </>
           )}
@@ -203,24 +195,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </nav>
 
       <div className="flex">
-        {/* Sidebar (desktop) */}
         <aside
           role="navigation"
-          aria-label="主导航"
+          aria-label={d.sidebar_arialabel}
           className="hidden md:flex flex-col w-52 min-h-[calc(100vh-3rem)] border-r border-ln-border bg-ln-surface flex-shrink-0"
         >
           {sidebarContent}
         </aside>
 
-        {/* Mobile sidebar overlay */}
         {sidebarOpen && (
-          <div
-            className="fixed inset-0 z-30 md:hidden bg-black/60 animate-in"
-            onClick={() => setSidebarOpen(false)}
-          >
+          <div className="fixed inset-0 z-30 md:hidden bg-black/60 animate-in" onClick={() => setSidebarOpen(false)}>
             <aside
               role="navigation"
-              aria-label="主导航"
+              aria-label={d.sidebar_arialabel}
               className="w-60 h-full bg-ln-surface border-r border-ln-border animate-in"
               onClick={e => e.stopPropagation()}
             >
@@ -229,7 +216,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         )}
 
-        {/* Main content */}
         <main role="main" className="flex-1 min-h-[calc(100vh-3rem)] bg-ln-bg">
           {children}
         </main>
