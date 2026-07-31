@@ -27,6 +27,7 @@ create table api_keys (
     key_prefix    text not null,
     name          text,
     permissions   text[] default '{read,write}',
+    is_active     boolean default true,
     last_used_at  timestamptz,
     expires_at    timestamptz,
     created_at    timestamptz default now(),
