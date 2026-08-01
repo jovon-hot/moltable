@@ -71,6 +71,7 @@ def search_memory(request: Request, q: str = Query(..., min_length=1, max_length
     if not results and not get_store()._offline:
         try:
             from app_state import supabase as sb
+            # 先用 pg fulltext，失败/无结果则 ILIKE
             kw_resp = sb.rpc("match_memories_keyword", {
                 "query_text": q,
                 "match_user_id": user_id,
@@ -87,14 +88,36 @@ def search_memory(request: Request, q: str = Query(..., min_length=1, max_length
                     "created_at": str(r.get("created_at", "")),
                 } for r in kw_resp.data]
         except Exception:
-            # 终极回退：返回最近记忆
-            recent = get_store().list(user_id, category=category, limit=top_k)
-            results = [{
-                "id": r["id"], "content": r["content"],
-                "category": r["category"], "source": r["source"],
-                "relevance": 0.5,
-                "created_at": r.get("created_at", ""),
-            } for r in recent]
+            pass
+        
+        # 关键词搜索也返回空 → ILIKE 回退
+        if not results:
+            try:
+                all_memories = get_store().list(user_id, category=category, limit=200)
+                q_lower = q.lower()
+                matches = []
+                for m in all_memories:
+                    content = m.get("content", "").lower()
+                    if q_lower in content:
+                        matches.append({
+                            "id": m["id"], "content": m["content"],
+                            "category": m["category"], "source": m["source"],
+                            "relevance": 0.6,
+                            "created_at": m.get("created_at", ""),
+                        })
+                results = matches[:top_k]
+            except Exception:
+                pass
+
+    # 所有搜索策略都失败 → 返回最近记忆作为兜底
+    if not results:
+        recent = get_store().list(user_id, category=category, limit=top_k)
+        results = [{
+            "id": r["id"], "content": r["content"],
+            "category": r["category"], "source": r["source"],
+            "relevance": 0.5,
+            "created_at": r.get("created_at", ""),
+        } for r in recent]
     
     return {
         "query": q,
@@ -179,7 +202,7 @@ def update_memory(request: Request, memory_id: str, body: MemoryUpdate,
     if body.content is not None:
         updates["content"] = body.content
         updates["embedding"] = embed(body.content)
-    for field in ("category", "is_archived", "tags"):
+    for field in ("category", "is_archived", "tags", "persona_id"):
         val = getattr(body, field)
         if val is not None:
             updates[field] = val
