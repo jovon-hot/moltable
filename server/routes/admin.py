@@ -3,7 +3,7 @@ import logging
 import json
 from fastapi import APIRouter, Request, HTTPException, Depends
 from app_state import limiter, supabase, _is_sqlite, get_error_count
-from services.admin_auth import verify_admin_token, is_admin_enabled
+from services.admin_auth import verify_admin_token, is_admin_enabled, create_admin_token
 
 logger = logging.getLogger("moltable.admin")
 router = APIRouter(prefix="/api/admin", tags=["admin"])
@@ -25,12 +25,11 @@ def _require_admin(request: Request):
 
 
 @router.post("/login")
-@limiter.limit("10/minute")
+@limiter.limit("5/minute")
 async def admin_login(request: Request):
-    from services.admin_auth import create_admin_token
     body = await request.json()
     secret = body.get("secret", "")
-    token = create_admin_token(secret)
+    token = create_admin_token(secret, request)
     if not token:
         raise HTTPException(401, "Invalid admin secret")
     return {"token": token, "expires_in": 3600}
