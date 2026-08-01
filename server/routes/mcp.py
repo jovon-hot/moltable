@@ -285,6 +285,82 @@ MCP_TOOLS = [
             "properties": {},
         },
     },
+    {
+        "name": "list_projects",
+        "description": "列出用户的所有项目，含 knowledge_bases（知识库连接信息）和 tools（工具/MCP 服务器配置）。Agent 据此建立工作环境。",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+        },
+    },
+    {
+        "name": "get_project",
+        "description": "获取单个项目的完整环境配置，含 knowledge_bases 和 tools。",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project_id": {
+                    "type": "string",
+                    "description": "项目 ID",
+                },
+            },
+            "required": ["project_id"],
+        },
+    },
+    {
+        "name": "create_project",
+        "description": "创建新项目，含 knowledge_bases（如 PostgreSQL/Obsidian/Superset 连接）和 tools（如 MCP 服务器/Hermes Skill）。",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "项目名称",
+                },
+                "description": {
+                    "type": "string",
+                    "description": "项目描述",
+                },
+                "persona_id": {
+                    "type": "string",
+                    "description": "关联的 Persona ID",
+                },
+                "knowledge_bases": {
+                    "type": "array",
+                    "description": "知识库列表，每项含 type/label/host/port/database/path/url 等",
+                },
+                "tools": {
+                    "type": "array",
+                    "description": "工具列表，每项含 type/name/url 等",
+                },
+                "is_active": {
+                    "type": "boolean",
+                    "description": "是否为活跃项目",
+                },
+            },
+            "required": ["name"],
+        },
+    },
+    {
+        "name": "update_project",
+        "description": "更新项目环境配置。",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project_id": {
+                    "type": "string",
+                    "description": "项目 ID",
+                },
+                "name": {"type": "string", "description": "新名称"},
+                "description": {"type": "string", "description": "新描述"},
+                "persona_id": {"type": "string", "description": "关联 Persona ID"},
+                "knowledge_bases": {"type": "array", "description": "新知识库配置"},
+                "tools": {"type": "array", "description": "新工具配置"},
+                "is_active": {"type": "boolean", "description": "是否活跃"},
+            },
+            "required": ["project_id"],
+        },
+    },
 ]
 
 
@@ -1072,6 +1148,104 @@ def _tool_ping(user_id: str, params: dict) -> dict:
     }
 
 
+# ── Project environment tools ──────────────────────────
+
+def _tool_list_projects(user_id: str, params: dict) -> dict:
+    """列出用户的所有项目，含 knowledge_bases 和 tools 配置。"""
+    resp = supabase.table("projects") \
+        .select("*") \
+        .eq("user_id", user_id) \
+        .order("created_at", desc=True) \
+        .execute()
+    projects = []
+    for r in (resp.data or []):
+        projects.append({
+            "id": r.get("id", ""),
+            "name": r.get("name", ""),
+            "description": r.get("description", ""),
+            "persona_id": r.get("persona_id"),
+            "knowledge_bases": r.get("knowledge_bases") or [],
+            "tools": r.get("tools") or [],
+            "is_active": r.get("is_active", False),
+            "created_at": str(r.get("created_at", "")),
+        })
+    return {"projects": projects}
+
+
+def _tool_get_project(user_id: str, params: dict) -> dict:
+    """获取单个项目的完整环境配置。"""
+    project_id = params.get("project_id", "")
+    if not project_id:
+        raise JSONRPCError(INVALID_PARAMS, "Missing required parameter: project_id")
+    resp = supabase.table("projects") \
+        .select("*") \
+        .eq("id", project_id) \
+        .eq("user_id", user_id) \
+        .single() \
+        .execute()
+    if not resp.data:
+        raise JSONRPCError(TOOL_ERROR, f"Project not found: {project_id}")
+    r = resp.data
+    return {
+        "id": r.get("id", ""),
+        "name": r.get("name", ""),
+        "description": r.get("description", ""),
+        "persona_id": r.get("persona_id"),
+        "knowledge_bases": r.get("knowledge_bases") or [],
+        "tools": r.get("tools") or [],
+        "is_active": r.get("is_active", False),
+        "created_at": str(r.get("created_at", "")),
+        "updated_at": str(r.get("updated_at", "")),
+    }
+
+
+def _tool_create_project(user_id: str, params: dict) -> dict:
+    """创建新项目，含 knowledge_bases 和 tools 配置。"""
+    name = params.get("name", "")
+    if not name:
+        raise JSONRPCError(INVALID_PARAMS, "Missing required parameter: name")
+    import uuid as _uid
+    pid = str(_uid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    row = {
+        "id": pid,
+        "user_id": user_id,
+        "name": name,
+        "description": params.get("description", ""),
+        "knowledge_bases": params.get("knowledge_bases") or [],
+        "tools": params.get("tools") or [],
+        "is_active": params.get("is_active", True),
+        "created_at": now,
+        "updated_at": now,
+    }
+    if params.get("persona_id"):
+        row["persona_id"] = params["persona_id"]
+    supabase.table("projects").insert(row).execute()
+    return {"id": pid, "name": name, "created": True}
+
+
+def _tool_update_project(user_id: str, params: dict) -> dict:
+    """更新项目环境配置。"""
+    project_id = params.get("project_id", "")
+    if not project_id:
+        raise JSONRPCError(INVALID_PARAMS, "Missing required parameter: project_id")
+    existing = supabase.table("projects") \
+        .select("id") \
+        .eq("id", project_id) \
+        .eq("user_id", user_id) \
+        .single() \
+        .execute()
+    if not existing.data:
+        raise JSONRPCError(TOOL_ERROR, f"Project not found: {project_id}")
+    payload = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    for f in ["name", "description", "persona_id", "knowledge_bases", "tools", "is_active"]:
+        if f in params:
+            payload[f] = params[f]
+    supabase.table("projects").update(payload).eq("id", project_id).execute()
+    return {"id": project_id, "updated": True}
+
+
+
 # ── 工具路由表 ────────────────────────────────────────────
 TOOL_DISPATCH = {
     "search_memory": _tool_search_memory,
@@ -1086,6 +1260,10 @@ TOOL_DISPATCH = {
     "compare_personas": _tool_compare_personas,
     "archive_memory": _tool_archive_memory,
     "ping": _tool_ping,
+    "list_projects": _tool_list_projects,
+    "get_project": _tool_get_project,
+    "create_project": _tool_create_project,
+    "update_project": _tool_update_project,
 }
 
 

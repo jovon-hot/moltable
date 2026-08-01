@@ -44,14 +44,25 @@ def auto_provision(supabase, user_id: str, ip_address: str = None) -> dict:
         else:
             preferences.append(p["content"])
 
-    # 3. Active projects
+    # 3. Active projects (full environment including knowledge_bases + tools)
     projects = (
         supabase.table("projects")
-        .select("name, description")
+        .select("id, name, description, persona_id, knowledge_bases, tools")
         .eq("user_id", user_id)
         .eq("is_active", True)
         .execute()
     )
+
+    projects_env = []
+    for p in (projects.data or []):
+        projects_env.append({
+            "id": p.get("id", ""),
+            "name": p.get("name", ""),
+            "description": p.get("description", ""),
+            "persona_id": p.get("persona_id"),
+            "knowledge_bases": p.get("knowledge_bases") or [],
+            "tools": p.get("tools") or [],
+        })
 
     # 4. Recent decisions
     decisions = (
@@ -118,10 +129,7 @@ def auto_provision(supabase, user_id: str, ip_address: str = None) -> dict:
         "personas_version": get_persona_version(),  # Agent 对比用
         "rules": rules,
         "preferences": preferences,
-        "active_projects": [
-            {"name": p["name"], "description": p.get("description")}
-            for p in (projects.data or [])
-        ],
+        "active_projects": projects_env,
         "recent_decisions": [d["content"] for d in (decisions.data or [])],
         "available_personas": [
             {"id": p["id"], "name": p["name"], "description": p.get("description"), "type": p["type"]}

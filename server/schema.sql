@@ -101,8 +101,12 @@ create table projects (
     user_id       uuid references users(id) on delete cascade,
     name          text not null,
     description   text,
+    persona_id    uuid references personas(id) on delete set null,
+    knowledge_bases jsonb default '[]',
+    tools         jsonb default '[]',
     is_active     boolean default false,
-    created_at    timestamptz default now()
+    created_at    timestamptz default now(),
+    updated_at    timestamptz default now()
 );
 create index projects_user_id_idx on projects (user_id);
 

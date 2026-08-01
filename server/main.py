@@ -92,7 +92,7 @@ async def limit_request_body_size(request: Request, call_next):
     return response
 
 # ── Routes ────────────────────────────────────────────────
-from routes import memories, provision, personas, auth, mcp, sessions, billing, v1, agents
+from routes import memories, provision, personas, auth, mcp, sessions, billing, v1, agents, projects
 app.include_router(memories.router)
 app.include_router(provision.router)
 app.include_router(personas.router)
@@ -102,6 +102,7 @@ app.include_router(sessions.router)
 app.include_router(billing.router)
 app.include_router(v1.router)
 app.include_router(agents.router)
+app.include_router(projects.router)
 app.add_api_route("/.well-known/mcp", mcp.mcp_discovery, methods=["GET"], tags=["mcp"])
 
 
