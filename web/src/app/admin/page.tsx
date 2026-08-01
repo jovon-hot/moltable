@@ -157,7 +157,7 @@ export default function AdminDashboard() {
         <table className="w-full text-sm" style={{ borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-              {['Email', 'Plan', 'Active', 'Created'].map((h) => (
+              {['Email', 'Plan', 'Created'].map((h) => (
                 <th key={h} className="text-left py-2 px-3 text-xs" style={{ color: '#5a5f68', fontWeight: 500 }}>{h}</th>
               ))}
             </tr>
@@ -176,9 +176,6 @@ export default function AdminDashboard() {
                   >
                     {u.plan}
                   </span>
-                </td>
-                <td className="py-2 px-3 text-xs" style={{ color: '#8a8f98' }}>
-                  {u.last_active_at ? new Date(u.last_active_at).toLocaleDateString() : '-'}
                 </td>
                 <td className="py-2 px-3 text-xs" style={{ color: '#5a5f68' }}>
                   {u.created_at ? new Date(u.created_at).toLocaleDateString() : '-'}

@@ -100,8 +100,9 @@ def admin_users(
         return {"users": [], "total": 0}
 
     try:
+        # SELECT without last_active_at (column may not exist in Supabase yet)
         q = supabase.table("users").select(
-            "id,email,name,plan,language,created_at,last_active_at", count="exact"
+            "id,email,name,plan,language,created_at", count="exact"
         )
         if search:
             q = q.ilike("email", "%{}%".format(search))
