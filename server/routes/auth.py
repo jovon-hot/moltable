@@ -64,22 +64,49 @@ async def get_user(request: Request,
             raise HTTPException(401, "Invalid token")
 
     elif x_api_key:
-        key_hash = hash_api_key(x_api_key)
-        try:
-            resp = supabase.table("api_keys").select("user_id, is_active").eq("key_hash", key_hash).execute()
-            if not resp.data:
-                _log_failed_auth("Invalid API key", ip_address)
+        # Check if this is a session token (mol_ prefix) or API key (molt_ prefix)
+        if x_api_key.startswith("mol_") and not x_api_key.startswith("molt_"):
+            # Session token — look up in sessions table
+            try:
+                resp = supabase.table("sessions").select("session_uuid, token, expires_at, migrated_at, user_id").eq("token", x_api_key).execute()
+                if not resp.data:
+                    _log_failed_auth("Invalid session token", ip_address)
+                    raise HTTPException(401, "Invalid session token")
+                session = resp.data[0]
+                if session.get("migrated_at"):
+                    _log_failed_auth("Session already migrated", ip_address)
+                    raise HTTPException(401, "Session already migrated — use API key instead")
+                expires_at = session.get("expires_at")
+                if expires_at:
+                    if isinstance(expires_at, str):
+                        expires_at = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+                    if expires_at < datetime.now(timezone.utc):
+                        _log_failed_auth("Session expired", ip_address)
+                        raise HTTPException(401, "Session expired — create a new one")
+                user_id = session.get("user_id") or str(session.get("session_uuid", x_api_key))
+            except HTTPException:
+                raise
+            except Exception:
+                _log_failed_auth("Session token lookup error", ip_address)
+                raise HTTPException(401, "Invalid session token")
+        else:
+            # API key — look up in api_keys table
+            key_hash = hash_api_key(x_api_key)
+            try:
+                resp = supabase.table("api_keys").select("user_id, is_active").eq("key_hash", key_hash).execute()
+                if not resp.data:
+                    _log_failed_auth("Invalid API key", ip_address)
+                    raise HTTPException(401, "Invalid API key")
+                key_record = resp.data[0]
+                if not key_record.get("is_active", False):
+                    _log_failed_auth("Revoked API key", ip_address)
+                    raise HTTPException(401, "API key revoked")
+                user_id = key_record["user_id"]
+            except HTTPException:
+                raise
+            except Exception:
+                _log_failed_auth("API key lookup error", ip_address)
                 raise HTTPException(401, "Invalid API key")
-            key_record = resp.data[0]
-            if not key_record.get("is_active", False):
-                _log_failed_auth("Revoked API key", ip_address)
-                raise HTTPException(401, "API key revoked")
-            user_id = key_record["user_id"]
-        except HTTPException:
-            raise
-        except Exception:
-            _log_failed_auth("API key lookup error", ip_address)
-            raise HTTPException(401, "Invalid API key")
 
     elif x_session_token:
         # Anonymous session: validate token exists and not expired
