@@ -1,12 +1,13 @@
-"""Daily statistics collector — aggregates counts into daily_stats table.
+"""Daily stats collector — lightweight aggregation for admin dashboard.
 
-Runs periodically (every hour) via the FastAPI startup event.  Each run
-checks whether today's row already exists; if not, collects and inserts it.
+Runs every hour.  Does NOT depend on daily_stats table (created separately
+in Supabase SQL editor).  All queries handle missing columns gracefully.
 """
 import os
 import logging
 import asyncio
 from datetime import datetime, timezone, date, timedelta
+
 from typing import Optional
 
 from app_state import supabase
@@ -16,166 +17,99 @@ logger = logging.getLogger("moltable.stats_collector")
 STATS_ENABLED = os.getenv("MOLTABLE_STATS_ENABLED", "true").lower() in ("1", "true", "yes")
 
 
-def _count_table(table: str, extra_filter = None) -> int:
-    """Count rows in a table, optionally with a WHERE clause."""
+def _safe_count(table: str, **filters) -> int:
+    """Count rows with optional equality filters.  Returns 0 on any error."""
     try:
-        if extra_filter:
-            q = supabase.table(table).select("id", count="exact")
-            for clause in extra_filter.split(" AND "):
-                parts = clause.split("=", 1)
-                if len(parts) == 2:
-                    q = q.eq(parts[0].strip(), parts[1].strip())
-            result = q.execute()
-        else:
-            result = supabase.table(table).select("id", count="exact").execute()
-        return getattr(result, "count", 0) or 0
-    except Exception as e:
-        logger.debug("count_table(%s) failed: %s", table, e)
-        return 0
-
-
-def _count_active_users_today() -> int:
-    """Count distinct users whose last_active_at falls on today's date.
-
-    Falls back to 0 if the column doesn't exist or the query fails.
-    """
-    try:
-        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-        result = supabase.table("users") \
-            .select("id", count="exact") \
-            .gte("last_active_at", today + "T00:00:00Z") \
-            .execute()
+        q = supabase.table(table).select("id", count="exact")
+        for col, val in filters.items():
+            q = q.eq(col, val)
+        result = q.execute()
         return getattr(result, "count", 0) or 0
     except Exception:
         return 0
 
 
-def collect_daily_stats():
-    """Collect today's stats and write to daily_stats table.
+def _safe_gte_count(table: str, col: str, val: str) -> int:
+    """Count rows WHERE col >= val.  Returns 0 on any error (missing col, etc)."""
+    try:
+        result = supabase.table(table).select("id", count="exact").gte(col, val).execute()
+        return getattr(result, "count", 0) or 0
+    except Exception:
+        return 0
 
-    Returns the collected data dict, or None if already collected or failed.
+
+def collect_daily_stats() -> Optional[dict]:
+    """Collect today's platform stats.  Logs the result; does NOT persist to DB.
+
+    Use GET /api/admin/stats for the realtime dashboard (calls get_today_stats).
     """
-    if not STATS_ENABLED:
+    if not STATS_ENABLED or supabase is None:
         return None
 
-    today = date.today()
-    today_str = today.isoformat()
+    today = date.today().isoformat()
+    week_start = (date.today() - timedelta(days=date.today().weekday())).isoformat()
 
     try:
-        # Check if today already collected
-        existing = supabase.table("daily_stats").select("date").eq("date", today_str).execute()
-        if existing.data and len(existing.data) > 0:
-            logger.debug("Daily stats for %s already collected", today_str)
-            return None
-    except Exception:
-        # daily_stats table might not exist yet — that's fine
-        pass
-
-    # ── Count everything ──────────────────────────
-    try:
-        total_users = _count_table("users")
-        total_memories = _count_table("memories")
-        total_projects = _count_table("projects")
-        total_personas = _count_table("personas")
-        active_users = _count_active_users_today()
-
-        # New users today
-        new_today = _count_table("users", f"created_at=gte.{today_str}T00:00:00Z")
-
-        # New users this week
-        week_start = (today - timedelta(days=today.weekday())).isoformat()
-        new_week = _count_table("users", f"created_at=gte.{week_start}T00:00:00Z")
-
-        # Trial activated users (plan=pro)
-        trial_activated = _count_table("users", "plan=pro")
-
-        # API calls today — try to count from a simple table if it exists;
-        # for now we use active_users as a proxy, actual API call tracking
-        # would need request logging middleware.
-        # Placeholder: query audit_logs for today
-        api_calls = 0
-        error_count = 0
+        total_users = _safe_count("users")
+        total_memories = _safe_count("memories")
+        total_projects = _safe_count("projects")
+        total_personas = _safe_count("personas")
+        trial = _safe_count("users", plan="pro")
+        new_today = _safe_gte_count("users", "created_at", today)
+        new_week = _safe_gte_count("users", "created_at", week_start)
+        active_today = _safe_gte_count("users", "last_active_at", today)
 
         from app_state import get_error_count
-        error_count = get_error_count()
 
         stats = {
-            "date": today_str,
+            "date": today,
             "total_users": total_users,
             "new_users": new_today,
-            "active_users": active_users,
-            "api_calls": api_calls,
-            "errors": error_count,
-            "trial_activated": trial_activated,
+            "new_users_week": new_week,
+            "active_users": active_today,
+            "trial_activated": trial,
+            "trial_active": trial,
+            "total_memories": total_memories,
+            "total_projects": total_projects,
+            "total_personas": total_personas,
+            "errors": get_error_count(),
         }
-
-        # Write to daily_stats
-        supabase.table("daily_stats").insert(stats).execute()
-        logger.info("Daily stats collected for %s: %s", today_str, stats)
+        logger.info("Daily stats for %s: users=%d (+%d) active=%d trial=%d",
+                    today, total_users, new_today, active_today, trial)
         return stats
-
     except Exception as e:
-        logger.warning("Failed to collect daily stats: %s", e)
+        logger.warning("Daily stats collection failed: %s", e)
         return None
 
 
-# ── Scheduled wrapper for startup event ──────────
-
 async def stats_collector_loop():
-    """Run collect_daily_stats() every hour (check once per hour)."""
+    """Run collect_daily_stats() every hour."""
     while True:
-        await asyncio.sleep(3600)  # 1 hour
+        await asyncio.sleep(3600)
         try:
             collect_daily_stats()
         except Exception as e:
-            logger.warning("Stats collector loop error: %s", e)
+            logger.warning("Stats loop error: %s", e)
 
 
-# ── Realtime stats query (called by admin API) ───
+# ── Realtime stats (called by admin API) ──────────────────
 
-def get_today_stats(db) -> dict:
-    """Return realtime stats for the admin dashboard.
-
-    Queries tables directly — does not use the daily_stats cache.
-    Parameter 'db' is the Supabase client (for interface compatibility).
-    """
-    today_str = date.today().isoformat()
+def get_today_stats(_db=None) -> dict:
+    """Return realtime stats for the admin dashboard."""
+    today = date.today().isoformat()
     week_start = (date.today() - timedelta(days=date.today().weekday())).isoformat()
-
-    def _count(table: str) -> int:
-        try:
-            result = supabase.table(table).select("id", count="exact").execute()
-            return getattr(result, "count", 0) or 0
-        except Exception:
-            return 0
-
-    def _count_where(table: str, col: str, op_val: str) -> int:
-        try:
-            result = supabase.table(table).select("id", count="exact") \
-                .gte(col, op_val).execute()
-            return getattr(result, "count", 0) or 0
-        except Exception:
-            return 0
-
-    def _count_eq(table: str, col: str, val: str) -> int:
-        try:
-            result = supabase.table(table).select("id", count="exact") \
-                .eq(col, val).execute()
-            return getattr(result, "count", 0) or 0
-        except Exception:
-            return 0
 
     from app_state import get_error_count
 
     return {
-        "total_users": _count("users"),
-        "new_users_today": _count_where("users", "created_at", today_str + "T00:00:00Z"),
-        "new_users_week": _count_where("users", "created_at", week_start + "T00:00:00Z"),
-        "active_users_today": _count_where("users", "last_active_at", today_str),
-        "trial_activated": _count_eq("users", "plan", "pro"),
-        "trial_active": _count_eq("users", "plan", "pro"),  # same as trial_activated for now
-        "total_memories": _count("memories"),
-        "total_projects": _count("projects"),
-        "total_personas": _count("personas"),
-        "api_calls_today": _count_where("audit_logs", "created_at", today_str + "T00:00:00Z"),
+        "total_users": _safe_count("users"),
+        "new_users_today": _safe_gte_count("users", "created_at", today),
+        "new_users_week": _safe_gte_count("users", "created_at", week_start),
+        "active_users_today": _safe_gte_count("users", "last_active_at", today),
+        "trial_activated": _safe_count("users", plan="pro"),
+        "trial_active": _safe_count("users", plan="pro"),
+        "total_memories": _safe_count("memories"),
+        "total_projects": _safe_count("projects"),
+        "total_personas": _safe_count("personas"),
+        "api_calls_today": 0,
     }
