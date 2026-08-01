@@ -2,7 +2,7 @@ export type Lang = 'zh' | 'en'
 
 export const translations = {
   zh: {
-    nav: { features: '功能', pricing: '定价', about: '关于', docs: '文档', connect: '接入', login: '登录', start: '免费开始' },
+    nav: { features: '功能', pricing: '定价', about: '关于', docs: '文档', connect: '接入', blog: '博客', faq: 'FAQ', login: '登录', start: '免费开始' },
     hero: {
       tagline: 'DID+VC · 开源 MIT',
       title: '你的 AI 为什么每次都要重新认识你？',
@@ -233,7 +233,7 @@ export const translations = {
   },
 
   en: {
-    nav: { features: 'Features', pricing: 'Pricing', about: 'About', docs: 'Docs', connect: 'Connect', login: 'Sign In', start: 'Get Started' },
+    nav: { features: 'Features', pricing: 'Pricing', about: 'About', docs: 'Docs', connect: 'Connect', blog: 'Blog', faq: 'FAQ', login: 'Sign In', start: 'Get Started' },
     hero: {
       tagline: 'DID+VC · Open Source MIT',
       title: 'Why does your AI have to relearn who you are every time?',

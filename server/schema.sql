@@ -370,3 +370,14 @@ create table if not exists daily_stats (
 -- ── 用户活跃度追踪 ──────────────────────────────
 alter table users add column if not exists last_active_at timestamptz;
 alter table users add column if not exists trial_activated_at timestamptz;
+
+-- ── Admin accounts (email+password auth) ───────
+create table if not exists admin_users (
+    email           text primary key,
+    name            text default '',
+    password_hash   text not null,
+    role            text not null default 'operator' check (role in ('admin', 'operator')),
+    is_active       boolean default true,
+    last_login_at   timestamptz,
+    created_at      timestamptz default now()
+);

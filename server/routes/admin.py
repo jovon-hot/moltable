@@ -1,45 +1,64 @@
-"""Admin API — users, stats, system health.  Gated by ADMIN_SECRET env var."""
-import logging
-import json
+"""Admin API — email+password auth, role-based access.
+
+Roles:
+  - admin:   full access (stats, users, account management, health)
+  - operator: read-only (stats, health)
+
+No ADMIN_SECRET env var needed. Accounts stored in admin_users table.
+"""
+import logging, os
 from fastapi import APIRouter, Request, HTTPException, Depends
+from pydantic import BaseModel, Field
+
 from app_state import limiter, supabase, _is_sqlite, get_error_count
-from services.admin_auth import verify_admin_token, is_admin_enabled, create_admin_token
+from services.admin_auth import (
+    login_admin, require_admin, require_staff,
+    create_admin_account, list_admin_accounts, toggle_admin_account,
+)
 
 logger = logging.getLogger("moltable.admin")
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 
-def _require_admin(request: Request):
-    if not is_admin_enabled():
-        raise HTTPException(404, "Admin API not enabled — set ADMIN_SECRET env var")
-    token = (
-        request.headers.get("X-Admin-Token")
-        or request.headers.get("Authorization", "").replace("Bearer ", "")
-    )
-    if not token:
-        raise HTTPException(401, "Missing admin token")
-    payload = verify_admin_token(token)
-    if not payload:
-        raise HTTPException(401, "Invalid or expired admin token")
-    return payload
+# ═══════════════════════════════════════════════════
+#  Request models
+# ═══════════════════════════════════════════════════
 
+class LoginRequest(BaseModel):
+    email: str = Field(..., max_length=254)
+    password: str = Field(..., min_length=1, max_length=128)
+
+
+class CreateAccountRequest(BaseModel):
+    email: str = Field(..., max_length=254)
+    password: str = Field(..., min_length=10, max_length=128)
+    role: str = Field(default="operator", pattern="^(admin|operator)$")
+    name: str = Field(default="", max_length=200)
+
+
+# ═══════════════════════════════════════════════════
+#  Auth endpoints
+# ═══════════════════════════════════════════════════
 
 @router.post("/login")
-@limiter.limit("5/minute")
-async def admin_login(request: Request):
-    body = await request.json()
-    secret = body.get("secret", "")
-    token = create_admin_token(secret, request)
-    if not token:
-        raise HTTPException(401, "Invalid admin secret")
-    return {"token": token, "expires_in": 3600}
+@limiter.limit("10/minute")
+async def admin_login(request: Request, body: LoginRequest):
+    """Login with email + password. Returns JWT token + role."""
+    result = login_admin(body.email, body.password, request)
+    if not result:
+        raise HTTPException(401, "Invalid email or password")
+    return result
 
+
+# ═══════════════════════════════════════════════════
+#  Stats (admin + operator)
+# ═══════════════════════════════════════════════════
 
 @router.get("/stats")
 @limiter.limit("30/minute")
-def admin_stats(request: Request, _admin=Depends(_require_admin)):
+def admin_stats(request: Request, _staff=Depends(require_staff)):
     if supabase is None or _is_sqlite:
-        return {"error": "Stats unavailable in SQLite mode", "mode": "sqlite"}
+        return {"error": "Stats unavailable in SQLite mode"}
 
     stats = {"total_users": 0, "new_users_today": 0, "new_users_week": 0,
              "active_users_today": 0, "trial_activated": 0, "trial_active": 0,
@@ -62,7 +81,6 @@ def admin_stats(request: Request, _admin=Depends(_require_admin)):
         stats["total_projects"] = r.count if hasattr(r, "count") else 0
         r = supabase.table("personas").select("count", count="exact").execute()
         stats["total_personas"] = r.count if hasattr(r, "count") else 0
-        # active today: users with last_active_at > today (may fail if column missing)
         try:
             r = supabase.table("users").select("count", count="exact").gte("last_active_at", today).execute()
             stats["active_users_today"] = r.count if hasattr(r, "count") else 0
@@ -89,6 +107,10 @@ def admin_stats(request: Request, _admin=Depends(_require_admin)):
     }
 
 
+# ═══════════════════════════════════════════════════
+#  Users (admin + operator)
+# ═══════════════════════════════════════════════════
+
 @router.get("/users")
 @limiter.limit("30/minute")
 def admin_users(
@@ -96,16 +118,13 @@ def admin_users(
     limit: int = 20,
     offset: int = 0,
     search: str = "",
-    _admin=Depends(_require_admin),
+    _staff=Depends(require_staff),
 ):
     if supabase is None or _is_sqlite:
         return {"users": [], "total": 0}
 
     try:
-        # SELECT without last_active_at (column may not exist in Supabase yet)
-        q = supabase.table("users").select(
-            "id,email,name,plan,language,created_at", count="exact"
-        )
+        q = supabase.table("users").select("id,email,name,plan,language,created_at", count="exact")
         if search:
             q = q.ilike("email", "%{}%".format(search))
         q = q.order("created_at", desc=True).range(offset, offset + limit - 1)
@@ -129,17 +148,49 @@ def admin_users(
         }
     except Exception as e:
         logger.error("Admin user list failed: %s", e)
-        raise HTTPException(500, "Query failed: {}".format(str(e)))
+        raise HTTPException(500, "Query failed")
 
+
+# ═══════════════════════════════════════════════════
+#  Health (admin + operator)
+# ═══════════════════════════════════════════════════
 
 @router.get("/health")
 @limiter.limit("30/minute")
-def admin_health(request: Request, _admin=Depends(_require_admin)):
-    import os
+def admin_health(request: Request, _staff=Depends(require_staff)):
     return {
         "status": "ok",
         "db": supabase is not None,
         "error_count": get_error_count(),
         "alerts_configured": bool(os.getenv("ALERT_WEBHOOK_URL")),
-        "admin_enabled": is_admin_enabled(),
     }
+
+
+# ═══════════════════════════════════════════════════
+#  Account management (admin only)
+# ═══════════════════════════════════════════════════
+
+@router.post("/accounts")
+@limiter.limit("10/minute")
+def create_account(request: Request, body: CreateAccountRequest, _admin=Depends(require_admin)):
+    """Create a new admin/operator account (admin only)."""
+    return create_admin_account(body.email, body.password, body.role, body.name)
+
+
+@router.get("/accounts")
+@limiter.limit("30/minute")
+def list_accounts(request: Request, _admin=Depends(require_admin)):
+    """List all admin/operator accounts (admin only)."""
+    return {"accounts": list_admin_accounts()}
+
+
+class ToggleRequest(BaseModel):
+    email: str
+    is_active: bool
+
+
+@router.patch("/accounts/toggle")
+@limiter.limit("20/minute")
+def toggle_account(request: Request, body: ToggleRequest, _admin=Depends(require_admin)):
+    """Enable/disable an admin account (admin only)."""
+    return toggle_admin_account(body.email, body.is_active)

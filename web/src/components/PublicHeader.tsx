@@ -18,6 +18,8 @@ export default function PublicHeader() {
     { href: '#pricing', label: t.nav.pricing },
     { href: '/connect', label: t.nav.connect },
     { href: '/docs', label: t.nav.docs },
+    { href: '/blog', label: t.nav.blog },
+    { href: '/faq', label: t.nav.faq },
     { href: '#about', label: t.nav.about },
   ]
 

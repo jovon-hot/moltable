@@ -30,7 +30,9 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.moltable.ai'
 
 export default function AdminDashboard() {
   const [token, setToken] = useState('')
-  const [secret, setSecret] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [role, setRole] = useState('')
   const [loggedIn, setLoggedIn] = useState(false)
   const [stats, setStats] = useState<AdminStats | null>(null)
   const [users, setUsers] = useState<any[]>([])
@@ -44,11 +46,15 @@ export default function AdminDashboard() {
       const r = await fetch(`${API_BASE}/api/admin/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ secret }),
+        body: JSON.stringify({ email, password }),
       })
-      if (!r.ok) throw new Error('Invalid admin secret')
+      if (!r.ok) {
+        const d = await r.json().catch(() => ({}))
+        throw new Error((d as any).detail || 'Invalid credentials')
+      }
       const d = await r.json()
       setToken(d.token)
+      setRole(d.role || 'operator')
       setLoggedIn(true)
     } catch (e: any) {
       setError(e.message)
@@ -93,20 +99,28 @@ export default function AdminDashboard() {
       <div className="min-h-screen px-6 py-24 max-w-md mx-auto" style={{ background: '#08090a', color: '#f7f8f8' }}>
         <h1 className="text-2xl mb-6" style={{ fontWeight: 590 }}>Admin</h1>
         <p className="text-sm mb-4" style={{ color: '#8a8f98' }}>
-          Enter the ADMIN_SECRET to access the dashboard.
+          Login with your admin account.
         </p>
         <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email"
+          className="w-full px-4 py-2.5 rounded-lg text-sm mb-3"
+          style={{ background: '#0f1011', border: '1px solid rgba(255,255,255,0.08)', color: '#f7f8f8' }}
+        />
+        <input
           type="password"
-          value={secret}
-          onChange={(e) => setSecret(e.target.value)}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && login()}
-          placeholder="Admin secret"
+          placeholder="Password"
           className="w-full px-4 py-2.5 rounded-lg text-sm mb-3"
           style={{ background: '#0f1011', border: '1px solid rgba(255,255,255,0.08)', color: '#f7f8f8' }}
         />
         <button
           onClick={login}
-          disabled={loading || !secret}
+          disabled={loading || !email || !password}
           className="w-full px-4 py-2.5 rounded-lg text-sm font-medium transition-all"
           style={{ background: '#7170ff', color: '#fff', opacity: loading ? 0.6 : 1 }}
         >
