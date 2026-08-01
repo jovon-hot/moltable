@@ -63,8 +63,19 @@ def _fallback_embed(text: str) -> list[float]:
         h = hashlib.md5(trigram.encode()).digest()
         idx = struct.unpack("<I", h[:4])[0] % _DIM
         vec[idx] += 1.0
+    # Short text (< 3 chars): hash the whole text and first char
+    if sum(v for v in vec) == 0 and t:
+        h = hashlib.md5(t.encode()).digest()
+        idx = struct.unpack("<I", h[:4])[0] % _DIM
+        vec[idx] = 1.0
+        if len(t) > 0:
+            # also hash individual chars for short text
+            for ch in t:
+                h = hashlib.md5(ch.encode()).digest()
+                idx = struct.unpack("<I", h[:4])[0] % _DIM
+                vec[idx] += 0.5
     # Normalize
-    total = sum(v * v for v in vec) ** 0.5
+    total = (sum(v * v for v in vec)) ** 0.5
     if total > 0:
         vec = [v / total for v in vec]
     return vec
