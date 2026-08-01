@@ -5,8 +5,10 @@ import logging
 import os
 import signal
 import sys
+import time as _time
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
@@ -91,6 +93,51 @@ async def limit_request_body_size(request: Request, call_next):
     response = await call_next(request)
     return response
 
+
+# ── Request Logging Middleware ───────────────────────────
+@app.middleware("http")
+async def request_logging_middleware(request: Request, call_next):
+    """记录每个请求的 method + path + status + duration。
+    超过 3s 的请求标记为 slow。
+    """
+    start = _time.perf_counter()
+    response = await call_next(request)
+    duration = _time.perf_counter() - start
+    status_code = response.status_code
+
+    slow = " [SLOW]" if duration > 3.0 else ""
+    logger.info(
+        "[Moltable] %s %s %d %.1fs%s",
+        request.method,
+        request.url.path,
+        status_code,
+        duration,
+        slow,
+    )
+    return response
+
+
+# ── Exception Handler (记录错误到监控) ──────────────────
+from app_state import record_error, get_error_count
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """全局异常处理：记录错误并返回 500。"""
+    record_error(error_type=type(exc).__name__)
+    logger.error(
+        "[Moltable] Unhandled exception on %s %s: %s",
+        request.method,
+        request.url.path,
+        str(exc),
+        exc_info=True,
+    )
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"},
+    )
+
+
 # ── Routes ────────────────────────────────────────────────
 from routes import memories, provision, personas, auth, mcp, sessions, billing, v1, agents, projects
 app.include_router(memories.router)
@@ -131,6 +178,7 @@ async def health(request: Request):
         "status": "ok" if (db_ok or supabase is None) else "degraded",
         "db": db_ok,
         "db_required": supabase is not None,
+        "error_count": get_error_count(),
     }
 
 

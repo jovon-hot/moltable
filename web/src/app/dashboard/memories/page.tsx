@@ -5,7 +5,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { useLang } from '@/contexts/LanguageContext'
 import { apiFetch } from '@/lib/api'
 import { timeAgo } from '@/lib/timeago'
-import { Loader2, Search, Plus, ChevronDown, Edit2, Save, X, Trash2, Clock, Tag } from 'lucide-react'
+import { Loader2, Search, Plus, ChevronDown, Edit2, Save, X, Trash2, Archive, Clock, Tag } from 'lucide-react'
 
 const CAT_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   preference: { bg: 'bg-[rgba(250,204,21,0.08)]', text: 'text-[#eab308]', border: 'shadow-[0_0_0_1px_rgba(250,204,21,0.2)]' },
@@ -89,11 +89,59 @@ export default function MemoriesPage() {
     const newOff = offset + PAGE_SIZE; setOffset(newOff)
     fetchMemories(search || undefined, category, newOff, true)
   }
-  const handleSave = async () => { showDemoToast() }
-  const handleDelete = async (id: string) => { showDemoToast() }
+  const handleSave = async () => {
+    if (isDemo) { showDemoToast(); return }
+    if (!newContent.trim()) return
+    setAdding(true)
+    try {
+      await apiFetch('/api/memories', {
+        method: 'POST',
+        body: JSON.stringify({ content: newContent.trim(), category: newCategory, source: 'manual' }),
+      })
+      toast(d.memoryCreated as string, 'success')
+      setNewContent(''); setShowAddForm(false); setOffset(0)
+      await fetchMemories(search || undefined, category)
+    } catch (err: any) {
+      toast(err?.message || 'Failed to create memory', 'error')
+    } finally { setAdding(false) }
+  }
+  const handleDelete = async (id: string) => {
+    if (isDemo) { showDemoToast(); return }
+    try {
+      await apiFetch(`/api/memories/${id}`, { method: 'DELETE' })
+      toast(d.memoryDeleted as string, 'success')
+      setMemories(prev => prev.filter(m => m.id !== id))
+    } catch (err: any) {
+      toast(err?.message || 'Failed to delete memory', 'error')
+    }
+  }
+  const handleArchive = async (id: string) => {
+    if (isDemo) { showDemoToast(); return }
+    try {
+      await apiFetch(`/api/memories/${id}/archive`, { method: 'POST' })
+      toast(d.memoryArchived as string, 'success')
+      setMemories(prev => prev.filter(m => m.id !== id))
+    } catch (err: any) {
+      toast(err?.message || 'Failed to archive memory', 'error')
+    }
+  }
   const startEdit = (m: any) => { if (isDemo) { showDemoToast(); return }; setEditingId(m.id); setEditContent(m.content) }
   const cancelEdit = () => { setEditingId(null); setEditContent('') }
-  const saveEdit = async (id: string) => { showDemoToast() }
+  const saveEdit = async (id: string) => {
+    if (isDemo) { showDemoToast(); return }
+    if (!editContent.trim()) return
+    try {
+      await apiFetch(`/api/memories/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ content: editContent.trim() }),
+      })
+      toast(d.memoryUpdated as string, 'success')
+      setMemories(prev => prev.map(m => m.id === id ? { ...m, content: editContent.trim() } : m))
+      setEditingId(null)
+    } catch (err: any) {
+      toast(err?.message || 'Failed to update memory', 'error')
+    }
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-10">
@@ -217,7 +265,10 @@ export default function MemoriesPage() {
                       <button onClick={() => startEdit(m)}
                         className="p-1.5 rounded-btn text-ln-tertiary hover:text-ln-accent-hover hover:bg-ln-accent-muted transition-all duration-150" aria-label={d.editAria}>
                         <Edit2 size={13} /></button>
-                      <button onClick={() => { if (window.confirm(d.deleteConfirm)) handleDelete(m.id) }}
+                      <button onClick={() => { if (window.confirm(d.confirmArchive as string)) handleArchive(m.id) }}
+                        className="p-1.5 rounded-btn text-ln-tertiary hover:text-ln-warning hover:bg-ln-warning/10 transition-all duration-150" aria-label={d.archiveMemory as string}>
+                        <Archive size={13} /></button>
+                      <button onClick={() => { if (window.confirm(d.deleteConfirm as string)) handleDelete(m.id) }}
                         className="p-1.5 rounded-btn text-ln-tertiary hover:text-ln-error hover:bg-ln-error/10 transition-all duration-150" aria-label={d.deleteAria}>
                         <Trash2 size={13} /></button>
                     </div>

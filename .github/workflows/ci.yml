@@ -9,21 +9,30 @@ on:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-      - run: pip install -r server/requirements.txt
-      - run: cd server && python -m pytest tests/ -v --tb=short
-      - run: cd server && python -m py_compile $(find routes services repositories -name "*.py")
+          python-version: '3.11'
+      - run: pip install pytest pytest-xdist -r requirements.txt
+      - run: python -m pytest tests/ -v --tb=short
+        env:
+          SKIP_SUPABASE_TESTS: 1
 
   frontend:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
-      - run: cd web && npm ci
-      - run: cd web && npx next build --no-lint
+          node-version: 20
+      - run: npm ci
+      - run: npx next build
+        env:
+          NEXT_PUBLIC_API_URL: https://api.moltable.ai

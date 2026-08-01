@@ -53,7 +53,7 @@ def get_store():
     return _store
 
 # ── Allowed Origins (reusable) ───────────────────────────
-ALLOWED_ORIGINS_STR = os.getenv("ALLOWED_ORIGINS", "http://localhost:8701,http://localhost:3000")
+ALLOWED_ORIGINS_STR = os.getenv("ALLOWED_ORIGINS", "http://localhost:8701,http://localhost:3000,https://moltable.ai,https://www.moltable.ai")
 allowed_origins = [o.strip() for o in ALLOWED_ORIGINS_STR.split(",") if o.strip()]
 
 # ── Persona Version (incremented on any change; Agent compares to detect drift) ──
@@ -68,3 +68,34 @@ def bump_persona_version():
 
 def get_persona_version() -> int:
     return _persona_version
+
+
+# ── Error Monitoring (纯本地，不依赖 Sentry 等外部服务) ───
+import threading
+import time as _time
+from collections import deque
+
+_error_events = deque()        # (timestamp, error_type)
+_error_lock = threading.Lock()
+_ERROR_WINDOW_SECONDS = 3600   # 1 小时
+
+
+def record_error(error_type: str = "unknown"):
+    """记录一次错误事件（线程安全）。"""
+    now = _time.time()
+    with _error_lock:
+        _error_events.append((now, error_type))
+        # 定期清理过期事件
+        cutoff = now - _ERROR_WINDOW_SECONDS
+        while _error_events and _error_events[0][0] < cutoff:
+            _error_events.popleft()
+
+
+def get_error_count() -> int:
+    """返回最近 1 小时内的错误计数。"""
+    now = _time.time()
+    with _error_lock:
+        cutoff = now - _ERROR_WINDOW_SECONDS
+        while _error_events and _error_events[0][0] < cutoff:
+            _error_events.popleft()
+        return len(_error_events)

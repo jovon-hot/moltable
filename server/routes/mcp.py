@@ -212,6 +212,28 @@ MCP_TOOLS = [
         },
     },
     {
+        "name": "list_skills",
+        "description": "列出用户的所有可用 Skills",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+        },
+    },
+    {
+        "name": "get_skill",
+        "description": "获取单个 Skill 的完整内容",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "skill_id": {
+                    "type": "string",
+                    "description": "Skill ID",
+                },
+            },
+            "required": ["skill_id"],
+        },
+    },
+    {
         "name": "list_projects",
         "description": "列出用户的所有项目，含 knowledge_bases（知识库连接信息）和 tools（工具/MCP 服务器配置）。Agent 据此建立工作环境。",
         "inputSchema": {
@@ -299,6 +321,8 @@ TOOL_SCOPE_MAP = {
     "auto_provision": ["provision:read"],
     "get_persona": ["persona:read"],
     "list_personas": ["persona:read"],
+    "list_skills": ["skill:read"],
+    "get_skill": ["skill:read"],
 }
 
 
@@ -596,6 +620,76 @@ def _tool_ping(user_id: str, params: dict) -> dict:
     }
 
 
+# ── Skills tools ────────────────────────────────────────
+
+def _tool_list_skills(user_id: str, params: dict) -> dict:
+    """列出用户的所有可用 Skills。
+
+    1. 尝试通过 provision_service 获取 skills 数据
+    2. 如果 provision_service 不返回 skills，从 projects 表的 tools 字段提取 type=skill 条目
+    3. SQLite 回退：返回空列表
+    """
+    from services.provision_service import auto_provision
+
+    # 尝试从 provision_service 获取
+    if supabase is not None:
+        try:
+            ctx = auto_provision(supabase, user_id)
+            if "skills" in ctx:
+                return {"skills": ctx["skills"]}
+        except Exception:
+            pass
+
+    # 回退：从 projects 表的 tools 字段提取 type=skill 的条目
+    skills = []
+    if supabase is not None:
+        try:
+            resp = supabase.table("projects") \
+                .select("tools") \
+                .eq("user_id", user_id) \
+                .execute()
+            for r in (resp.data or []):
+                tools = r.get("tools") or []
+                for t in tools:
+                    if isinstance(t, dict) and t.get("type") == "skill":
+                        skills.append(t)
+        except Exception:
+            # SQLite fallback: return empty skills list
+            pass
+
+    return {"skills": skills}
+
+
+def _tool_get_skill(user_id: str, params: dict) -> dict:
+    """获取单个 Skill 的完整内容。
+
+    从 projects 表的 tools 字段中按 skill_id 检索。
+    """
+    skill_id = params.get("skill_id", "")
+    if not skill_id:
+        raise JSONRPCError(INVALID_PARAMS, "Missing required parameter: skill_id")
+
+    if supabase is not None:
+        try:
+            resp = supabase.table("projects") \
+                .select("tools") \
+                .eq("user_id", user_id) \
+                .execute()
+            for r in (resp.data or []):
+                tools = r.get("tools") or []
+                for t in tools:
+                    if isinstance(t, dict) and t.get("type") == "skill" \
+                            and t.get("name") == skill_id:
+                        return {"skill": t}
+            raise JSONRPCError(TOOL_ERROR, f"Skill '{skill_id}' not found")
+        except JSONRPCError:
+            raise
+        except Exception:
+            pass
+
+    raise JSONRPCError(TOOL_ERROR, f"Skill '{skill_id}' not found")
+
+
 # ── Project environment tools ──────────────────────────
 
 def _tool_list_projects(user_id: str, params: dict) -> dict:
@@ -704,6 +798,8 @@ TOOL_DISPATCH = {
     "auto_provision": _tool_auto_provision,
     "archive_memory": _tool_archive_memory,
     "ping": _tool_ping,
+    "list_skills": _tool_list_skills,
+    "get_skill": _tool_get_skill,
     "list_projects": _tool_list_projects,
     "get_project": _tool_get_project,
     "create_project": _tool_create_project,
