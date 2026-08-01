@@ -293,14 +293,20 @@ def local_register(request: Request, body: RegisterRequest):
     user_id = str(_uuid.uuid4())
     pw_hash = _hash_password(body.password)
 
-    # 创建用户
-    supabase.table("users").insert({
-        "id": user_id,
-        "email": email,
-        "name": name,
-        "password_hash": pw_hash,
-        "plan": "free",
-    }).execute()
+    # 创建用户 — email UNIQUE 约束在并发场景提供原子性保证
+    try:
+        supabase.table("users").insert({
+            "id": user_id,
+            "email": email,
+            "name": name,
+            "password_hash": pw_hash,
+            "plan": "free",
+        }).execute()
+    except Exception as e:
+        err_msg = str(e).lower()
+        if "duplicate" in err_msg or "unique" in err_msg or "already exists" in err_msg:
+            raise HTTPException(409, "该邮箱已注册")
+        raise
 
     # 自动生成 API Key (使用相同的 PBKDF2 哈希)
     raw_key = "molt_" + secrets.token_urlsafe(24)

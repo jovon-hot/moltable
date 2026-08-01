@@ -33,6 +33,8 @@ create table api_keys (
     created_at    timestamptz default now(),
     revoked_at    timestamptz
 );
+create index api_keys_user_id_idx on api_keys (user_id);
+create index api_keys_key_hash_idx on api_keys (key_hash);
 
 -- ============ Personas ============
 create table personas (
@@ -62,6 +64,10 @@ create table persona_versions (
     snapshot      jsonb not null,
     created_at    timestamptz default now()
 );
+create index persona_versions_persona_id_idx on persona_versions (persona_id);
+
+create index personas_user_id_idx on personas (user_id);
+create index personas_parent_id_idx on personas (parent_id);
 
 -- ============ Memories (pgvector) ============
 -- category 取值: preference, decision, fact, project, insight, task, relationship
@@ -87,6 +93,7 @@ create index memories_content_idx on memories using gin (to_tsvector('simple', c
 
 -- 按用户+分类查询
 create index memories_user_cat_idx on memories (user_id, category);
+create index memories_user_id_idx on memories (user_id);
 
 -- ============ Projects ============
 create table projects (
@@ -97,15 +104,18 @@ create table projects (
     is_active     boolean default false,
     created_at    timestamptz default now()
 );
+create index projects_user_id_idx on projects (user_id);
 
 -- ============ Decisions ============
 create table decisions (
     id            uuid primary key default gen_random_uuid(),
     user_id       uuid references users(id) on delete cascade,
-    project_id    uuid references projects(id),
+    project_id    uuid references projects(id) on delete cascade,
     content       text not null,
     decided_at    timestamptz default now()
 );
+create index decisions_user_id_idx on decisions (user_id);
+create index decisions_project_id_idx on decisions (project_id);
 
 -- ============ 审计日志 ============
 create table audit_logs (
@@ -117,6 +127,8 @@ create table audit_logs (
     ip_address    text,
     created_at    timestamptz default now()
 );
+create index audit_logs_user_id_idx on audit_logs (user_id);
+create index audit_logs_api_key_id_idx on audit_logs (api_key_id);
 
 -- ============ Sessions (Anonymous) ============
 create table if not exists sessions (
@@ -131,6 +143,85 @@ create table if not exists sessions (
 
 create index sessions_token_idx on sessions (token);
 create index sessions_user_id_idx on sessions (user_id);
+
+-- ============================================
+-- DID+VC Agent Identity Layer (merged from migration_did_vc.sql)
+-- ============================================
+
+create table did_registry (
+    did             text primary key,
+    user_id         uuid references users(id) on delete cascade,
+    public_key      text not null,
+    key_type        text default 'Ed25519VerificationKey2020',
+    platform        text default 'unknown',
+    agent_name      text default '',
+    status          text default 'active',
+    last_seen_at    timestamptz,
+    created_at      timestamptz default now(),
+    revoked_at      timestamptz
+);
+create index did_registry_user_idx on did_registry (user_id);
+create index did_registry_status_idx on did_registry (status);
+
+create table enrollment_tokens (
+    token           text primary key,
+    user_id         uuid references users(id) on delete cascade,
+    platform        text default 'hermes',
+    agent_name      text default '',
+    consumed_at     timestamptz,
+    expires_at      timestamptz not null default (now() + interval '5 minutes'),
+    created_at      timestamptz default now()
+);
+create index enrollment_tokens_user_idx on enrollment_tokens (user_id);
+
+create table credentials (
+    id              uuid primary key default gen_random_uuid(),
+    credential_jwt  text not null,
+    issuer_did      text not null,
+    subject_did     text not null,
+    credential_type text not null,
+    claims          jsonb not null default '{}',
+    replaced_by     uuid references credentials(id),
+    expires_at      timestamptz,
+    revoked_at      timestamptz,
+    created_at      timestamptz default now()
+);
+create index credentials_subject_idx on credentials (subject_did);
+create index credentials_type_idx on credentials (credential_type);
+
+create table presentations (
+    id              uuid primary key default gen_random_uuid(),
+    agent_did       text not null,
+    challenge       text not null,
+    expires_at      timestamptz not null,
+    verified_at     timestamptz default now()
+);
+create index presentations_agent_idx on presentations (agent_did);
+create index presentations_challenge_idx on presentations (challenge);
+
+create table challenges (
+    challenge       text primary key,
+    agent_did       text,
+    used_at         timestamptz,
+    expires_at      timestamptz not null default (now() + interval '5 minutes'),
+    created_at      timestamptz default now()
+);
+
+-- DID+VC 扩展列
+alter table api_keys add column if not exists migrated_to_did text;
+alter table personas add column if not exists linked_did text;
+alter table audit_logs add column if not exists agent_did text;
+alter table audit_logs add column if not exists presentation_id uuid;
+
+-- DID+VC RLS
+alter table did_registry enable row level security;
+alter table credentials enable row level security;
+alter table enrollment_tokens enable row level security;
+
+create policy "Users can only access their own DIDs"
+    on did_registry for all
+    using (user_id = auth.uid())
+    with check (user_id = auth.uid());
 
 -- ============================================
 -- pgvector RPC：语义搜索
