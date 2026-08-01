@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moltable Logo — From Meaning to Mark</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #08090a; color: #f7f8f8;
+    font-family: Inter, system-ui, -apple-system, sans-serif;
+    min-height: 100vh; padding: 60px 40px;
+  }
+  h1 { font-size: 30px; font-weight: 590; text-align: center; letter-spacing: -0.5px; margin-bottom: 4px; }
+  .sub { text-align: center; color: #8a8f98; font-size: 14px; margin-bottom: 12px; }
+  .meaning { text-align: center; max-width: 700px; margin: 0 auto 48px; color: #5a5f68; font-size: 13px; line-height: 1.7; }
+  .meaning strong { color: #7170ff; font-weight: 590; }
+  .concepts { max-width: 1000px; margin: 0 auto; display: flex; flex-direction: column; gap: 60px; }
+
+  .concept { display: grid; grid-template-columns: 280px 1fr; gap: 48px; align-items: start; }
+  .concept .mark { width: 280px; height: 280px; background: #0f1011; border-radius: 16px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 1px rgba(255,255,255,0.06); }
+  .concept .mark svg { width: 180px; height: 180px; }
+  .concept .info { padding-top: 20px; }
+  .concept .info h2 { font-size: 22px; font-weight: 590; margin-bottom: 8px; letter-spacing: -0.3px; }
+  .concept .info .tag { display: inline-block; font-size: 11px; padding: 2px 10px; border-radius: 3px; background: rgba(113,112,255,0.12); color: #9d9cff; margin-bottom: 16px; }
+  .concept .info p { font-size: 13px; color: #8a8f98; line-height: 1.7; margin-bottom: 8px; }
+  .concept .info ul { list-style: none; margin-top: 8px; }
+  .concept .info ul li { font-size: 12px; color: #5a5f68; padding: 3px 0; padding-left: 16px; position: relative; }
+  .concept .info ul li::before { content: '·'; position: absolute; left: 4px; color: #7170ff; }
+
+  .variants { max-width: 1000px; margin: 80px auto 0; padding-top: 48px; border-top: 1px solid rgba(255,255,255,0.06); }
+  .variants h2 { font-size: 20px; font-weight: 590; text-align: center; margin-bottom: 32px; letter-spacing: -0.3px; }
+  .usage-row { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-bottom: 32px; }
+  .usage-card { background: #0f1011; border-radius: 10px; padding: 20px; display: flex; align-items: center; gap: 14px; box-shadow: 0 0 0 1px rgba(255,255,255,0.06); min-width: 240px; }
+  .usage-card svg { width: 44px; height: 44px; flex-shrink: 0; }
+  .usage-card div h4 { font-size: 13px; font-weight: 590; margin-bottom: 2px; }
+  .usage-card div span { font-size: 11px; color: #8a8f98; }
+
+  @media (max-width: 700px) {
+    .concept { grid-template-columns: 1fr; }
+    .concept .mark { width: 200px; height: 200px; margin: 0 auto; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Moltable Logo · 从含义出发</h1>
+<p class="sub">Mol-ecule（分子）+ Table（元素台） = AI 身份的基本构建单元</p>
+<p class="meaning">
+  <strong>Mol</strong>（分子）= 原子通过键连接成分子。每个用户的身份就是一颗独一无二的分子——数据原子
+  通过 DID/VC 密码学键连接。<strong>Table</strong>（台/表）= 元素周期表式的系统化平台。同一颗分子可以有
+  多种排列（Persona），在不同场景切换不同构型，但原子核心不变——那就是<strong>你</strong>。
+</p>
+
+<div class="concepts">
+
+  <!-- Concept 1: Molecular M -->
+  <div class="concept">
+    <div class="mark">
+      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#7170ff"/>
+            <stop offset="100%" stop-color="#4f4ecf"/>
+          </linearGradient>
+          <linearGradient id="g1l" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#9d9cff"/>
+            <stop offset="100%" stop-color="#7170ff"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Connection bonds (DID links) -->
+        <line x1="42" y1="168" x2="70" y2="140" stroke="#7170ff" stroke-width="2" stroke-opacity="0.4"/>
+        <line x1="70" y1="140" x2="100" y2="168" stroke="#7170ff" stroke-width="2" stroke-opacity="0.4"/>
+        <line x1="100" y1="168" x2="130" y2="140" stroke="#9d9cff" stroke-width="1.5" stroke-opacity="0.3"/>
+        <line x1="130" y1="140" x2="158" y2="168" stroke="#9d9cff" stroke-width="1.5" stroke-opacity="0.3"/>
+        <!-- Vertical bonds -->
+        <line x1="70" y1="140" x2="70" y2="72" stroke="#7170ff" stroke-width="1.5" stroke-opacity="0.3"/>
+        <line x1="130" y1="140" x2="130" y2="72" stroke="#9d9cff" stroke-width="1.5" stroke-opacity="0.3"/>
+        <!-- Top bond -->
+        <line x1="70" y1="72" x2="130" y2="72" stroke="#7170ff" stroke-width="1.5" stroke-opacity="0.25"/>
+
+        <!-- Central core atom (YOU) -->
+        <circle cx="100" cy="140" r="7" fill="#7170ff"/>
+        <circle cx="100" cy="140" r="4" fill="#fff" opacity="0.9"/>
+
+        <!-- Outer atoms (Persona nodes) -->
+        <circle cx="42" cy="168" r="5" fill="none" stroke="#7170ff" stroke-width="2"/>
+        <circle cx="70" cy="168" r="5" fill="none" stroke="#7170ff" stroke-width="2"/>
+        <circle cx="130" cy="168" r="5" fill="none" stroke="#9d9cff" stroke-width="2"/>
+        <circle cx="158" cy="168" r="5" fill="none" stroke="#9d9cff" stroke-width="2"/>
+        <circle cx="70" cy="72" r="5" fill="none" stroke="#7170ff" stroke-width="2"/>
+        <circle cx="130" cy="72" r="5" fill="none" stroke="#9d9cff" stroke-width="2"/>
+
+        <!-- Orbital ring (identity boundary) -->
+        <ellipse cx="100" cy="120" rx="62" ry="60" fill="none" stroke="#7170ff" stroke-width="0.8" stroke-dasharray="4 6" opacity="0.25"/>
+      </svg>
+    </div>
+    <div class="info">
+      <h2>① Molecular Identity</h2>
+      <span class="tag">分子 + 身份</span>
+      <p>6 个节点通过 DID 键连接成分子结构，中心实心节点是你（唯一身份核心），环绕空心节点是 Persona。整个分子被一条虚线轨道包围——代表你的身份边界。</p>
+      <ul>
+        <li>分子隐喻直接呼应 "Moltable" 名字</li>
+        <li>节点间连线 = DID 去中心化连接</li>
+        <li>实心→空心 = 身份→Persona 的层级关系</li>
+        <li>M 形骨架自然嵌入键角中</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Concept 2: The M Mask -->
+  <div class="concept">
+    <div class="mark">
+      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#7170ff"/>
+            <stop offset="100%" stop-color="#4f4ecf"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Outer M (Platform layer) -->
+        <path d="M40 170V40l60 100 60-100v130" fill="none" stroke="url(#g2)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity="0.3"/>
+
+        <!-- Inner M (Persona layer) -->
+        <path d="M60 150V64l40 68 40-68v86" fill="none" stroke="url(#g2)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+
+        <!-- Core mark (Identity) -->
+        <path d="M82 132V90l18 32 18-32v42" fill="none" stroke="#7170ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+        <!-- Central anchor point -->
+        <circle cx="100" cy="112" r="4" fill="#7170ff"/>
+
+        <!-- DID corner anchors -->
+        <circle cx="36" cy="36" r="2.5" fill="#9d9cff"/>
+        <circle cx="164" cy="36" r="2.5" fill="#9d9cff"/>
+        <circle cx="36" cy="174" r="2.5" fill="#7170ff"/>
+        <circle cx="164" cy="174" r="2.5" fill="#7170ff"/>
+      </svg>
+    </div>
+    <div class="info">
+      <h2>② Triple M · 三层身份</h2>
+      <span class="tag">嵌套 + 结构</span>
+      <p>三层 M 逐层收窄：最外层是平台/协议层（虚化），中层是 Persona 层（半透明），最内层是你（实色）。四角的点锚代表 DID 密码学锚点。</p>
+      <ul>
+        <li>三层 = 协议层 → Persona 层 → 你</li>
+        <li>M 形天然表达 Moltable 首字母</li>
+        <li>层层嵌套如同俄罗斯套娃，但方向相反</li>
+        <li>几何感强，适合科技品牌</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Concept 3: Orbital M -->
+  <div class="concept">
+    <div class="mark">
+      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="g3p" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#7170ff"/>
+            <stop offset="100%" stop-color="#9d9cff"/>
+          </linearGradient>
+          <linearGradient id="g3o" x1="0.3" y1="0" x2="0.7" y2="1">
+            <stop offset="0%" stop-color="#9d9cff" stop-opacity="0"/>
+            <stop offset="50%" stop-color="#7170ff" stop-opacity="0.4"/>
+            <stop offset="100%" stop-color="#4f4ecf" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Three orbital rings (identity, persona, agent) -->
+        <ellipse cx="100" cy="100" rx="56" ry="78" fill="none" stroke="url(#g3o)" stroke-width="1.2" transform="rotate(-15 100 100)"/>
+        <ellipse cx="100" cy="100" rx="56" ry="78" fill="none" stroke="url(#g3o)" stroke-width="1.2" transform="rotate(45 100 100)"/>
+        <ellipse cx="100" cy="100" rx="56" ry="78" fill="none" stroke="url(#g3o)" stroke-width="1.2" transform="rotate(105 100 100)"/>
+
+        <!-- M-shaped core formed by electron path -->
+        <path d="M38 170V40l24 66 24-66 24 66 24-66v130" fill="none" stroke="url(#g3p)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+        <!-- Center nucleus -->
+        <circle cx="100" cy="100" r="8" fill="#7170ff"/>
+        <circle cx="100" cy="100" r="3.5" fill="#fff"/>
+
+        <!-- Memory dots along orbits -->
+        <circle cx="70" cy="40" r="3" fill="#9d9cff"/>
+        <circle cx="148" cy="72" r="2.5" fill="#7170ff"/>
+        <circle cx="52" cy="148" r="2.5" fill="#9d9cff"/>
+      </svg>
+    </div>
+    <div class="info">
+      <h2>③ Orbital Atom · 电子云</h2>
+      <span class="tag">原子 + 轨道</span>
+      <p>电子云轨道的原子模型。三条椭圆轨道交错，中心核是你的身份。M 形骨架穿过轨道交汇处。轨道上的点代表记忆——沿轨道运行，随时可被任意 AI Agent 访问。</p>
+      <ul>
+        <li>原子模型 = Mol 的字面含义</li>
+        <li>电子轨道 = Persona 绕着身份核旋转</li>
+        <li>轨道上的点 = 跨 AI 共享的记忆</li>
+        <li>最具科技感和辨识度</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<!-- Recommend horizontal variants -->
+<div class="variants">
+  <h2>推荐 · 横排版</h2>
+
+  <div class="usage-row">
+    <!-- Molecular M horizontal -->
+    <div class="usage-card">
+      <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="18" cy="24" r="4" fill="#7170ff"/>
+        <circle cx="18" cy="24" r="2.2" fill="#fff" opacity="0.9"/>
+        <circle cx="8" cy="30" r="3" fill="none" stroke="#7170ff" stroke-width="1.5"/>
+        <circle cx="18" cy="36" r="3" fill="none" stroke="#7170ff" stroke-width="1.5"/>
+        <circle cx="30" cy="36" r="3" fill="none" stroke="#9d9cff" stroke-width="1.5"/>
+        <circle cx="40" cy="30" r="3" fill="none" stroke="#9d9cff" stroke-width="1.5"/>
+        <circle cx="18" cy="12" r="3" fill="none" stroke="#7170ff" stroke-width="1.5"/>
+        <circle cx="30" cy="12" r="3" fill="none" stroke="#9d9cff" stroke-width="1.5"/>
+        <line x1="8" y1="30" x2="18" y2="24" stroke="#7170ff" stroke-width="1.2" stroke-opacity="0.4"/>
+        <line x1="18" y1="24" x2="18" y2="36" stroke="#7170ff" stroke-width="1.2" stroke-opacity="0.4"/>
+        <line x1="18" y1="24" x2="30" y2="36" stroke="#9d9cff" stroke-width="1" stroke-opacity="0.3"/>
+        <line x1="30" y1="36" x2="40" y2="30" stroke="#9d9cff" stroke-width="1" stroke-opacity="0.3"/>
+        <line x1="18" y1="24" x2="18" y2="12" stroke="#7170ff" stroke-width="1" stroke-opacity="0.3"/>
+        <line x1="18" y1="24" x2="30" y2="12" stroke="#9d9cff" stroke-width="1" stroke-opacity="0.3"/>
+      </svg>
+      <div>
+        <h4>Moltable</h4>
+        <span>Molecular Identity · 主推荐</span>
+      </div>
+    </div>
+
+    <!-- Triple M horizontal -->
+    <div class="usage-card">
+      <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 40V8l16 28 16-28v32" fill="none" stroke="#7170ff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.25"/>
+        <path d="M14 34V16l10 18 10-18v18" fill="none" stroke="#7170ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/>
+        <path d="M19 28V18l5 9 5-9v10" fill="none" stroke="#7170ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="24" cy="20" r="1.5" fill="#7170ff"/>
+      </svg>
+      <div>
+        <h4>Moltable</h4>
+        <span>Triple M · 适合企业/文档</span>
+      </div>
+    </div>
+
+    <!-- Orbital M horizontal -->
+    <div class="usage-card">
+      <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="24" cy="24" rx="13" ry="19" fill="none" stroke="#7170ff" stroke-width="0.8" stroke-dasharray="3 5" transform="rotate(-15 24 24)" opacity="0.4"/>
+        <ellipse cx="24" cy="24" rx="13" ry="19" fill="none" stroke="#9d9cff" stroke-width="0.8" stroke-dasharray="3 5" transform="rotate(45 24 24)" opacity="0.4"/>
+        <ellipse cx="24" cy="24" rx="13" ry="19" fill="none" stroke="#7170ff" stroke-width="0.8" stroke-dasharray="3 5" transform="rotate(105 24 24)" opacity="0.4"/>
+        <circle cx="24" cy="24" r="4" fill="#7170ff"/>
+        <circle cx="24" cy="24" r="1.8" fill="#fff" opacity="0.8"/>
+        <circle cx="16" cy="10" r="1.5" fill="#9d9cff"/>
+        <circle cx="36" cy="18" r="1.5" fill="#7170ff"/>
+        <circle cx="12" cy="36" r="1.5" fill="#9d9cff"/>
+      </svg>
+      <div>
+        <h4>Moltable</h4>
+        <span>Orbital Atom · 最具辨识度</span>
+      </div>
+    </div>
+
+    <!-- Favicon molecular -->
+    <div class="usage-card">
+      <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+        <rect width="48" height="48" rx="10" fill="#7170ff"/>
+        <circle cx="24" cy="24" r="5" fill="#fff" opacity="0.9"/>
+        <circle cx="14" cy="30" r="3.5" fill="none" stroke="#fff" stroke-width="1.5" opacity="0.7"/>
+        <circle cx="24" cy="36" r="3.5" fill="none" stroke="#fff" stroke-width="1.5" opacity="0.7"/>
+        <circle cx="34" cy="30" r="3.5" fill="none" stroke="#fff" stroke-width="1.5" opacity="0.7"/>
+        <circle cx="24" cy="14" r="3.5" fill="none" stroke="#fff" stroke-width="1.5" opacity="0.7"/>
+        <line x1="14" y1="30" x2="24" y2="24" stroke="#fff" stroke-width="1" opacity="0.4"/>
+        <line x1="24" y1="24" x2="24" y2="36" stroke="#fff" stroke-width="1" opacity="0.4"/>
+        <line x1="24" y1="24" x2="34" y2="30" stroke="#fff" stroke-width="1" opacity="0.4"/>
+        <line x1="24" y1="24" x2="24" y2="14" stroke="#fff" stroke-width="1" opacity="0.4"/>
+      </svg>
+      <div>
+        <h4>Moltable</h4>
+        <span>Favicon · App Icon 分子标</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

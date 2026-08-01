@@ -72,12 +72,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const sidebarContent = (
     <div className="flex flex-col h-full">
       <div className="px-4 pt-5 pb-6">
-        <Link
-          href="/dashboard"
-          className="text-lg inline-flex items-center gap-2 font-heading tracking-[-0.3px] text-ln-text"
-        >
-          <span className="w-2 h-2 rounded-full bg-ln-accent inline-block" />
-          Moltable
+        <Link href="/dashboard" className="inline-flex items-center">
+          <img src="/logo-horizontal.svg" alt="Moltable" className="h-6 w-auto" />
         </Link>
       </div>
       <nav role="navigation" aria-label={d.sidebar_arialabel} className="flex-1 px-3 space-y-0.5">
@@ -144,12 +140,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           >
             {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
-          <Link
-            href="/dashboard"
-            className="text-base flex items-center gap-2 font-heading tracking-[-0.3px] text-ln-text"
-          >
-            <span className="w-[7px] h-[7px] rounded-full bg-ln-accent inline-block" />
-            Moltable
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <img src="/logo.svg" alt="Moltable" className="h-7 w-7" />
+            <span className="text-base font-heading tracking-[-0.3px] text-ln-text">Moltable</span>
           </Link>
         </div>
         <div className="flex items-center gap-3">

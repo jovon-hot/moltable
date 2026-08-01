@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moltable Logo Concepts</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #08090a;
+    color: #f7f8f8;
+    font-family: Inter, system-ui, sans-serif;
+    min-height: 100vh;
+    padding: 60px 40px;
+  }
+  h1 { font-size: 32px; font-weight: 590; text-align: center; margin-bottom: 8px; letter-spacing: -0.5px; }
+  .sub { text-align: center; color: #8a8f98; font-size: 14px; margin-bottom: 60px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 32px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .card {
+    background: #0f1011;
+    border-radius: 12px;
+    padding: 40px 32px 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.06);
+    transition: box-shadow 0.2s;
+  }
+  .card:hover { box-shadow: 0 0 0 1px #7170ff, 0 4px 24px rgba(113,112,255,0.15); }
+  .icon-area { width: 160px; height: 160px; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; }
+  .icon-area svg { width: 140px; height: 140px; }
+  .card h3 { font-size: 18px; font-weight: 590; margin-bottom: 8px; letter-spacing: -0.3px; }
+  .card p { font-size: 13px; color: #8a8f98; text-align: center; line-height: 1.6; }
+
+  .variants { max-width: 1200px; margin: 60px auto 0; }
+  .variants h2 { font-size: 22px; font-weight: 590; text-align: center; margin-bottom: 32px; letter-spacing: -0.3px; }
+  .usage-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; }
+  .usage-card { background: #0f1011; border-radius: 10px; padding: 28px 24px; display: flex; align-items: center; gap: 16px; box-shadow: 0 0 0 1px rgba(255,255,255,0.06); }
+  .usage-card svg { width: 48px; height: 48px; flex-shrink: 0; }
+  .usage-meta h4 { font-size: 14px; font-weight: 590; margin-bottom: 4px; }
+  .usage-meta span { font-size: 12px; color: #8a8f98; }
+</style>
+</head>
+<body>
+
+<h1>Moltable Logo · 7 Concepts</h1>
+<p class="sub">AI Identity Layer · DID+VC · Multi-Persona</p>
+
+<div class="grid">
+
+  <!-- 1: Layered Identity -->
+  <div class="card">
+    <div class="icon-area">
+      <svg viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Outer layer (community/platform) -->
+        <rect x="12" y="16" width="116" height="108" rx="16" fill="rgba(113,112,255,0.08)" stroke="#7170ff" stroke-width="2"/>
+        <!-- Middle layer (persona) -->
+        <rect x="28" y="32" width="84" height="76" rx="12" fill="rgba(113,112,255,0.16)" stroke="#7170ff" stroke-width="1.5"/>
+        <!-- Inner identity (you) -->
+        <rect x="44" y="48" width="52" height="44" rx="8" fill="#7170ff"/>
+        <path d="M58 70c0-2.2 1.8-4 4-4h16c2.2 0 4 1.8 4 4v4c0 6.6-5.4 12-12 12s-12-5.4-12-12v-4Z" fill="#fff"/>
+        <circle cx="70" cy="60" r="5" fill="#fff"/>
+        <!-- Connecting dots (DID) -->
+        <circle cx="24" cy="26" r="3" fill="#9d9cff"/>
+        <circle cx="116" cy="114" r="3" fill="#9d9cff"/>
+        <circle cx="24" cy="114" r="2.5" fill="#9d9cff"/>
+        <circle cx="116" cy="26" r="2.5" fill="#9d9cff"/>
+      </svg>
+    </div>
+    <h3>Layered Identity</h3>
+    <p>三层嵌套：平台→Persona→你。四角的点代表 DID 密码学锚点。</p>
+  </div>
+
+  <!-- 2: Geometric M -->
+  <div class="card">
+    <div class="icon-area">
+      <svg viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- M shape from perspective blocks -->
+        <path d="M26 120V40l30 60 28-60 28 60 2-80" stroke="#7170ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <!-- Persona layer accent -->
+        <path d="M56 88l14-22 14 22" stroke="#9d9cff" stroke-width="2" stroke-linecap="round" fill="none"/>
+        <circle cx="70" cy="48" r="5" fill="#7170ff"/>
+        <!-- Identity keyhole -->
+        <circle cx="70" cy="44" r="3" fill="#08090a"/>
+        <rect x="68" y="47" width="4" height="6" rx="2" fill="#08090a"/>
+      </svg>
+    </div>
+    <h3>Geometric M</h3>
+    <p>Moltable 的 "M" 加上 persona 弧线，顶部的点含密码学图样。</p>
+  </div>
+
+  <!-- 3: Identity Shield -->
+  <div class="card">
+    <div class="icon-area">
+      <svg viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Shield outline -->
+        <path d="M70 16L28 36v36c0 36 42 56 42 56s42-20 42-56V36L70 16Z" fill="rgba(113,112,255,0.1)" stroke="#7170ff" stroke-width="2.5"/>
+        <!-- Persona slices inside shield -->
+        <path d="M50 84c0-11 9-20 20-20s20 9 20 20v8c-6.7 8-9.3 12-20 12s-13.3-4-20-12v-8Z" fill="rgba(113,112,255,0.3)" stroke="#9d9cff" stroke-width="1.5"/>
+        <circle cx="70" cy="64" r="9" fill="rgba(113,112,255,0.4)" stroke="#7170ff" stroke-width="1.5"/>
+        <circle cx="70" cy="62" r="4" fill="#7170ff"/>
+      </svg>
+    </div>
+    <h3>Identity Shield</h3>
+    <p>盾形强调安全。内含 persona 层和人像——"你"被保护在中心。</p>
+  </div>
+
+  <!-- 4: Persona Mask -->
+  <div class="card">
+    <div class="icon-area">
+      <svg viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Main mask shape -->
+        <path d="M40 110V50c0-22 28-36 46-28 5 2.6 10 6.3 14 11v0c4-4.7 9-8.4 14-11 18-8 46 6 46 28v60" stroke="#7170ff" stroke-width="3" stroke-linecap="round"/>
+        <!-- Left eye -->
+        <ellipse cx="52" cy="58" rx="8" ry="10" fill="rgba(113,112,255,0.2)" stroke="#9d9cff" stroke-width="1.5"/>
+        <circle cx="54" cy="57" r="3" fill="#7170ff"/>
+        <!-- Right eye -->
+        <ellipse cx="88" cy="58" rx="8" ry="10" fill="rgba(113,112,255,0.2)" stroke="#9d9cff" stroke-width="1.5"/>
+        <circle cx="86" cy="57" r="3" fill="#7170ff"/>
+        <!-- Smile / lower identity -->
+        <path d="M56 78c4 6 14 10 24 0" stroke="#9d9cff" stroke-width="2" stroke-linecap="round"/>
+        <!-- Memory dots -->
+        <circle cx="28" cy="110" r="3" fill="#7170ff"/>
+        <circle cx="112" cy="110" r="3" fill="#7170ff"/>
+        <circle cx="46" cy="125" r="2" fill="#9d9cff"/>
+        <circle cx="94" cy="125" r="2" fill="#9d9cff"/>
+      </svg>
+    </div>
+    <h3>Persona Mask</h3>
+    <p>人格面具（希腊文 persona）。双眼+记忆锚点，直接呼应产品名。</p>
+  </div>
+
+  <!-- 5: The Stack -->
+  <div class="card">
+    <div class="icon-area">
+      <svg viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Bottom layer (data) -->
+        <rect x="24" y="100" width="92" height="16" rx="4" fill="rgba(113,112,255,0.12)"/>
+        <rect x="24" y="100" width="92" height="16" rx="4" stroke="#7170ff" stroke-width="1" stroke-dasharray="3 2"/>
+        <!-- Middle layer (identity) -->
+        <rect x="34" y="80" width="72" height="16" rx="4" fill="rgba(113,112,255,0.25)"/>
+        <rect x="34" y="80" width="72" height="16" rx="4" stroke="#7170ff" stroke-width="1"/>
+        <!-- Top layer (persona) -->
+        <rect x="44" y="60" width="52" height="16" rx="4" fill="#7170ff"/>
+        <!-- You mark -->
+        <circle cx="70" cy="42" r="18" fill="rgba(113,112,255,0.06)" stroke="#7170ff" stroke-width="2"/>
+        <circle cx="70" cy="38" r="6" fill="rgba(113,112,255,0.3)"/>
+        <circle cx="70" cy="36" r="3" fill="#9d9cff"/>
+        <!-- Connecting lines -->
+        <line x1="70" y1="52" x2="70" y2="60" stroke="#9d9cff" stroke-width="1" stroke-dasharray="4 3"/>
+      </svg>
+    </div>
+    <h3>The Stack</h3>
+    <p>纵向三层：数据→身份→Persona，"你"在最上方。结构清晰。</p>
+  </div>
+
+  <!-- 6: Minimal Mark -->
+  <div class="card">
+    <div class="icon-area">
+      <svg viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Bold geometric mark: M + Persona -->
+        <path d="M38 118V42h0l32 56 32-56h0v76" stroke="#7170ff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- Inner persona indicator -->
+        <circle cx="70" cy="58" r="8" fill="#7170ff"/>
+        <circle cx="70" cy="58" r="4" fill="#08090a"/>
+        <!-- Memory trail -->
+        <circle cx="34" cy="118" r="3" fill="#9d9cff"/>
+        <circle cx="106" cy="118" r="3" fill="#9d9cff"/>
+      </svg>
+    </div>
+    <h3>Minimal Mark</h3>
+    <p>纯几何 M 标，中心点代表身份核心。适合 favicon/app icon。</p>
+  </div>
+
+  <!-- 7: Nested M -->
+  <div class="card">
+    <div class="icon-area">
+      <svg viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Outer M -->
+        <path d="M24 116V28l46 72 46-72v88" stroke="#7170ff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- Inner M (persona layer) -->
+        <path d="M44 96V48l26 40 26-40v48" stroke="#9d9cff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- Identity point -->
+        <circle cx="70" cy="72" r="5" fill="#7170ff"/>
+        <!-- DID chain dots -->
+        <circle cx="24" cy="24" r="2" fill="#7170ff"/>
+        <circle cx="116" cy="24" r="2" fill="#7170ff"/>
+        <circle cx="24" cy="116" r="2" fill="#9d9cff"/>
+        <circle cx="116" cy="116" r="2" fill="#9d9cff"/>
+      </svg>
+    </div>
+    <h3>Nested M</h3>
+    <p>双层 M：外层平台，内层 persona。四角的点是 DID 锚。</p>
+  </div>
+
+</div>
+
+<!-- Usage variants -->
+<div class="variants">
+  <h2>推荐款 · Horizontal Layout</h2>
+  <div class="usage-grid">
+
+    <!-- Horizontal: Nested M + wordmark -->
+    <div class="usage-card">
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 40V8l16 26 16-26v32" stroke="#7170ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M16 32V16l8 14 8-14v16" stroke="#9d9cff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="24" cy="24" r="2.5" fill="#7170ff"/>
+      </svg>
+      <div class="usage-meta">
+        <h4>Moltable</h4>
+        <span>Nested M · 推荐主 logo</span>
+      </div>
+    </div>
+
+    <!-- Horizontal: Shield + wordmark -->
+    <div class="usage-card">
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M24 4L8 12v14c0 14 16 22 16 22s16-8 16-22V12L24 4Z" fill="rgba(113,112,255,0.1)" stroke="#7170ff" stroke-width="2"/>
+        <circle cx="24" cy="18" r="4" fill="#7170ff"/>
+        <path d="M15 28c0-5 4-9 9-9s9 4 9 9v4c-3 4-4 6-9 6s-6-2-9-6v-4Z" fill="rgba(113,112,255,0.3)" stroke="#9d9cff" stroke-width="1"/>
+      </svg>
+      <div class="usage-meta">
+        <h4>Moltable</h4>
+        <span>Identity Shield · 适合安全/企业页</span>
+      </div>
+    </div>
+
+    <!-- Horizontal: Persona Mask + wordmark -->
+    <div class="usage-card">
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 38V18c0-8 10-13 16-10 2 .9 4 2.2 6 3.8h0c2-1.6 4-2.9 6-3.8 6-3 16 2 16 10v20" stroke="#7170ff" stroke-width="2.5" stroke-linecap="round"/>
+        <ellipse cx="18" cy="20" rx="3.5" ry="4" fill="rgba(113,112,255,0.2)" stroke="#9d9cff" stroke-width="1"/>
+        <ellipse cx="30" cy="20" rx="3.5" ry="4" fill="rgba(113,112,255,0.2)" stroke="#9d9cff" stroke-width="1"/>
+        <path d="M18 28c2 2.5 6 4 10 0" stroke="#9d9cff" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <div class="usage-meta">
+        <h4>Moltable</h4>
+        <span>Persona Mask · 适合产品页/品牌</span>
+      </div>
+    </div>
+
+    <!-- Favicon variant (minimal M) -->
+    <div class="usage-card">
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="4" y="4" width="40" height="40" rx="10" fill="#7170ff"/>
+        <path d="M12 36V12l12 18 12-18v24" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="usage-meta">
+        <h4>Moltable</h4>
+        <span>Favicon · 纯 M 标，紫色填充</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
