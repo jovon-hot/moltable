@@ -342,7 +342,7 @@ def _keyword_score(query: str, content: str) -> float:
 
 
 def _tool_search_memory(user_id: str, params: dict) -> dict:
-    """搜索记忆"""
+    """搜索记忆 — 向量搜索 + 关键词回退"""
     query = params.get("query", "")
     top_k = min(int(params.get("top_k", 5)), 50)
     category = params.get("category")
@@ -353,9 +353,20 @@ def _tool_search_memory(user_id: str, params: dict) -> dict:
     vec = embed(query)
     results = get_store().search(user_id, vec, top_k=top_k * 3, category=category)
 
-    # SQLite mode: re-rank by keyword match + cosine
-    # (trigram hash embeddings are sparse; plain cosine gives near-zero)
-    if results:
+    # pgvector returns empty for near-zero trigram-hash vectors on Supabase.
+    # Fallback: fetch all active memories and score by keyword match.
+    if not results:
+        all_mems = get_store().list(user_id, category=category, limit=200)
+        if all_mems:
+            scored = []
+            for r in all_mems:
+                kw = _keyword_score(query, r.get("content", ""))
+                if kw > 0:
+                    scored.append((kw, r))
+            scored.sort(key=lambda x: x[0], reverse=True)
+            results = [r for _, r in scored[:top_k]]
+    else:
+        # Re-rank by combined score (cosine + keyword)
         scored = []
         for r in results:
             sim = float(r.get("similarity", 0))
@@ -400,9 +411,16 @@ def _tool_save_memory(user_id: str, params: dict) -> dict:
     confidence = float(params.get("confidence", 1.0))
     tags = params.get("tags", [])
     force = params.get("force", False)
+    persona_id = params.get("persona_id")
 
     if not content:
         raise JSONRPCError(INVALID_PARAMS, "Missing required parameter: content")
+
+    # Validate category enum
+    VALID_CATEGORIES = {"preference", "decision", "fact", "project", "insight", "task", "relationship"}
+    if category not in VALID_CATEGORIES:
+        raise JSONRPCError(INVALID_PARAMS,
+            f"Invalid category: '{category}'. Must be one of: {', '.join(sorted(VALID_CATEGORIES))}")
 
     vec = embed(content)
 
@@ -429,6 +447,7 @@ def _tool_save_memory(user_id: str, params: dict) -> dict:
             user_id, content, vec,
             category=category, source=source,
             confidence=confidence, tags=tags,
+            persona_id=persona_id,
         )
         return {"saved": True, "id": doc["id"]}
     except JSONRPCError:
