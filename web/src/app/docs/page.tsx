@@ -33,13 +33,13 @@ const sidebarItems: SidebarItem[] = [
       { id: 'api-auto_provision', label: 'auto_provision' },
       { id: 'api-save_memory', label: 'save_memory' },
       { id: 'api-search_memory', label: 'search_memory' },
-      { id: 'api-save_memories', label: 'save_memories' },
-      { id: 'api-search_by_tag', label: 'search_by_tag' },
+      { id: 'api-update_memory', label: 'update_memory' },
       { id: 'api-list_personas', label: 'list_personas' },
       { id: 'api-get_persona', label: 'get_persona' },
-      { id: 'api-match_persona', label: 'match_persona' },
-      { id: 'api-compare_personas', label: 'compare_personas' },
-      { id: 'api-consult_persona', label: 'consult_persona' },
+      { id: 'api-list_projects', label: 'list_projects' },
+      { id: 'api-get_project', label: 'get_project' },
+      { id: 'api-create_project', label: 'create_project' },
+      { id: 'api-update_project', label: 'update_project' },
       { id: 'api-archive_memory', label: 'archive_memory' },
       { id: 'api-ping', label: 'ping' },
     ],
@@ -160,59 +160,6 @@ const apiTools: ToolDef[] = [
 }`
   },
   {
-    id: 'save_memories',
-    name: 'save_memories',
-    description:
-      '批量保存多条记忆。每项需提供 content、category，可选 source、confidence、tags。冲突项自动跳过。',
-    params: [
-      {
-        name: 'memories',
-        type: 'array',
-        required: true,
-        description: '记忆列表，每项包含 { content, category, source?, confidence?, tags? }',
-      },
-    ],
-    curlExample: `curl -X POST ${API_HOST}/mcp \\
-  -H "Content-Type: application/json" \\
-  -H "X-API-Key: YOUR_API_KEY" \\
-  -d '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"save_memories","arguments":{"memories":[{"content":"用户喜欢在上午处理深度工作","category":"preference"},{"content":"决定使用 Next.js 重构前端","category":"decision","tags":["技术栈"]}]}}}'`,
-    responseExample: `{
-  "jsonrpc": "2.0",
-  "id": 4,
-  "result": {
-    "content": [{
-      "type": "text",
-      "text": "{\\n  \\"total\\": 2,\\n  \\"saved\\": 2,\\n  \\"failed\\": 0,\\n  \\"results\\": [\\n    {\\"index\\": 0, \\"saved\\": true, \\"id\\": \\"mem_001\\"},\\n    {\\"index\\": 1, \\"saved\\": true, \\"id\\": \\"mem_002\\"}\\n  ]\\n}"
-    }]
-  }
-}`
-  },
-  {
-    id: 'search_by_tag',
-    name: 'search_by_tag',
-    description:
-      '按标签搜索记忆。返回匹配指定标签（OR 逻辑）的所有未归档记忆。',
-    params: [
-      { name: 'tags', type: 'string[]', required: true, description: '要搜索的标签列表（OR 逻辑）' },
-      { name: 'category', type: 'string', required: false, description: '可选过滤类别' },
-      { name: 'limit', type: 'integer', required: false, description: '返回结果数量（默认 20，最大 100）' },
-    ],
-    curlExample: `curl -X POST ${API_HOST}/mcp \\
-  -H "Content-Type: application/json" \\
-  -H "X-API-Key: YOUR_API_KEY" \\
-  -d '{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"search_by_tag","arguments":{"tags":["数据分析","机器学习"],"limit":10}}}'`,
-    responseExample: `{
-  "jsonrpc": "2.0",
-  "id": 5,
-  "result": {
-    "content": [{
-      "type": "text",
-      "text": "{\\n  \\"tags\\": [\\"数据分析\\", \\"机器学习\\"],\\n  \\"results\\": [\\n    {\\n      \\"id\\": \\"mem_003\\",\\n      \\"content\\": \\"用户使用 Python 进行数据分析\\",\\n      \\"category\\": \\"fact\\",\\n      \\"tags\\": [\\"数据分析\\", \\"Python\\"]\\n    }\\n  ],\\n  \\"total\\": 1\\n}"
-    }]
-  }
-}`
-  },
-  {
     id: 'list_personas',
     name: 'list_personas',
     description:
@@ -257,77 +204,102 @@ const apiTools: ToolDef[] = [
 }`
   },
   {
-    id: 'match_persona',
-    name: 'match_persona',
+    id: 'list_projects',
+    name: 'list_projects',
     description:
-      '根据问题或任务描述自动推荐最匹配的 Persona。基于问题与 Persona 描述的语义匹配度排序。',
-    params: [
-      { name: 'question', type: 'string', required: true, description: '要匹配的问题或任务描述' },
-    ],
+      '列出用户的所有项目，含 knowledge_bases（知识库连接信息）和 tools（工具/MCP 服务器配置）。Agent 据此建立工作环境。',
+    params: [],
     curlExample: `curl -X POST ${API_HOST}/mcp \\
   -H "Content-Type: application/json" \\
-  -H "X-API-Key: YOUR_API_KEY" \\
-  -d '{"jsonrpc":"2.0","id":8,"method":"tools/call","params":{"name":"match_persona","arguments":{"question":"如何制定Q3产品路线图？"}}}'`,
+  -H "X-API-Key: *** \\
+  -d '{"jsonrpc":"2.0","id":8,"method":"tools/call","params":{"name":"list_projects","arguments":{}}}'`,
     responseExample: `{
   "jsonrpc": "2.0",
   "id": 8,
   "result": {
     "content": [{
       "type": "text",
-      "text": "{\\n  \\"matches\\": [\\n    {\\n      \\"id\\": \\"ps_001\\",\\n      \\"name\\": \\"战略顾问\\",\\n      \\"description\\": \\"提供高屋建瓴的战略分析和建议\\",\\n      \\"score\\": 0.78\\n    }\\n  ],\\n  \\"question\\": \\"如何制定Q3产品路线图？\\"\\n}"
+      "text": "{\n  \"projects\": [\n    {\n      \"id\": \"pj_001\",\n      \"name\": \"数据分析项目\",\n      \"description\": \"公司的数据分析平台\",\n      \"is_active\": true,\n      \"knowledge_bases\": [...],\n      \"tools\": [...]\n    }\n  ]\n}"
     }]
   }
 }`
   },
   {
-    id: 'compare_personas',
-    name: 'compare_personas',
+    id: 'get_project',
+    name: 'get_project',
     description:
-      '让多个 Persona 回答同一个问题，返回各 Persona 的视角对比。传 "*" 或省略则对比所有活跃 Persona。',
+      '获取单个项目的完整环境配置，含 knowledge_bases 和 tools。',
     params: [
-      { name: 'question', type: 'string', required: true, description: '要对比的问题' },
-      {
-        name: 'persona_names',
-        type: 'string[]',
-        required: false,
-        description: '要对比的 Persona 名称列表（至少 2 个）；传 "*" 或省略则对比所有活跃 Persona',
-      },
+      { name: 'project_id', type: 'string', required: true, description: '项目 ID' },
     ],
     curlExample: `curl -X POST ${API_HOST}/mcp \\
   -H "Content-Type: application/json" \\
-  -H "X-API-Key: YOUR_API_KEY" \\
-  -d '{"jsonrpc":"2.0","id":9,"method":"tools/call","params":{"name":"compare_personas","arguments":{"question":"技术选型：React vs Vue？","persona_names":["*"]}}}'`,
+  -H "X-API-Key: *** \\
+  -d '{"jsonrpc":"2.0","id":9,"method":"tools/call","params":{"name":"get_project","arguments":{"project_id":"pj_001"}}}'`,
     responseExample: `{
   "jsonrpc": "2.0",
   "id": 9,
   "result": {
     "content": [{
       "type": "text",
-      "text": "{\\n  \\"question\\": \\"技术选型：React vs Vue？\\",\\n  \\"comparisons\\": {\\n    \\"战略顾问\\": \\"从技术生态和招聘成本角度，React 更具优势...\\",\\n    \\"创意伙伴\\": \\"Vue 对中小团队更友好，上手快、文档好...\\"\\n  }\\n}"
+      "text": "{\n  \"id\": \"pj_001\",\n  \"name\": \"数据分析项目\",\n  \"description\": \"公司的数据分析平台\",\n  \"knowledge_bases\": [...],\n  \"tools\": [...]\n}"
     }]
   }
 }`
   },
   {
-    id: 'consult_persona',
-    name: 'consult_persona',
+    id: 'create_project',
+    name: 'create_project',
     description:
-      '用指定 Persona 的系统提示和 traits，结合用户记忆上下文回答问题。需要配置 DeepSeek API Key。',
+      '创建新项目，含 knowledge_bases（如 PostgreSQL/Obsidian/Superset 连接）和 tools（如 MCP 服务器/Hermes Skill）。',
     params: [
-      { name: 'persona_id', type: 'string', required: true, description: 'Persona ID' },
-      { name: 'question', type: 'string', required: true, description: '要咨询的问题' },
+      { name: 'name', type: 'string', required: true, description: '项目名称' },
+      { name: 'description', type: 'string', required: false, description: '项目描述' },
+      { name: 'persona_id', type: 'string', required: false, description: '关联的 Persona ID' },
+      { name: 'knowledge_bases', type: 'array', required: false, description: '知识库列表，每项含 type/label/host/port/database/path/url 等' },
+      { name: 'tools', type: 'array', required: false, description: '工具列表，每项含 type/name/url 等' },
+      { name: 'is_active', type: 'boolean', required: false, description: '是否为活跃项目' },
     ],
     curlExample: `curl -X POST ${API_HOST}/mcp \\
   -H "Content-Type: application/json" \\
-  -H "X-API-Key: YOUR_API_KEY" \\
-  -d '{"jsonrpc":"2.0","id":10,"method":"tools/call","params":{"name":"consult_persona","arguments":{"persona_id":"ps_001","question":"当前的AI创业机会有哪些？"}}}'`,
+  -H "X-API-Key: *** \\
+  -d '{"jsonrpc":"2.0","id":10,"method":"tools/call","params":{"name":"create_project","arguments":{"name":"新项目","description":"一个数据分析项目","is_active":true}}}'`,
     responseExample: `{
   "jsonrpc": "2.0",
   "id": 10,
   "result": {
     "content": [{
       "type": "text",
-      "text": "{\\n  \\"answer\\": \\"基于您的项目背景，我认为以下领域值得关注...\\",\\n  \\"persona_name\\": \\"战略顾问\\"\\n}"
+      "text": "{\n  \"created\": true,\n  \"id\": \"pj_002\",\n  \"name\": \"新项目\"\n}"
+    }]
+  }
+}`
+  },
+  {
+    id: 'update_project',
+    name: 'update_project',
+    description:
+      '更新项目环境配置。',
+    params: [
+      { name: 'project_id', type: 'string', required: true, description: '项目 ID' },
+      { name: 'name', type: 'string', required: false, description: '新名称' },
+      { name: 'description', type: 'string', required: false, description: '新描述' },
+      { name: 'persona_id', type: 'string', required: false, description: '关联 Persona ID' },
+      { name: 'knowledge_bases', type: 'array', required: false, description: '新知识库配置' },
+      { name: 'tools', type: 'array', required: false, description: '新工具配置' },
+      { name: 'is_active', type: 'boolean', required: false, description: '是否活跃' },
+    ],
+    curlExample: `curl -X POST ${API_HOST}/mcp \\
+  -H "Content-Type: application/json" \\
+  -H "X-API-Key: *** \\
+  -d '{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"update_project","arguments":{"project_id":"pj_001","name":"更新后的项目名"}}}'`,
+    responseExample: `{
+  "jsonrpc": "2.0",
+  "id": 11,
+  "result": {
+    "content": [{
+      "type": "text",
+      "text": "{\n  \"updated\": true,\n  \"id\": \"pj_001\"\n}"
     }]
   }
 }`

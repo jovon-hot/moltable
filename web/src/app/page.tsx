@@ -1,10 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Layers, Zap, Users, Brain, Shield, Code, Check, ArrowRight, GitBranch, Download, Trash2, Mail } from 'lucide-react'
 import { useLang } from '@/contexts/LanguageContext'
-import { activateTrial } from '@/lib/api'
 
 const featureIcons = [Layers, Zap, Users, Brain, Shield, Code]
 const aboutLayerIcons = [Shield, Users, Layers]
@@ -12,28 +11,9 @@ const privacyIcons = [Shield, Download, Trash2, Mail]
 
 export default function LandingPage() {
   const { t, lang } = useLang()
-  const [checkoutLoading, setCheckoutLoading] = useState(false)
-  const [checkoutError, setCheckoutError] = useState('')
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
 
   const p = t.pricing as any
   const pricingFeatures = (t.pricing as any).features || {}
-
-  const handleProCheckout = async () => {
-    setCheckoutLoading(true)
-    setCheckoutError('')
-    try {
-      const result = await activateTrial('pro')
-      window.location.href = '/dashboard?trial=activated'
-    } catch (e: any) {
-      if (e.message.includes('Login required')) {
-        window.location.href = '/register'
-        return
-      }
-      setCheckoutError(e.message || 'Checkout failed')
-      setCheckoutLoading(false)
-    }
-  }
 
   useEffect(() => {
     if (window.location.hash) {
@@ -54,11 +34,10 @@ export default function LandingPage() {
     },
     {
       name: p.pro.name,
-      price: billingCycle === 'yearly' ? p.pro.priceYearlyMonthly : p.pro.priceMonthly,
+      price: p.pro.priceMonthly,
       period: '',
-      yearPrice: p.pro.priceYearly,
-      desc: billingCycle === 'yearly' ? p.pro.descShort : p.pro.desc,
-      cta: billingCycle === 'yearly' ? p.pro.ctaYearly : p.pro.cta,
+      desc: p.pro.desc,
+      cta: p.pro.cta,
       badge: p.pro.badge,
       accent: true,
       features: pricingFeatures.pro || [],
@@ -131,27 +110,7 @@ export default function LandingPage() {
           {p.subtitle}
         </p>
 
-        {/* Billing cycle toggle */}
-        <div className="flex justify-center mb-10">
-          <div className="flex items-center gap-1 p-1 rounded-[6px]" style={{ background: '#0f1011' }}>
-            <button onClick={() => setBillingCycle('monthly')}
-              className="px-4 py-1.5 rounded-[4px] text-xs font-medium transition-all"
-              style={{ 
-                background: billingCycle === 'monthly' ? '#7170ff' : 'transparent',
-                color: billingCycle === 'monthly' ? '#fff' : '#8a8f98',
-              }}>
-              {p.monthly}
-            </button>
-            <button onClick={() => setBillingCycle('yearly')}
-              className="px-4 py-1.5 rounded-[4px] text-xs font-medium transition-all flex items-center gap-1.5"
-              style={{ 
-                background: billingCycle === 'yearly' ? '#7170ff' : 'transparent',
-                color: billingCycle === 'yearly' ? '#fff' : '#8a8f98',
-              }}>
-              {p.yearly} <span style={{ color: billingCycle === 'yearly' ? '#c4ff6b' : '#7170ff', fontSize: 10 }}>{p.savePercent}</span>
-            </button>
-          </div>
-        </div>
+        {/* Pricing cards */}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {pricingPlans.map((plan, i) => (
@@ -175,10 +134,7 @@ export default function LandingPage() {
                 <span className="text-3xl" style={{ fontWeight: 590 }}>{plan.price}</span>
                 {plan.period && <span className="text-sm" style={{ color: '#8a8f98' }}>{plan.period}</span>}
               </div>
-              {plan.yearPrice && (
-                <p className="text-xs mb-4" style={{ color: '#7170ff' }}>{plan.yearPrice}</p>
-              )}
-              {!plan.yearPrice && <div className="mb-4" />}
+              <div className="mb-4" />
               <p className="text-xs mb-5 flex-1 leading-relaxed" style={{ color: '#8a8f98' }}>{plan.desc}</p>
 
               <ul className="mb-5 space-y-2">
@@ -191,16 +147,11 @@ export default function LandingPage() {
               </ul>
 
               {plan.accent ? (
-                <div>
-                  <button onClick={handleProCheckout} disabled={checkoutLoading}
-                    className="block w-full text-center px-4 py-2.5 rounded-[6px] text-sm font-medium transition-all duration-150 disabled:opacity-50"
-                    style={{ background: '#7170ff', color: '#fff', fontWeight: 510 }}>
-                    {checkoutLoading ? p.redirecting : plan.cta}
-                  </button>
-                  {checkoutError && (
-                    <p className="text-xs mt-2 text-center" style={{ color: '#f87171' }}>{checkoutError}</p>
-                  )}
-                </div>
+                <Link href="/register"
+                  className="block w-full text-center px-4 py-2.5 rounded-[6px] text-sm font-medium transition-all duration-150"
+                  style={{ background: '#7170ff', color: '#fff', fontWeight: 510 }}>
+                  {lang === 'zh' ? 'Pro · 90天免费体验' : 'Pro · 90-Day Free Trial'}
+                </Link>
               ) : (
                 <Link href={plan.href || '#'}
                   className="block w-full text-center px-4 py-2.5 rounded-[6px] text-sm font-medium transition-all duration-150"

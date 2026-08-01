@@ -48,6 +48,7 @@ export default function RegisterPage() {
             onFocus={e => e.target.style.boxShadow = '0 0 0 1px #7170ff'}
             onBlur={e => e.target.style.boxShadow = '0 0 0 1px rgba(255,255,255,0.08)'}
             required />
+          <p className="text-xs" style={{ color: '#5a5f68' }}>{a.passwordHint}</p>
           {error && <p className="text-sm" style={{ color: '#f87171' }}>{error}</p>}
           <button type="submit" disabled={loading}
             className="w-full py-2.5 rounded-[6px] text-sm font-medium disabled:opacity-50 transition-all hover:opacity-90"

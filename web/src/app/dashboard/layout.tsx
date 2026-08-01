@@ -4,14 +4,16 @@ import { useEffect, useState } from 'react'
 import { createClient, getLocalKey, clearLocalKey } from '@/lib/supabase'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Loader2, Menu, X, LayoutDashboard, Brain, User, Settings, Eye, Bell, Search } from 'lucide-react'
+import { Loader2, Menu, X, LayoutDashboard, Brain, User, Settings, Eye, Bell, Search, Shield } from 'lucide-react'
 import { useLang } from '@/contexts/LanguageContext'
+import { apiFetch } from '@/lib/api'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isDemo, setIsDemo] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
   const local = !(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
   const supabase = local ? null : createClient()
   const pathname = usePathname()
@@ -45,6 +47,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       }
       setUser(data.user)
       setLoading(false)
+      // Check if user is admin
+      apiFetch<{ plan?: string }>('/api/auth/me').then(info => {
+        if (info?.plan === 'admin') setIsAdmin(true)
+      }).catch(() => {})
     })
   }, [])
 
@@ -59,6 +65,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { href: '/dashboard/memories', label: t.dashboard.stats.memories, icon: Brain },
     { href: '/dashboard/personas', label: t.dashboard.stats.personas, icon: User },
     { href: '/dashboard/settings', label: d.settings, icon: Settings },
+    ...(isAdmin ? [{ href: '/admin', label: 'Admin', icon: Shield }] : []),
   ]
 
   if (loading) {

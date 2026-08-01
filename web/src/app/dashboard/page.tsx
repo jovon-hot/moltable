@@ -5,7 +5,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { useLang } from '@/contexts/LanguageContext'
 import { apiFetch, activateTrial } from '@/lib/api'
 import Link from 'next/link'
-import { Loader2, Brain, User, ArrowRight, Check, Zap, Sparkles, Clock, Layers } from 'lucide-react'
+import { Loader2, Brain, User, ArrowRight, Zap, Sparkles, Clock, Layers } from 'lucide-react'
 
 const DEMO_STATS = { memories: 128, personas: 3, projects: 5, decisions: 42 }
 
@@ -123,12 +123,6 @@ export default function DashboardPage() {
     if (plan.plan === 'pro') return ui.planPro as string
     return ''
   }
-
-  const onboardingSteps = [
-    { step: 1, title: d.step1, desc: d.step1desc },
-    { step: 2, title: d.step2, desc: d.step2desc },
-    { step: 3, title: d.step3, desc: d.step3desc },
-  ]
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-10">
@@ -261,32 +255,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
-
-      {/* Onboarding guide for first-time users */}
-      {(stats.total_memories === 0 && stats.total_personas === 0 && !isDemo && !loading) && (
-        <div className="mb-8 p-6 rounded-card bg-ln-surface shadow-accent-glow">
-          <h3 className="text-lg mb-4 font-heading text-ln-text">🚀 {d.quickStart}</h3>
-          <div className="space-y-3">
-            {onboardingSteps.map(s => (
-              <div key={s.step} className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-7 h-7 rounded-full bg-ln-accent-muted flex items-center justify-center">
-                  <Check size={14} className="text-ln-accent" />
-                </div>
-                <div>
-                  <p className="text-sm font-ui text-ln-text">{s.title}</p>
-                  <p className="text-xs mt-0.5 text-ln-tertiary font-body">
-                    {s.step === 1 ? (
-                      <>
-                        {s.desc} — <Link href="/dashboard/settings" className="text-ln-accent hover:text-ln-accent-hover transition-colors">{lang === 'zh' ? '前往设置 →' : 'Go to settings →'}</Link>
-                      </>
-                    ) : s.desc}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Quick Start / API Integration */}
       <div className="p-8 rounded-panel bg-ln-surface shadow-accent-glow transition-all duration-200">

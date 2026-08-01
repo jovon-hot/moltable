@@ -17,7 +17,7 @@ export const translations = {
         { title: '多 Persona', desc: '工作、生活、学习 — 不同场景切换不同人格，各自独立的记忆和偏好。' },
         { title: '渐进记忆', desc: 'AI 在工作中学到的偏好自动积累。用得越久，AI 越懂你。' },
         { title: '你拥有数据', desc: '随时随地导出或删除全部数据。我们永远不会用你的数据训练模型。' },
-        { title: '开放协议', desc: '基于 MCP 和 DID+VC 开放标准。任何 AI 都可以接入，不锁定平台。' },
+        { title: '标准协议', desc: '基于 MCP 和 DID+VC 开放标准。任何 AI 都可以接入，不锁定平台。' },
       ],
     },
     how: {
@@ -229,6 +229,7 @@ export const translations = {
       namePlaceholder: '昵称（可选）',
       loginFailed: '登录失败',
       registerFailed: '注册失败',
+      passwordHint: '至少8位，建议包含字母+数字+符号',
     },
   },
 
@@ -248,7 +249,7 @@ export const translations = {
         { title: 'Multi-Persona', desc: 'Work, life, learning — switch between different personas, each with independent memory and preferences.' },
         { title: 'Progressive Memory', desc: 'AI automatically accumulates preferences learned at work. The longer you use it, the better it knows you.' },
         { title: 'You Own Your Data', desc: 'Export or delete everything anytime, anywhere. We will never use your data to train models.' },
-        { title: 'Open Protocol', desc: 'Built on MCP and DID+VC open standards. Any AI can connect — no platform lock-in.' },
+        { title: 'Standard Protocol', desc: 'Built on MCP and DID+VC open standards. Any AI can connect — no platform lock-in.' },
       ],
     },
     how: {
@@ -460,6 +461,7 @@ export const translations = {
       namePlaceholder: 'Name (optional)',
       loginFailed: 'Login failed',
       registerFailed: 'Registration failed',
+      passwordHint: 'Min 8 chars, letters+numbers+symbols recommended',
     },
   },
 } as const
