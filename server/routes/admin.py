@@ -63,9 +63,12 @@ def admin_stats(request: Request, _admin=Depends(_require_admin)):
         stats["total_projects"] = r.count if hasattr(r, "count") else 0
         r = supabase.table("personas").select("count", count="exact").execute()
         stats["total_personas"] = r.count if hasattr(r, "count") else 0
-        # active today: users with last_active_at > today
-        r = supabase.table("users").select("count", count="exact").gte("last_active_at", today).execute()
-        stats["active_users_today"] = r.count if hasattr(r, "count") else 0
+        # active today: users with last_active_at > today (may fail if column missing)
+        try:
+            r = supabase.table("users").select("count", count="exact").gte("last_active_at", today).execute()
+            stats["active_users_today"] = r.count if hasattr(r, "count") else 0
+        except Exception:
+            stats["active_users_today"] = 0
     except Exception as e:
         logger.warning("Stats query partial failure: %s", e)
 
@@ -118,7 +121,6 @@ def admin_users(
                     "plan": r.get("plan", "free"),
                     "language": r.get("language"),
                     "created_at": str(r.get("created_at", "")),
-                    "last_active_at": str(r.get("last_active_at", "")),
                 }
                 for r in (resp.data or [])
             ],
