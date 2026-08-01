@@ -359,9 +359,27 @@ def local_login(request: Request, body: LoginRequest):
     
     has_existing_key = keys_result.data and len(keys_result.data) > 0
     
+    # 创建临时 session token（7 天有效，用于前端登录态）
+    from datetime import timedelta
+    import uuid as _ses_uuid
+    session_id = str(_ses_uuid.uuid4())
+    session_token = "mol_" + secrets.token_urlsafe(32)
+    now = datetime.now(timezone.utc)
+    expires = now + timedelta(days=7)
+    
+    supabase.table("sessions").insert({
+        "id": session_id,
+        "session_uuid": session_id,
+        "user_id": user_id,
+        "token": session_token,
+        "created_at": now.isoformat(),
+        "expires_at": expires.isoformat(),
+    }).execute()
+    
     return {
         "user_id": user_id,
         "has_api_key": has_existing_key,
+        "session_token": session_token,
         "email": user["email"],
         "name": user.get("name", ""),
     }

@@ -17,7 +17,12 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const setLang = (l: Lang) => {
     setLangState(l)
     localStorage.setItem('moltable-lang', l)
+    document.documentElement.lang = l
   }
+
+  useEffect(() => {
+    document.documentElement.lang = lang
+  }, [lang])
 
   return <LanguageContext.Provider value={{ lang, t: translations[lang] as T, setLang }}>{children}</LanguageContext.Provider>
 }

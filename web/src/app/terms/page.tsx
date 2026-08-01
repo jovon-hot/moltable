@@ -1,0 +1,77 @@
+'use client'
+
+import { useLang } from '@/contexts/LanguageContext'
+
+export default function TermsPage() {
+  const { lang } = useLang()
+
+  return (
+    <div className="min-h-screen px-6 py-24 max-w-3xl mx-auto" style={{ background: '#08090a', color: '#f7f8f8' }}>
+      <h1 className="text-2xl mb-8" style={{ fontWeight: 590 }}>
+        {lang === 'zh' ? '服务条款' : 'Terms of Service'}
+      </h1>
+
+      <div className="space-y-6 text-sm leading-relaxed" style={{ color: '#b0b5bd' }}>
+        <section>
+          <h2 className="text-base mb-3" style={{ color: '#f7f8f8', fontWeight: 590 }}>
+            {lang === 'zh' ? '1. 服务描述' : '1. Service Description'}
+          </h2>
+          <p>{lang === 'zh'
+            ? 'Moltable 是一个 AI 身份层服务（DID+VC），提供跨平台 AI 身份同步、多 Persona 管理、渐进记忆和 Agent 自动配置功能。'
+            : 'Moltable is an AI identity layer service (DID+VC) providing cross-platform AI identity sync, multi-Persona management, progressive memory, and Agent auto-provisioning.'
+          }</p>
+        </section>
+
+        <section>
+          <h2 className="text-base mb-3" style={{ color: '#f7f8f8', fontWeight: 590 }}>
+            {lang === 'zh' ? '2. 账户责任' : '2. Account Responsibility'}
+          </h2>
+          <p>{lang === 'zh'
+            ? '您有责任保护您的账户凭据和 API Key。API Key 仅在创建时显示一次。请勿与他人共享您的 API Key。'
+            : 'You are responsible for safeguarding your account credentials and API keys. API keys are shown only once upon creation. Do not share your API key with others.'
+          }</p>
+        </section>
+
+        <section>
+          <h2 className="text-base mb-3" style={{ color: '#f7f8f8', fontWeight: 590 }}>
+            {lang === 'zh' ? '3. 使用限制' : '3. Usage Limits'}
+          </h2>
+          <p>{lang === 'zh'
+            ? '各套餐有明确的使用配额（Free: 100 条记忆, Pro: 10,000 条, Team: 50,000 条）。超出配额可能导致服务降级。禁止滥用 API、反向工程或非法用途。'
+            : 'Each plan has defined usage quotas (Free: 100 memories, Pro: 10,000, Team: 50,000). Exceeding quotas may result in service degradation. API abuse, reverse engineering, or illegal use is prohibited.'
+          }</p>
+        </section>
+
+        <section>
+          <h2 className="text-base mb-3" style={{ color: '#f7f8f8', fontWeight: 590 }}>
+            {lang === 'zh' ? '4. 退款政策' : '4. Refund Policy'}
+          </h2>
+          <p>{lang === 'zh'
+            ? 'Pro 和 Team 套餐支持 7 天无理由退款。退款申请请发送至 hi@moltable.ai。'
+            : 'Pro and Team plans come with a 7-day no-questions-asked refund policy. Send refund requests to hi@moltable.ai.'
+          }</p>
+        </section>
+
+        <section>
+          <h2 className="text-base mb-3" style={{ color: '#f7f8f8', fontWeight: 590 }}>
+            {lang === 'zh' ? '5. 知识产权' : '5. Intellectual Property'}
+          </h2>
+          <p>{lang === 'zh'
+            ? '您保留您创建的所有数据（Persona、记忆）的完全所有权。Moltable 平台代码以 MIT 协议开源。'
+            : 'You retain full ownership of all data you create (Personas, memories). The Moltable platform code is open source under the MIT license.'
+          }</p>
+        </section>
+
+        <section>
+          <h2 className="text-base mb-3" style={{ color: '#f7f8f8', fontWeight: 590 }}>
+            {lang === 'zh' ? '6. 免责声明' : '6. Disclaimer'}
+          </h2>
+          <p>{lang === 'zh'
+            ? 'Moltable 按"现状"提供服务，不提供任何明示或暗示的保证。我们不对因使用服务而产生的任何间接损失承担责任。最后更新：2026-08-01。'
+            : 'Moltable is provided "as is" without warranties of any kind. We are not liable for any indirect damages arising from use of the service. Last updated: 2026-08-01.'
+          }</p>
+        </section>
+      </div>
+    </div>
+  )
+}

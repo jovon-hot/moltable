@@ -13,8 +13,8 @@ export default function PublicFooter() {
           <h4 className="text-sm mb-4 text-ln-text font-ui">{t.footer.product}</h4>
           <ul className="space-y-3">
             {[
-              { href: '#features', label: t.footer.features },
-              { href: '#pricing', label: t.footer.pricing },
+              { href: '/#features', label: t.footer.features },
+              { href: '/#pricing', label: t.footer.pricing },
               { href: '/docs', label: t.footer.docs },
             ].map((item) => (
               <li key={item.href}>
@@ -52,12 +52,12 @@ export default function PublicFooter() {
           <h4 className="text-sm mb-4 text-ln-text font-ui">{t.footer.legal}</h4>
           <ul className="space-y-3">
             <li>
-              <Link href="#privacy" className="text-sm font-body text-ln-tertiary hover:text-ln-secondary transition-colors duration-150">
+              <Link href="/privacy" className="text-sm font-body text-ln-tertiary hover:text-ln-secondary transition-colors duration-150">
                 {t.footer.privacy}
               </Link>
             </li>
             <li>
-              <Link href="#privacy" className="text-sm font-body text-ln-tertiary hover:text-ln-secondary transition-colors duration-150">
+              <Link href="/terms" className="text-sm font-body text-ln-tertiary hover:text-ln-secondary transition-colors duration-150">
                 {t.footer.terms}
               </Link>
             </li>

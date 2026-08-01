@@ -76,6 +76,7 @@ export async function localLogin(email: string, password: string) {
     throw new Error((data as any).detail || '登录失败')
   }
   const data = await res.json()
-  if (data.key) setLocalKey(data.key)
+  // 存储 session token（MCP 端点通过 X-API-Key header 接受 mol_ 前缀的 session token）
+  if (data.session_token) setLocalKey(data.session_token)
   return data
 }

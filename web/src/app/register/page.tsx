@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient, isLocalMode, localRegister } from '@/lib/supabase'
+import { localRegister } from '@/lib/supabase'
 import { useLang } from '@/contexts/LanguageContext'
 
 export default function RegisterPage() {
@@ -11,25 +11,16 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const local = isLocalMode()
-  const supabase = local ? null : createClient()
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
-
-    if (local) {
-      try {
-        await localRegister(email, password)
-        window.location.href = '/dashboard'
-      } catch (err: any) {
-        setError(err.message || a.registerFailed)
-      }
-    } else {
-      const { error } = await supabase.auth.signUp({ email, password })
-      if (error) setError(error.message)
-      else window.location.href = '/dashboard'
+    try {
+      await localRegister(email, password)
+      window.location.href = '/dashboard'
+    } catch (err: any) {
+      setError(err.message || a.registerFailed)
     }
     setLoading(false)
   }
@@ -40,7 +31,6 @@ export default function RegisterPage() {
         <div className="text-center mb-8">
           <h1 className="text-2xl mb-1" style={{ fontWeight: 590, letterSpacing: '-0.3px', color: '#f7f8f8' }}>{a.registerTitle}</h1>
           <p className="text-sm" style={{ color: '#8a8f98' }}>Moltable</p>
-          {local && <p className="text-xs mt-1" style={{ color: '#7170ff' }}>{a.localMode}</p>}
         </div>
 
         <form onSubmit={handleRegister} className="space-y-3">
