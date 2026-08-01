@@ -10,7 +10,7 @@ import logging, os
 from fastapi import APIRouter, Request, HTTPException, Depends
 from pydantic import BaseModel, Field
 
-from app_state import limiter, supabase, _is_sqlite, get_error_count
+import app_state
 from services.admin_auth import (
     login_admin, require_admin, require_staff,
     create_admin_account, list_admin_accounts, toggle_admin_account,
@@ -41,7 +41,7 @@ class CreateAccountRequest(BaseModel):
 # ═══════════════════════════════════════════════════
 
 @router.post("/login")
-@limiter.limit("10/minute")
+@app_state.limiter.limit("10/minute")
 async def admin_login(request: Request, body: LoginRequest):
     """Login with email + password. Returns JWT token + role."""
     result = login_admin(body.email, body.password, request)
@@ -55,9 +55,9 @@ async def admin_login(request: Request, body: LoginRequest):
 # ═══════════════════════════════════════════════════
 
 @router.get("/stats")
-@limiter.limit("30/minute")
+@app_state.limiter.limit("30/minute")
 def admin_stats(request: Request, _staff=Depends(require_staff)):
-    if supabase is None or _is_sqlite:
+    if app_state.supabase is None or app_state._is_sqlite:
         return {"error": "Stats unavailable in SQLite mode"}
 
     stats = {"total_users": 0, "new_users_today": 0, "new_users_week": 0,
@@ -69,20 +69,20 @@ def admin_stats(request: Request, _staff=Depends(require_staff)):
     today = datetime.date.today().isoformat()
 
     try:
-        r = supabase.table("users").select("count", count="exact").execute()
+        r = app_state.supabase.table("users").select("count", count="exact").execute()
         stats["total_users"] = r.count if hasattr(r, "count") else 0
-        r = supabase.table("users").select("count", count="exact").gte("created_at", today).execute()
+        r = app_state.supabase.table("users").select("count", count="exact").gte("created_at", today).execute()
         stats["new_users_today"] = r.count if hasattr(r, "count") else 0
-        r = supabase.table("users").select("count", count="exact").eq("plan", "pro").execute()
+        r = app_state.supabase.table("users").select("count", count="exact").eq("plan", "pro").execute()
         stats["trial_active"] = r.count if hasattr(r, "count") else 0
-        r = supabase.table("memories").select("count", count="exact").eq("is_archived", False).execute()
+        r = app_state.supabase.table("memories").select("count", count="exact").eq("is_archived", False).execute()
         stats["total_memories"] = r.count if hasattr(r, "count") else 0
-        r = supabase.table("projects").select("count", count="exact").execute()
+        r = app_state.supabase.table("projects").select("count", count="exact").execute()
         stats["total_projects"] = r.count if hasattr(r, "count") else 0
-        r = supabase.table("personas").select("count", count="exact").execute()
+        r = app_state.supabase.table("personas").select("count", count="exact").execute()
         stats["total_personas"] = r.count if hasattr(r, "count") else 0
         try:
-            r = supabase.table("users").select("count", count="exact").gte("last_active_at", today).execute()
+            r = app_state.supabase.table("users").select("count", count="exact").gte("last_active_at", today).execute()
             stats["active_users_today"] = r.count if hasattr(r, "count") else 0
         except Exception:
             stats["active_users_today"] = 0
@@ -103,7 +103,7 @@ def admin_stats(request: Request, _staff=Depends(require_staff)):
             "total_projects": stats["total_projects"],
             "total_personas": stats["total_personas"],
         },
-        "api": {"calls_today": stats["api_calls_today"], "error_count": get_error_count()},
+        "api": {"calls_today": stats["api_calls_today"], "error_count": app_state.get_error_count()},
     }
 
 
@@ -112,7 +112,7 @@ def admin_stats(request: Request, _staff=Depends(require_staff)):
 # ═══════════════════════════════════════════════════
 
 @router.get("/users")
-@limiter.limit("30/minute")
+@app_state.limiter.limit("30/minute")
 def admin_users(
     request: Request,
     limit: int = 20,
@@ -120,11 +120,11 @@ def admin_users(
     search: str = "",
     _staff=Depends(require_staff),
 ):
-    if supabase is None or _is_sqlite:
+    if app_state.supabase is None or app_state._is_sqlite:
         return {"users": [], "total": 0}
 
     try:
-        q = supabase.table("users").select("id,email,name,plan,language,created_at", count="exact")
+        q = app_state.supabase.table("users").select("id,email,name,plan,language,created_at", count="exact")
         if search:
             q = q.ilike("email", "%{}%".format(search))
         q = q.order("created_at", desc=True).range(offset, offset + limit - 1)
@@ -156,12 +156,12 @@ def admin_users(
 # ═══════════════════════════════════════════════════
 
 @router.get("/health")
-@limiter.limit("30/minute")
+@app_state.limiter.limit("30/minute")
 def admin_health(request: Request, _staff=Depends(require_staff)):
     return {
         "status": "ok",
-        "db": supabase is not None,
-        "error_count": get_error_count(),
+        "db": app_state.supabase is not None,
+        "error_count": app_state.get_error_count(),
         "alerts_configured": bool(os.getenv("ALERT_WEBHOOK_URL")),
     }
 
@@ -171,14 +171,14 @@ def admin_health(request: Request, _staff=Depends(require_staff)):
 # ═══════════════════════════════════════════════════
 
 @router.post("/accounts")
-@limiter.limit("10/minute")
+@app_state.limiter.limit("10/minute")
 def create_account(request: Request, body: CreateAccountRequest, _admin=Depends(require_admin)):
     """Create a new admin/operator account (admin only)."""
     return create_admin_account(body.email, body.password, body.role, body.name)
 
 
 @router.get("/accounts")
-@limiter.limit("30/minute")
+@app_state.limiter.limit("30/minute")
 def list_accounts(request: Request, _admin=Depends(require_admin)):
     """List all admin/operator accounts (admin only)."""
     return {"accounts": list_admin_accounts()}
@@ -190,7 +190,7 @@ class ToggleRequest(BaseModel):
 
 
 @router.patch("/accounts/toggle")
-@limiter.limit("20/minute")
+@app_state.limiter.limit("20/minute")
 def toggle_account(request: Request, body: ToggleRequest, _admin=Depends(require_admin)):
     """Enable/disable an admin account (admin only)."""
     return toggle_admin_account(body.email, body.is_active)
