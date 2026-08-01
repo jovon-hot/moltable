@@ -64,6 +64,24 @@ def save_memory(request: Request, body: MemoryCreate, force: bool = Query(False)
 def search_memory(request: Request, q: str = Query(..., min_length=1, max_length=500),
                   category: str | None = None, top_k: int = Query(default=5, ge=1, le=50),
                   user_id: str = Depends(get_user)):
+    try:
+        return _do_search(user_id, q, category, top_k)
+    except Exception as e:
+        # 兜底：任何错误都返回最近记忆，不崩溃
+        recent = get_store().list(user_id, category=category, limit=top_k)
+        return {
+            "query": q,
+            "results": [{
+                "id": r["id"], "content": r["content"],
+                "category": r["category"], "source": r["source"],
+                "relevance": 0.5,
+                "created_at": str(r.get("created_at", "")),
+            } for r in recent],
+            "fallback": True,
+        }
+
+
+def _do_search(user_id: str, q: str, category: str | None, top_k: int):
     vec = embed(q)
     results = get_store().search(user_id, vec, top_k=top_k, category=category)
     
