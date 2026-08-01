@@ -55,36 +55,13 @@ async def activate_trial(request: Request, body: ActivateRequest,
 
     if supabase is not None and not _is_sqlite:
         try:
-            # 检查是否已有活跃订阅
-            existing = supabase.table("subscriptions") \
-                .select("*") \
-                .eq("user_id", user_id) \
-                .eq("status", "trialing") \
-                .execute()
-            if existing.data:
-                return {
-                    "activated": False,
-                    "message": "你已经激活了免费试用",
-                    "plan": existing.data[0].get("plan", "pro"),
-                }
-
-            # 写入 subscriptions 表
-            sub_data = {
-                "user_id": user_id,
-                "stripe_subscription_id": f"trial_{user_id[:8]}",
-                "plan": plan_info["plan"],
-                "status": "trialing",
-                "billing_cycle": "monthly",
-            }
-            supabase.table("subscriptions").insert(sub_data).execute()
-
-            # 同步更新 users.plan
+            # 更新 users.plan（最简单可靠的方案）
             supabase.table("users").update({
                 "plan": plan_info["plan"],
             }).eq("id", user_id).execute()
-
+            logger.info("Trial activated: user=%s plan=%s", user_id, body.plan)
         except Exception as e:
-            logger.warning("Trial activation DB write failed (non-fatal): %s", e)
+            logger.warning("Trial activation DB update failed (non-fatal): %s", e)
 
     return {
         "activated": True,
@@ -109,20 +86,13 @@ async def get_subscription(request: Request, user_id: str = Depends(get_user)):
         return {"plan": "free", "status": "active"}
 
     try:
-        resp = supabase.table("subscriptions") \
-            .select("*") \
-            .eq("user_id", user_id) \
-            .in_("status", ["active", "trialing"]) \
-            .order("created_at", desc=True) \
-            .limit(1) \
-            .execute()
+        resp = supabase.table("users").select("plan").eq("id", user_id).single().execute()
         if resp.data:
-            sub = resp.data[0]
+            plan = resp.data.get("plan", "free")
             return {
-                "plan": sub.get("plan", "free"),
-                "plan_name": "Pro 体验中" if sub.get("plan") == "pro" else "Free",
-                "status": sub.get("status", "trialing"),
-                "since": sub.get("created_at"),
+                "plan": plan,
+                "plan_name": "Pro 体验中" if plan == "pro" else "Free",
+                "status": "trialing" if plan == "pro" else "active",
             }
     except Exception:
         pass
