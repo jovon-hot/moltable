@@ -77,12 +77,25 @@ def _encode_admin_jwt(payload: dict) -> str:
     return _jwt.encode(payload, secret, algorithm="HS256")
 
 
+def _client_ip(request: Optional[Request]) -> str:
+    """Extract real client IP behind Railway edge proxy."""
+    if request is None:
+        return "unknown"
+    # Railway/Cloudflare pass X-Forwarded-For; take the first IP (real client)
+    xff = request.headers.get("X-Forwarded-For", "")
+    if xff:
+        return xff.split(",")[0].strip()
+    xri = request.headers.get("X-Real-IP", "")
+    if xri:
+        return xri.strip()
+    return request.client.host if request.client else "unknown"
+
+
 def create_admin_token(secret: str, request: Optional[Request] = None) -> Optional[str]:
     if not is_admin_enabled():
         return None
 
-    # Brute-force check
-    ip = request.client.host if request and request.client else "unknown"
+    ip = _client_ip(request)
     _check_brute_force(ip)
 
     if not verify_admin_secret(secret):
