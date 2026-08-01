@@ -89,6 +89,7 @@ export const translations = {
       changelog: '更新日志',
       privacy: '隐私政策',
       terms: '服务条款',
+      faq: '常见问题',
     },
     dashboard: {
       demoBanner: '演示模式 — 注册后开始使用',
@@ -319,6 +320,7 @@ export const translations = {
       changelog: 'Changelog',
       privacy: 'Privacy',
       terms: 'Terms',
+      faq: 'FAQ',
     },
     dashboard: {
       demoBanner: 'Demo Mode — Sign up to get started',

@@ -61,6 +61,11 @@ export default function PublicFooter() {
                 {t.footer.terms}
               </Link>
             </li>
+            <li>
+              <Link href="/faq" className="text-sm font-body text-ln-tertiary hover:text-ln-secondary transition-colors duration-150">
+                {t.footer.faq}
+              </Link>
+            </li>
           </ul>
         </div>
       </div>
