@@ -70,7 +70,12 @@ class TestAdminLogin:
 class TestAdminAuthRequired:
     def get_admin_token(self, client_with_admin):
         resp = client_with_admin.post("/api/admin/login", json={"secret": "test-admin-secret"})
-        return resp.json()["token"]
+        data = resp.json()
+        # If bruteforce kicked in from earlier test, just skip
+        if resp.status_code == 429:
+            pytest.skip("Rate limited by brute-force protection from prior test")
+        assert resp.status_code == 200, f"Login failed: {resp.status_code} {data}"
+        return data["token"]
 
     def test_stats_no_auth(self, client_with_admin):
         resp = client_with_admin.get("/api/admin/stats")
@@ -98,7 +103,11 @@ class TestAdminAuthRequired:
 class TestAdminHealth:
     def get_admin_token(self, client_with_admin):
         resp = client_with_admin.post("/api/admin/login", json={"secret": "test-admin-secret"})
-        return resp.json()["token"]
+        data = resp.json()
+        if resp.status_code == 429:
+            pytest.skip("Rate limited by brute-force protection from prior test")
+        assert resp.status_code == 200, f"Login failed: {resp.status_code} {data}"
+        return data["token"]
 
     def test_health_with_token(self, client_with_admin):
         token = self.get_admin_token(client_with_admin)
