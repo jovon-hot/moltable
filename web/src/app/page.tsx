@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { Layers, Zap, Users, Brain, Shield, Code, Check, ArrowRight, GitBranch, Download, Trash2, Mail } from 'lucide-react'
 import { useLang } from '@/contexts/LanguageContext'
-import { createCheckout } from '@/lib/api'
+import { activateTrial } from '@/lib/api'
 
 const featureIcons = [Layers, Zap, Users, Brain, Shield, Code]
 const aboutLayerIcons = [Shield, Users, Layers]
@@ -14,7 +14,7 @@ export default function LandingPage() {
   const { t, lang } = useLang()
   const [checkoutLoading, setCheckoutLoading] = useState(false)
   const [checkoutError, setCheckoutError] = useState('')
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly')
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
 
   const p = t.pricing as any
   const pricingFeatures = (t.pricing as any).features || {}
@@ -23,8 +23,8 @@ export default function LandingPage() {
     setCheckoutLoading(true)
     setCheckoutError('')
     try {
-      const checkoutUrl = await createCheckout('pro')
-      window.location.href = checkoutUrl
+      const result = await activateTrial('pro')
+      window.location.href = '/dashboard?trial=activated'
     } catch (e: any) {
       if (e.message.includes('Login required')) {
         window.location.href = '/register'

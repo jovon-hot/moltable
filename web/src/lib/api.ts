@@ -45,26 +45,21 @@ export async function apiFetch<T = any>(
   return res.json()
 }
 
-export async function createCheckout(plan: 'pro' | 'team'): Promise<string> {
+export async function activateTrial(plan: 'pro' | 'team' = 'pro'): Promise<{activated: boolean; message: string; expires_at?: string}> {
   const token = await getToken()
-  if (!token) throw new Error('Login required to checkout')
+  if (!token) throw new Error('Login required to activate trial')
 
-  const res = await fetch(`${API_BASE}/api/billing/checkout`, {
+  const res = await fetch(`${API_BASE}/api/billing/activate`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'X-API-Key': token,
     },
-    body: JSON.stringify({
-      plan,
-      success_url: window.location.origin + '/dashboard',
-      cancel_url: window.location.origin,
-    }),
+    body: JSON.stringify({ plan, accept_terms: true }),
   })
   if (!res.ok) {
     const text = await res.text().catch(() => '')
-    throw new Error(`Checkout ${res.status}: ${text}`)
+    throw new Error(`Activation ${res.status}: ${text}`)
   }
-  const data = await res.json()
-  return data.url
+  return res.json()
 }

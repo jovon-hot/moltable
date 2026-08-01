@@ -1,137 +1,119 @@
-"""Stripe checkout routes — subscription and one-time payment handling."""
+"""Billing routes — free trial activation (Stripe deferred).
+
+激活即获得 90 天 Pro 体验，无需支付信息。
+后续收费功能待 Stripe 账户开通后再接入。
+"""
 import os
 import logging
+from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
-from app_state import limiter, supabase
+from app_state import limiter, supabase, _is_sqlite
 from routes.auth import get_user
 
-logger = logging.getLogger("moltable.stripe")
+logger = logging.getLogger("moltable.billing")
 
 router = APIRouter(prefix="/api/billing", tags=["billing"])
 
-STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
-STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
+# ── 免费试用配置 ───────────────────────────────
+TRIAL_DAYS = int(os.getenv("MOLTABLE_TRIAL_DAYS", "90"))
+TRIAL_ACTIVE = os.getenv("MOLTABLE_TRIAL_ACTIVE", "true").lower() in ("1", "true", "yes")
 
-# Price IDs — set in .env or Stripe Dashboard
-PRICE_FREE = os.getenv("STRIPE_PRICE_FREE", "price_free_monthly")
-PRICE_PRO_MONTHLY = os.getenv("STRIPE_PRICE_PRO_MONTHLY", "price_pro_monthly")
-PRICE_PRO_YEARLY = os.getenv("STRIPE_PRICE_PRO_YEARLY", "price_pro_yearly")
-PRICE_TEAM = os.getenv("STRIPE_PRICE_TEAM", "price_team_monthly")
-
-
-def _get_stripe():
-    if not STRIPE_SECRET_KEY:
-        raise HTTPException(503, "Payment service not configured")
-    import stripe
-    stripe.api_key = STRIPE_SECRET_KEY
-    return stripe
-
-
-class CheckoutRequest(BaseModel):
-    plan: str = Field(..., pattern=r"^(pro|team)$")
-    billing_cycle: str = Field(default="monthly", pattern=r"^(monthly|yearly)$")
-    success_url: str = Field(default="http://localhost:8701/dashboard")
-    cancel_url: str = Field(default="http://localhost:8701")
+# ── 用户计划元数据 ───────────────────────────────
+TRIAL_PLANS = {
+    "pro": {
+        "plan": "pro", "plan_name": "Pro (限时体验)",
+        "limits": {"identities": 3, "personas": 10, "memories": 10000, "agents": 5, "api_calls_per_day": 500},
+    },
+    "team": {
+        "plan": "team", "plan_name": "Team (限时体验)",
+        "limits": {"identities": 10, "personas": -1, "memories": 50000, "agents": -1, "api_calls_per_day": 2000},
+    },
+}
 
 
-@router.post("/checkout")
+class ActivateRequest(BaseModel):
+    plan: str = Field(default="pro", pattern=r"^(pro|team)$")
+    accept_terms: bool = Field(default=True)
+
+
+# ═══════════════════════════════════════════════════
+#  激活免费试用
+# ═══════════════════════════════════════════════════
+
+@router.post("/activate")
 @limiter.limit("10/minute")
-async def create_checkout(request: Request, body: CheckoutRequest,
-                          user_id: str = Depends(get_user)):
-    """Create a Stripe Checkout Session for subscription."""
-    stripe = _get_stripe()
+async def activate_trial(request: Request, body: ActivateRequest,
+                         user_id: str = Depends(get_user)):
+    """激活 90 天 Pro/Team 免费试用。一次调用，即时生效。"""
+    if not TRIAL_ACTIVE:
+        raise HTTPException(503, "Trial activation is currently disabled")
 
-    # 选择价格 ID：年付 vs 月付
-    if body.plan == "pro":
-        price_id = PRICE_PRO_YEARLY if body.billing_cycle == "yearly" else PRICE_PRO_MONTHLY
-    else:
-        price_id = PRICE_TEAM
+    plan_info = TRIAL_PLANS.get(body.plan, TRIAL_PLANS["pro"])
+    now = datetime.now(timezone.utc)
+    expires_at = now + timedelta(days=TRIAL_DAYS)
 
-    try:
-        session = stripe.checkout.Session.create(
-            payment_method_types=["card"],
-            line_items=[{
-                "price": price_id,
-                "quantity": 1,
-            }],
-            mode="subscription",
-            success_url=body.success_url + "?session_id={CHECKOUT_SESSION_ID}",
-            cancel_url=body.cancel_url,
-            client_reference_id=user_id,
-            metadata={"user_id": user_id, "plan": body.plan},
-        )
-        return {"url": session.url}
-    except Exception as e:
-        logger.error("Stripe checkout creation failed: %s", e)
-        raise HTTPException(500, f"Payment service error: {str(e)}")
+    if supabase is not None and not _is_sqlite:
+        try:
+            # 检查是否已有活跃订阅
+            existing = supabase.table("subscriptions") \
+                .select("*") \
+                .eq("user_id", user_id) \
+                .eq("status", "trialing") \
+                .execute()
+            if existing.data:
+                return {
+                    "activated": False,
+                    "message": "你已经激活了免费试用",
+                    "plan": existing.data[0].get("plan", "pro"),
+                    "expires_at": existing.data[0].get("current_period_end"),
+                }
 
-
-@router.post("/webhook")
-async def stripe_webhook(request: Request):
-    """Handle Stripe webhook events for subscription lifecycle."""
-    if not STRIPE_WEBHOOK_SECRET:
-        raise HTTPException(503, "Webhook not configured")
-
-    stripe = _get_stripe()
-    payload = await request.body()
-    sig_header = request.headers.get("stripe-signature")
-
-    try:
-        event = stripe.Webhook.construct_event(
-            payload, sig_header, STRIPE_WEBHOOK_SECRET
-        )
-    except Exception as e:
-        logger.warning("Invalid Stripe webhook signature")
-        raise HTTPException(400, f"Invalid signature: {str(e)}")
-
-    # Handle subscription events
-    event_type = event["type"]
-    subscription = event["data"]["object"]
-    user_id = subscription.get("metadata", {}).get("user_id")
-
-    if not user_id or supabase is None:
-        return {"received": True}
-
-    try:
-        if event_type == "customer.subscription.created":
+            # 写入 subscriptions 表（无 stripe_subscription_id）
             supabase.table("subscriptions").insert({
                 "user_id": user_id,
-                "stripe_subscription_id": subscription["id"],
-                "status": subscription["status"],
-                "plan": subscription["metadata"].get("plan", "pro"),
+                "status": "trialing",
+                "plan": plan_info["plan"],
+                "plan_name": plan_info["plan_name"],
+                "current_period_start": now.isoformat(),
+                "current_period_end": expires_at.isoformat(),
             }).execute()
-            logger.info("Subscription created: user=%s", user_id)
 
-        elif event_type == "customer.subscription.updated":
-            supabase.table("subscriptions").update({
-                "status": subscription["status"],
-            }).eq("stripe_subscription_id", subscription["id"]).execute()
+            # 同步更新 users.plan
+            supabase.table("users").update({
+                "plan": plan_info["plan"],
+            }).eq("id", user_id).execute()
 
-        elif event_type == "customer.subscription.deleted":
-            supabase.table("subscriptions").update({
-                "status": "canceled",
-            }).eq("stripe_subscription_id", subscription["id"]).execute()
-            logger.info("Subscription canceled: user=%s", user_id)
+        except Exception as e:
+            logger.warning("Trial activation DB write failed (non-fatal): %s", e)
 
-    except Exception as e:
-        logger.error("Webhook processing error: %s", e)
+    return {
+        "activated": True,
+        "plan": plan_info["plan"],
+        "plan_name": plan_info["plan_name"],
+        "trial_days": TRIAL_DAYS,
+        "expires_at": expires_at.isoformat(),
+        "limits": plan_info["limits"],
+        "message": f"Pro 体验已激活，{TRIAL_DAYS} 天有效。尽情使用！",
+    }
 
-    return {"received": True}
 
+# ═══════════════════════════════════════════════════
+#  订阅状态查询
+# ═══════════════════════════════════════════════════
 
 @router.get("/subscription")
 @limiter.limit("60/minute")
 async def get_subscription(request: Request, user_id: str = Depends(get_user)):
-    """Return current subscription status for the user."""
-    if supabase is None:
+    """返回当前用户的订阅状态（含试用过期时间）"""
+    if supabase is None or _is_sqlite:
         return {"plan": "free", "status": "active"}
 
     try:
         resp = supabase.table("subscriptions") \
             .select("*") \
             .eq("user_id", user_id) \
-            .eq("status", "active") \
+            .in_("status", ["active", "trialing"]) \
             .order("created_at", desc=True) \
             .limit(1) \
             .execute()
@@ -139,7 +121,9 @@ async def get_subscription(request: Request, user_id: str = Depends(get_user)):
             sub = resp.data[0]
             return {
                 "plan": sub.get("plan", "free"),
-                "status": sub.get("status", "active"),
+                "plan_name": sub.get("plan_name", "Pro 体验中"),
+                "status": sub.get("status", "trialing"),
+                "expires_at": sub.get("current_period_end"),
                 "since": sub.get("created_at"),
             }
     except Exception:
@@ -147,33 +131,65 @@ async def get_subscription(request: Request, user_id: str = Depends(get_user)):
     return {"plan": "free", "status": "active"}
 
 
+# ═══════════════════════════════════════════════════
+#  计划列表（公开）
+# ═══════════════════════════════════════════════════
+
 @router.get("/plans")
 @limiter.limit("120/minute")
 def get_plans(request: Request):
-    """Return available plans with pricing (no auth required)."""
-    from services.quota import PLAN_FEATURES
+    """返回当前可用计划。Stripe 暂未接入，全部限时免费。"""
     return {
+        "mode": "free_trial",
+        "trial_days": TRIAL_DAYS,
+        "message": "Stripe 收款账户暂未开通。当前所有 Pro 功能限时免费体验。",
         "free": {
             "name": "Free",
             "price_monthly": 0,
             "price_yearly": 0,
-            "features": PLAN_FEATURES["free"],
+            "features": [
+                "1 个 AI Agent 身份",
+                "2 个 Persona",
+                "100 条记忆",
+                "项目环境地图",
+                "MCP 工具 (8 个)",
+                "基础 API 访问 (50/天)",
+            ],
             "limits": {"identities": 1, "personas": 2, "memories": 100, "agents": 1, "api_calls_per_day": 50},
         },
         "pro": {
-            "name": "Pro",
-            "price_monthly": 19,
-            "price_yearly": 149,
-            "yearly_savings_pct": 35,
-            "features": PLAN_FEATURES["pro"],
+            "name": "Pro · 限时体验",
+            "price_monthly": 0,
+            "price_yearly": 0,
+            "badge": f"🔥 {TRIAL_DAYS}天免费",
+            "features": [
+                "3 个 AI Agent 身份",
+                "10 个 Persona",
+                "10,000 条记忆",
+                "Agent 自动发现",
+                "Skills 内容同步",
+                "MCP 密钥加密存储",
+                "记忆离线缓存",
+                "完整 API 访问 (500/天)",
+            ],
             "limits": {"identities": 3, "personas": 10, "memories": 10000, "agents": 5, "api_calls_per_day": 500},
+            "trial_days": TRIAL_DAYS,
+            "note": "Stripe 接入后恢复 ¥19/月。早鸟用户有专属优惠。",
         },
         "team": {
-            "name": "Team",
-            "price_monthly": 39,
-            "price_yearly": 399,
-            "per_seat": True,
-            "features": PLAN_FEATURES["team"],
+            "name": "Team · 限时体验",
+            "price_monthly": 0,
+            "price_yearly": 0,
+            "features": [
+                "10 个 AI Agent 身份",
+                "无限 Persona",
+                "50,000 条记忆",
+                "团队共享记忆库",
+                "优先支持",
+                "完整 API 访问 (2000/天)",
+            ],
             "limits": {"identities": 10, "personas": -1, "memories": 50000, "agents": -1, "api_calls_per_day": 2000},
+            "trial_days": TRIAL_DAYS,
+            "note": "联系 hi@moltable.ai 开通团队试用",
         },
     }
