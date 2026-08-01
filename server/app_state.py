@@ -54,7 +54,10 @@ def get_store():
 
 # ── Allowed Origins (reusable) ───────────────────────────
 ALLOWED_ORIGINS_STR = os.getenv("ALLOWED_ORIGINS", "http://localhost:8701,http://localhost:3000,https://moltable.ai,https://www.moltable.ai")
-allowed_origins = [o.strip() for o in ALLOWED_ORIGINS_STR.split(",") if o.strip()]
+# Always include production domains (env var might not have them from older deploys)
+_production_domains = ["https://moltable.ai", "https://www.moltable.ai"]
+_raw_origins = [o.strip() for o in ALLOWED_ORIGINS_STR.split(",") if o.strip()]
+allowed_origins = list(dict.fromkeys(_raw_origins + _production_domains))  # dedupe-preserving order
 
 # ── Persona Version (incremented on any change; Agent compares to detect drift) ──
 _persona_version = 0
