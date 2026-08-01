@@ -22,10 +22,15 @@ ADMIN_TOKEN_EXPIRY_HOURS = int(os.getenv("ADMIN_TOKEN_EXPIRY_HOURS", "2"))
 
 JWT_SECRET = os.getenv("ADMIN_JWT_SECRET")
 if not JWT_SECRET or len(JWT_SECRET) < 32:
+    JWT_SECRET = os.getenv("SUPABASE_SERVICE_KEY", "")
+if not JWT_SECRET or len(JWT_SECRET) < 32:
     JWT_SECRET = os.getenv("ADMIN_SECRET", "")
 if not JWT_SECRET or len(JWT_SECRET) < 32:
     JWT_SECRET = secrets.token_hex(32)
     logger.warning("ADMIN_JWT_SECRET not set — generated random %d-char key (persists only for this process)", len(JWT_SECRET))
+
+# Password pepper: stable, independent of JWT. Uses SUPABASE_SERVICE_KEY (always set).
+_PASSWORD_PEPPER = os.getenv("SUPABASE_SERVICE_KEY", JWT_SECRET)
 
 # Brute-force: keyed by (ip, role), tracks consecutive failures
 _failure_store: dict[str, tuple[int, float]] = defaultdict(lambda: (0, 0.0))
@@ -46,8 +51,8 @@ def _client_ip(request: Optional[Request]) -> str:
 
 
 def _hash_password(password: str) -> str:
-    """PBKDF2-HMAC-SHA256 — 100,000 iterations."""
-    salt = (JWT_SECRET[:16]).encode()
+    """PBKDF2-HMAC-SHA256 — 100,000 iterations. Pepper from SUPABASE_SERVICE_KEY (stable)."""
+    salt = _PASSWORD_PEPPER[:16].encode()
     return hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 100_000).hex()
 
 
