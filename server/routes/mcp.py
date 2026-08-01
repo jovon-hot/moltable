@@ -175,58 +175,7 @@ MCP_TOOLS = [
             },
         },
     },
-    {
-        "name": "consult_persona",
-        "description": "用指定Persona的系统提示和traits，在用户记忆上下文中回答问题",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "persona_id": {
-                    "type": "string",
-                    "description": "Persona ID",
-                },
-                "question": {
-                    "type": "string",
-                    "description": "要咨询的问题",
-                },
-            },
-            "required": ["persona_id", "question"],
-        },
-    },
-    {
-        "name": "match_persona",
-        "description": "根据问题自动推荐最匹配的 Persona。基于问题与 Persona 描述的语义匹配度排序。",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "question": {
-                    "type": "string",
-                    "description": "要匹配的问题或任务描述",
-                },
-            },
-            "required": ["question"],
-        },
-    },
-    {
-        "name": "compare_personas",
-        "description": "让多个 Persona 回答同一个问题，返回各 Persona 的视角对比。",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "question": {
-                    "type": "string",
-                    "description": "要对比的问题",
-                },
-                "persona_names": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                    "description": "要对比的 Persona 名称列表（至少2个）；传 \"*\" 或省略则对比所有活跃 Persona",
-                },
-            },
-            "required": ["question"],
-        },
-    },
-    {
+                {
         "name": "archive_memory",
         "description": "归档记忆（软删除）。归档后的记忆不会出现在搜索和列表中，但数据保留。",
         "inputSchema": {
@@ -239,42 +188,19 @@ MCP_TOOLS = [
             },
             "required": ["memory_id"],
         },
-    },
-    {
-        "name": "save_memories",
-        "description": "批量保存多条记忆。每项需提供 content、category，可选 source、confidence、tags。",
+    },        {
+        "name": "update_memory",
+        "description": "更新已有记忆的内容、分类、标签或置信度。",
         "inputSchema": {
             "type": "object",
             "properties": {
-                "memories": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "content": {"type": "string"},
-                            "category": {"type": "string", "enum": ["preference", "decision", "fact", "project", "insight", "task", "relationship"]},
-                            "source": {"type": "string"},
-                            "confidence": {"type": "number"},
-                            "tags": {"type": "array", "items": {"type": "string"}},
-                        },
-                        "required": ["content", "category"],
-                    },
-                }
+                "memory_id": {"type": "string", "description": "要更新的记忆 ID"},
+                "content": {"type": "string", "description": "新的记忆内容"},
+                "category": {"type": "string", "enum": ["preference","decision","fact","project","insight","task","relationship"], "description": "新的记忆类别"},
+                "tags": {"type": "array", "items": {"type": "string"}, "description": "新的标签列表"},
+                "confidence": {"type": "number", "description": "新的置信度 0.0-1.0"},
             },
-            "required": ["memories"],
-        },
-    },
-    {
-        "name": "search_by_tag",
-        "description": "按标签搜索记忆。返回匹配标签的所有记忆条目。",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "tags": {"type": "array", "items": {"type": "string"}, "description": "要搜索的标签列表（OR 逻辑）"},
-                "category": {"type": "string", "description": "可选过滤类别"},
-                "limit": {"type": "integer", "description": "返回结果数量", "default": 20},
-            },
-            "required": ["tags"],
+            "required": ["memory_id"],
         },
     },
     {
@@ -368,15 +294,11 @@ MCP_TOOLS = [
 TOOL_SCOPE_MAP = {
     "search_memory": ["memory:read"],
     "save_memory": ["memory:write"],
-    "save_memories": ["memory:write"],
     "archive_memory": ["memory:write"],
+    "update_memory": ["memory:write"],
     "auto_provision": ["provision:read"],
     "get_persona": ["persona:read"],
     "list_personas": ["persona:read"],
-    "match_persona": ["persona:read"],
-    "consult_persona": ["persona:read", "persona:use"],
-    "compare_personas": ["persona:read", "persona:use"],
-    "search_by_tag": ["memory:read"],
 }
 
 
@@ -515,163 +437,6 @@ def _tool_save_memory(user_id: str, params: dict) -> dict:
         raise JSONRPCError(INTERNAL_ERROR, f"Save memory failed: {str(e)}")
 
 
-def _tool_save_memories(user_id: str, params: dict) -> dict:
-    """批量保存多条记忆"""
-    memories = params.get("memories", [])
-    if not memories or not isinstance(memories, list):
-        raise JSONRPCError(INVALID_PARAMS, "Missing required parameter: memories (non-empty array)")
-
-    # ── Enforce 200 memory limit per user ─────────────────
-    existing = get_store().list(user_id, limit=0)
-    if len(existing) >= 200:
-        return {
-            "total": len(memories),
-            "saved": 0,
-            "failed": 0,
-            "error": "Memory limit reached (200). Register to unlock unlimited storage.",
-        }
-
-    results = []
-    for i, mem in enumerate(memories):
-        content = mem.get("content", "")
-        category = mem.get("category", "fact")
-        source = mem.get("source", "agent")
-        confidence = float(mem.get("confidence", 1.0))
-        tags = mem.get("tags", [])
-
-        if not content:
-            results.append({
-                "index": i,
-                "saved": False,
-                "error": "Missing required field: content",
-            })
-            continue
-        if category not in ("preference", "decision", "fact", "project", "insight", "task", "relationship"):
-            results.append({
-                "index": i,
-                "saved": False,
-                "error": f"Invalid category: {category}",
-            })
-            continue
-
-        try:
-            vec = embed(content)
-
-            # Conflict detection (same as single save)
-            conflicts = get_store().find_conflicts(user_id, vec)
-            strong = [c for c in conflicts if c["similarity"] > 0.9]
-            if strong:
-                results.append({
-                    "index": i,
-                    "saved": False,
-                    "conflict": True,
-                    "existing": [
-                        {
-                            "id": c["id"],
-                            "content": c["content"][:100],
-                            "similarity": c["similarity"],
-                        }
-                        for c in strong
-                    ],
-                    "message": "发现相似记忆，跳过保存。可单独使用 save_memory force=true 强制覆盖。",
-                })
-                continue
-
-            doc = get_store().insert(
-                user_id, content, vec,
-                category=category, source=source,
-                confidence=confidence, tags=tags,
-            )
-            results.append({
-                "index": i,
-                "saved": True,
-                "id": doc["id"],
-            })
-        except Exception as e:
-            results.append({
-                "index": i,
-                "saved": False,
-                "error": str(e),
-            })
-
-    saved_count = sum(1 for r in results if r.get("saved"))
-    return {
-        "total": len(memories),
-        "saved": saved_count,
-        "failed": len(memories) - saved_count,
-        "results": results,
-    }
-
-
-def _tool_search_by_tag(user_id: str, params: dict) -> dict:
-    """按标签搜索记忆"""
-    tags = params.get("tags", [])
-    category = params.get("category")
-    limit = min(int(params.get("limit", 20)), 100)
-
-    if not tags or not isinstance(tags, list):
-        raise JSONRPCError(INVALID_PARAMS, "Missing required parameter: tags (non-empty array)")
-
-    # Try Supabase first, fallback to in-memory VectorStore
-    store = get_store()
-    results = []
-
-    # Check if we have Supabase available via the store
-    from app_state import supabase
-    if supabase is not None and not store._offline:
-        try:
-            # Use jsonb ?| operator (tags contains any of the given tags)
-            query = supabase.table("memories") \
-                .select("*") \
-                .eq("user_id", user_id) \
-                .eq("is_archived", False) \
-                .contains("tags", tags) \
-                .order("created_at", desc=True) \
-                .limit(limit)
-
-            if category:
-                query = query.eq("category", category)
-
-            resp = query.execute()
-            for r in (resp.data or []):
-                results.append({
-                    "id": str(r.get("id", "")),
-                    "content": r.get("content", ""),
-                    "category": r.get("category", ""),
-                    "source": r.get("source", ""),
-                    "tags": r.get("tags") or [],
-                    "confidence": float(r.get("confidence", 1.0)),
-                    "created_at": r.get("created_at", ""),
-                })
-            return {"tags": tags, "results": results, "total": len(results)}
-        except Exception:
-            pass  # Fall through to in-memory fallback
-
-    # In-memory fallback: filter by tags
-    if hasattr(store, '_fallback') and store._fallback:
-        tag_set = set(tags)
-        for doc in store._fallback._store.values():
-            if doc["user_id"] != user_id or doc["is_archived"]:
-                continue
-            if category and doc["category"] != category:
-                continue
-            doc_tags = set(doc.get("tags") or [])
-            if tag_set & doc_tags:  # Intersection — OR logic
-                results.append({
-                    "id": doc["id"],
-                    "content": doc["content"],
-                    "category": doc["category"],
-                    "source": doc["source"],
-                    "tags": doc.get("tags") or [],
-                    "confidence": doc.get("confidence", 1.0),
-                    "created_at": doc.get("created_at", ""),
-                })
-        results = results[:limit]
-        return {"tags": tags, "results": results, "total": len(results)}
-
-    return {"tags": tags, "results": [], "total": 0}
-
-
 def _tool_get_persona(user_id: str, params: dict) -> dict:
     """获取 Persona 详情"""
     persona_id = params.get("persona_id", "")
@@ -776,356 +541,20 @@ def _tool_auto_provision(user_id: str, params: dict, ip_address: str = None) -> 
     }
 
 
-def _tool_consult_persona(user_id: str, params: dict, ip_address: str = None) -> dict:
-    """用指定 Persona 的身份回答问题"""
-    persona_id = params.get("persona_id", "")
-    question = params.get("question", "")
-
-    if not persona_id:
-        raise JSONRPCError(INVALID_PARAMS, "Missing required parameter: persona_id")
-    if not question:
-        raise JSONRPCError(INVALID_PARAMS, "Missing required parameter: question")
-
-    if supabase is None:
-        raise JSONRPCError(INTERNAL_ERROR, "Database not available")
-
-    # 1. Load Persona
-    result = (
-        supabase.table("personas")
-        .select("*")
-        .eq("id", persona_id)
-        .eq("user_id", user_id)
-        .single()
-        .execute()
-    )
-    if not result.data:
-        raise JSONRPCError(TOOL_ERROR, f"Persona '{persona_id}' not found")
-
-    persona = result.data
-    persona_name = persona.get("name", persona_id)
-    system_prompt = persona.get("system_prompt", "")
-    traits = persona.get("traits", {})
-
-    # 2. Search relevant memories as context
-    memories = []
-    memory_context = ""
-    try:
-        from services.embedding import embed
-        vec = embed(question)
-        memories = get_store().search(user_id, vec, top_k=10, category=None)
-        memory_context = "\n".join(
-            f"[{m['category']}] {m['content']}"
-            for m in memories
-        ) if memories else ""
-    except Exception:
-        pass
-
-    # 3. Build system prompt with context
-    if traits:
-        traits_str = "; ".join(f"{k}: {v}" for k, v in traits.items())
-        full_system = f"{system_prompt}\n\n角色特质: {traits_str}"
-    else:
-        full_system = system_prompt
-
-    if memory_context:
-        full_system += f"\n\n用户上下文:\n{memory_context}"
-
-    # 4. Check LLM availability — lazy import from main to avoid circular import
-    try:
-        from main import deepseek_client as _ds_client
-    except ImportError:
-        _ds_client = None
-
-    if _ds_client is None:
-        # Fallback: return persona context + memories without LLM
-        answer = (
-            f"[本地回退模式 — LLM 未配置]\n\n"
-            f"Persona: {persona_name}\n"
-            f"描述: {persona.get('description', '')}\n\n"
-            f"相关记忆:\n"
-        )
-        if memory_context:
-            answer += memory_context
-        else:
-            answer += "（无相关记忆）"
-        answer += f"\n\n原始问题: {question}"
-        return {
-            "answer": answer,
-            "persona_name": persona_name,
-        }
-
-    # 5. Call DeepSeek LLM with local fallback (timeout: 30s, retries: 2)
-    from openai import OpenAI, APITimeoutError, APIConnectionError
-    import time as _time
-
-    max_retries = 2
-    answer = ""  # initialized before loop for type safety
-    for attempt in range(max_retries + 1):
-        try:
-            response = _ds_client.chat.completions.create(
-                model="deepseek-chat",
-                messages=[
-                    {"role": "system", "content": full_system},
-                    {"role": "user", "content": question},
-                ],
-                max_tokens=1000,
-                temperature=0.7,
-                timeout=30.0,
-            )
-            answer = response.choices[0].message.content.strip()
-            break
-        except (APITimeoutError, APIConnectionError) as e:
-            if attempt < max_retries:
-                _time.sleep(1.0 * (attempt + 1))  # exponential backoff: 1s, 2s
-                continue
-            # All retries exhausted — fallback
-            answer = (
-                f"[本地回退模式 — LLM 不可用 ({type(e).__name__})]\\n\\n"
-                f"Persona: {persona_name}\\n"
-                f"描述: {persona.get('description', '')}\\n\\n"
-                f"相关记忆:\\n"
-            )
-            if memory_context:
-                answer += memory_context
-            else:
-                answer += "（无相关记忆）"
-            answer += f"\\n\\n原始问题: {question}"
-        except Exception as e:
-            # Other exceptions — immediate fallback
-            answer = (
-                f"[本地回退模式 — LLM 不可用]\\n\\n"
-                f"Persona: {persona_name}\\n"
-                f"描述: {persona.get('description', '')}\\n\\n"
-                f"相关记忆:\\n"
-            )
-            if memory_context:
-                answer += memory_context
-            else:
-                answer += "（无相关记忆）"
-            answer += f"\\n\\n原始问题: {question}"
-            break
-
-    # 6. Audit log
-    try:
-        supabase.table("audit_logs").insert({
-            "user_id": user_id,
-            "action": "consult_persona",
-            "ip_address": ip_address,
-            "details": {
-                "persona_id": persona_id,
-                "persona_name": persona_name,
-                "question_length": len(question),
-                "memories_used": len(memories) if memory_context else 0,
-            },
-        }).execute()
-    except Exception:
-        pass  # 审计失败不应阻塞
-
-    return {
-        "answer": answer,
-        "persona_name": persona_name,
-    }
-
-
-def _tool_match_persona(user_id: str, params: dict) -> dict:
-    """根据问题自动推荐最匹配的 Persona（基于简单词重叠评分）"""
-    question = params.get("question", "")
-    if not question:
-        raise JSONRPCError(INVALID_PARAMS, "Missing required parameter: question")
-
-    # Try supabase first, fallback to in-memory persona store
-    personas_data = []
-    if supabase is not None:
-        try:
-            result = (
-                supabase.table("personas")
-                .select("id, name, description")
-                .eq("user_id", user_id)
-                .eq("is_active", True)
-                .execute()
-            )
-            personas_data = result.data or []
-        except Exception:
-            pass
-
-    if not personas_data:
-        from services.persona_store import get_persona_store
-        personas_data = get_persona_store().list(user_id)
-
-    if not personas_data:
-        return {"matches": []}
-
-    # Compute simple keyword overlap score (jaccard-like word overlap)
-    def _tokenize(text: str) -> set[str]:
-        import re
-        words = re.findall(r"[a-zA-Z0-9\u4e00-\u9fff]+", text.lower())
-        return set(words)
-
-    question_tokens = _tokenize(question)
-
-    scored = []
-    for p in personas_data:
-        text = f"{p.get('name', '')} {p.get('description', '')}"
-        persona_tokens = _tokenize(text)
-        if not persona_tokens:
-            continue
-        intersection = len(question_tokens & persona_tokens)
-        union = len(question_tokens | persona_tokens)
-        score = intersection / union if union > 0 else 0.0
-        scored.append({
-            "id": p["id"],
-            "name": p["name"],
-            "description": p.get("description", ""),
-            "score": round(score, 4),
-        })
-
-    scored.sort(key=lambda x: x["score"], reverse=True)
-    return {"matches": scored[:3], "question": question}
-
-
-def _tool_compare_personas(user_id: str, params: dict, ip_address: str = None) -> dict:
-    """让多个 Persona 回答同一个问题，返回各 Persona 的视角对比"""
-    question = params.get("question", "")
-    persona_names = params.get("persona_names", ["*"])
-
-    if not question:
-        raise JSONRPCError(INVALID_PARAMS, "Missing required parameter: question")
-
-    # 1. Determine which personas to compare (supabase → in-memory fallback)
-    personas = []
-    if supabase is not None:
-        try:
-            if persona_names == ["*"] or not persona_names:
-                result = (
-                    supabase.table("personas")
-                    .select("id, name")
-                    .eq("user_id", user_id)
-                    .eq("is_active", True)
-                    .execute()
-                )
-            else:
-                result = (
-                    supabase.table("personas")
-                    .select("id, name")
-                    .eq("user_id", user_id)
-                    .in_("name", persona_names)
-                    .execute()
-                )
-            personas = result.data or []
-        except Exception:
-            pass
-
-    if not personas:
-        from services.persona_store import get_persona_store
-        all_p = get_persona_store().list(user_id)
-        if persona_names == ["*"] or not persona_names:
-            personas = [{"id": p["id"], "name": p["name"]} for p in all_p]
-        else:
-            name_set = set(persona_names)
-            personas = [{"id": p["id"], "name": p["name"]} for p in all_p if p["name"] in name_set]
-
-    if not personas:
-        raise JSONRPCError(TOOL_ERROR, "No matching personas found")
-    if len(personas) < 2 and persona_names != ["*"]:
-        raise JSONRPCError(INVALID_PARAMS, "Need at least 2 personas to compare")
-
-    # 2. Load full persona data (supabase → in-memory fallback)
-    def _load_persona(pid: str) -> dict | None:
-        if supabase is not None:
-            try:
-                r = supabase.table("personas").select("*").eq("id", pid).eq("user_id", user_id).single().execute()
-                if r.data:
-                    return r.data
-            except Exception:
-                pass
-        from services.persona_store import get_persona_store
-        return get_persona_store().get(pid, user_id)
-
-    # 3. For each persona, build prompt and call LLM (with timeout/retry)
-    from openai import APITimeoutError, APIConnectionError
-    import time as _time
-
-    comparisons = {}
-    for p in personas:
-        persona_data = _load_persona(p["id"])
-        if not persona_data:
-            comparisons[p["name"]] = {"error": "Persona data not found"}
-            continue
-
-        system_prompt = persona_data.get("system_prompt", "")
-        traits = persona_data.get("traits", {})
-
-        traits_str = "; ".join(f"{k}: {v}" for k, v in traits.items()) if traits else ""
-        persona_prompt = system_prompt
-        if traits_str:
-            persona_prompt += f"\n\n角色特质: {traits_str}"
-
-        # Search relevant memories
-        try:
-            from services.embedding import embed
-            vec = embed(question)
-            memories = get_store().search(user_id, vec, top_k=5, category=None)
-            memory_context = "\n".join(
-                f"[{m['category']}] {m['content']}" for m in memories
-            ) if memories else ""
-            if memory_context:
-                persona_prompt += f"\n\n用户上下文:\n{memory_context}"
-        except Exception:
-            pass
-
-        # Call LLM with timeout/retry
-        try:
-            from main import deepseek_client as _ds_client
-            if _ds_client is None:
-                comparisons[p["name"]] = f"[LLM 未配置] {p['name']}: 需要配置 DEEPSEEK_API_KEY"
-                continue
-
-            max_retries = 2
-            answer = None
-            for attempt in range(max_retries + 1):
-                try:
-                    response = _ds_client.chat.completions.create(
-                        model="deepseek-chat",
-                        messages=[
-                            {"role": "system", "content": persona_prompt},
-                            {"role": "user", "content": question},
-                        ],
-                        max_tokens=1000,
-                        temperature=0.7,
-                        timeout=30.0,
-                    )
-                    answer = response.choices[0].message.content.strip()
-                    break
-                except (APITimeoutError, APIConnectionError):
-                    if attempt < max_retries:
-                        _time.sleep(1.0 * (attempt + 1))
-                        continue
-                    answer = f"[LLM 超时] {p['name']}: 请求超时，请稍后重试"
-                except Exception as e:
-                    answer = f"[LLM 错误] {p['name']}: {str(e)[:100]}"
-                    break
-
-            comparisons[p["name"]] = answer or f"[无响应] {p['name']}"
-        except Exception as e:
-            comparisons[p["name"]] = f"[错误] {p['name']}: {str(e)[:100]}"
-
-    # 4. Audit log (supabase only)
-    if supabase is not None:
-        try:
-            supabase.table("audit_logs").insert({
-                "user_id": user_id,
-                "action": "compare_personas",
-                "ip_address": ip_address,
-                "details": {
-                    "persona_count": len(personas),
-                    "persona_names": [p["name"] for p in personas],
-                    "question_length": len(question),
-                },
-            }).execute()
-        except Exception:
-            pass
-
-    return {"question": question, "comparisons": comparisons}
+def _tool_update_memory(user_id: str, params: dict) -> dict:
+    """更新已有记忆"""
+    memory_id = params.get("memory_id", "")
+    if not memory_id:
+        raise JSONRPCError(INVALID_PARAMS, "Missing required parameter: memory_id")
+    updates = {}
+    for field in ("content", "category", "tags", "confidence", "is_archived"):
+        if field in params:
+            updates[field] = params[field]
+    if not updates:
+        raise JSONRPCError(INVALID_PARAMS, "No fields to update")
+    if not get_store().update(memory_id, user_id, **updates):
+        raise JSONRPCError(TOOL_ERROR, f"Memory '{memory_id}' not found")
+    return {"updated": True, "memory_id": memory_id, "fields": list(updates.keys())}
 
 
 def _tool_archive_memory(user_id: str, params: dict) -> dict:
@@ -1250,14 +679,10 @@ def _tool_update_project(user_id: str, params: dict) -> dict:
 TOOL_DISPATCH = {
     "search_memory": _tool_search_memory,
     "save_memory": _tool_save_memory,
-    "save_memories": _tool_save_memories,
-    "search_by_tag": _tool_search_by_tag,
+    "update_memory": _tool_update_memory,
     "get_persona": _tool_get_persona,
     "list_personas": _tool_list_personas,
     "auto_provision": _tool_auto_provision,
-    "consult_persona": _tool_consult_persona,
-    "match_persona": _tool_match_persona,
-    "compare_personas": _tool_compare_personas,
     "archive_memory": _tool_archive_memory,
     "ping": _tool_ping,
     "list_projects": _tool_list_projects,
@@ -1268,7 +693,7 @@ TOOL_DISPATCH = {
 
 
 # ── Tools that need IP address ────────────────────────────
-_IP_AWARE_TOOLS = {"auto_provision", "consult_persona", "compare_personas"}
+_IP_AWARE_TOOLS = {"auto_provision"}
 
 
 # ═══════════════════════════════════════════════════════════

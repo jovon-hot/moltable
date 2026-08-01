@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Moltable 一键接入 Hermes Agent
+# Moltable 一键接入 AI Agent
 # 用法: curl -sL moltable.ai/connect.sh | bash -s -- <你的API-KEY>
 # 或: bash connect.sh <molt_xxx>
 
@@ -42,7 +42,7 @@ PING=$(curl -s -X POST "$API_BASE/mcp" \
 if echo "$PING" | grep -q '"status":"ok"'; then
     echo -e "  ${GREEN}✅ 连接成功${NC}"
 else
-    echo -e "  ${RED}❌ 连接失败: $PING${NC}"
+    echo -e "  ${RED}❌ 连接失败${NC}"
     echo -e "  ${RED}   请检查 API Key 是否正确 (应以 molt_ 或 mol_ 开头)${NC}"
     exit 1
 fi
@@ -63,27 +63,24 @@ MCP_FILE="$HERMES_DIR/mcp.json"
 mkdir -p "$HERMES_DIR"
 
 # Build config JSON
-CONFIG=$(cat <<EOF
-{
-  "mcpServers": {
-    "moltable": {
-      "type": "http",
-      "url": "$API_BASE/mcp",
-      "headers": {
-        "X-API-Key": "$API_KEY"
+CONFIG="{
+  \"mcpServers\": {
+    \"moltable\": {
+      \"type\": \"http\",
+      \"url\": \"$API_BASE/mcp\",
+      \"headers\": {
+        \"X-API-Key\": \"$API_KEY\"
       },
-      "description": "Moltable — AI Identity & Memory Layer"
+      \"description\": \"Moltable — AI Identity & Memory Layer\"
     }
   }
-}
-EOF
-)
+}"
 
 # Merge with existing config if present
 if [ -f "$MCP_FILE" ]; then
     echo -e "  ⚠️  已有 MCP 配置，合并中..."
     python3 -c "
-import json, sys
+import json
 with open('$MCP_FILE') as f:
     existing = json.load(f)
 new = json.loads('''$CONFIG''')
@@ -93,7 +90,6 @@ existing['mcpServers']['moltable'] = new['mcpServers']['moltable']
 with open('$MCP_FILE', 'w') as f:
     json.dump(existing, f, indent=2, ensure_ascii=False)
 " 2>/dev/null || {
-        # Fallback: just write new file
         echo "$CONFIG" > "$MCP_FILE"
         echo -e "  ${BLUE}  (已覆盖旧配置)${NC}"
     }
@@ -105,9 +101,10 @@ echo -e "  └─ ${GREEN}✅ 配置已写入${NC} → $MCP_FILE"
 echo ""
 echo -e "  ${GREEN}🎉 完成！${NC}"
 echo ""
-echo -e "  现在在 Hermes 中试试："
-echo -e "    ${BLUE}search_memory 查询\"我的偏好\"${NC}"
-echo -e "    ${BLUE}save_memory 内容\"我是一名后端工程师\"${NC}"
+echo -e "  现在试试这些 MCP 工具："
+echo -e "    ${BLUE}auto_provision${NC} — 一键恢复你的 AI 环境"
+echo -e "    ${BLUE}search_memory${NC} — 搜索你的跨平台记忆"
+echo -e "    ${BLUE}save_memory${NC} — 保存偏好和决策"
 echo ""
-echo -e "  API Key: ${PURPLE}${API_KEY:0:12}...${NC} (已保存到 MCP 配置)"
+echo -e "  API Key: ${PURPLE}${API_KEY:0:12}...${NC}"
 echo ""

@@ -114,7 +114,7 @@ class TestMCPNoAuth:
         assert "search_memory" in tool_names
         assert "auto_provision" in tool_names
         assert "ping" in tool_names
-        assert "consult_persona" in tool_names
+        assert "update_memory" in tool_names
         assert len(tools) >= 10
 
 
@@ -161,6 +161,7 @@ class TestMCPMemoryTools:
             # May save empty or return error — both acceptable in test
             assert "error" in result or result.get("saved") is False
 
+    @pytest.mark.skip(reason="Removed: save_memories merged into save_memory")
     def test_save_memories_batch(self, client: TestClient, mock_supabase: MagicMock):
         _setup_api_key_mock(mock_supabase)
         resp = client.post("/mcp", json=_rpc("tools/call", {
@@ -201,6 +202,7 @@ class TestMCPMemoryTools:
         assert result["query"] == "户外运动"
         assert "results" in result
 
+    @pytest.mark.skip(reason="Removed: use search_memory with tags param")
     def test_search_by_tag(self, client: TestClient, mock_supabase: MagicMock):
         _setup_api_key_mock(mock_supabase)
         # Save memory with tags
@@ -303,6 +305,7 @@ class TestMCPPersonaTools:
         data = resp.json()
         assert "error" in data
 
+    @pytest.mark.skip(reason="Removed: Agent-side LLM handles persona matching")
     def test_match_persona(self, client: TestClient, mock_supabase: MagicMock):
         _setup_api_key_mock(mock_supabase)
         _setup_persona_list_mock(mock_supabase, [
