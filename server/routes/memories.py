@@ -15,6 +15,7 @@ class MemoryCreate(BaseModel):
     source: str = Field(default="manual", max_length=200)
     confidence: float = Field(default=1.0, ge=0.0, le=1.0)
     tags: list[str] = Field(default=[], max_length=50)
+    persona_id: str | None = Field(default=None, description="关联的 Persona ID")
 
 
 class MemoryUpdate(BaseModel):
@@ -22,6 +23,7 @@ class MemoryUpdate(BaseModel):
     category: str | None = Field(default=None, pattern=r"^(preference|decision|fact|project|insight|task|relationship)$")
     is_archived: bool | None = None
     tags: list[str] | None = Field(default=None, max_length=50)
+    persona_id: str | None = Field(default=None)
 
 
 # ── Save ──────────────────────────────────────────────
@@ -51,6 +53,7 @@ def save_memory(request: Request, body: MemoryCreate, force: bool = Query(False)
         user_id, body.content, vec,
         category=body.category, source=body.source,
         confidence=body.confidence, tags=body.tags,
+        persona_id=body.persona_id,
     )
     return {"saved": True, "id": doc["id"]}
 
@@ -63,24 +66,100 @@ def search_memory(request: Request, q: str = Query(..., min_length=1, max_length
                   user_id: str = Depends(get_user)):
     vec = embed(q)
     results = get_store().search(user_id, vec, top_k=top_k, category=category)
+    
+    # 如果 pgvector 返回空，回退到关键词搜索（全文索引）
+    if not results and not get_store()._offline:
+        try:
+            from app_state import supabase as sb
+            kw_resp = sb.rpc("match_memories_keyword", {
+                "query_text": q,
+                "match_user_id": user_id,
+                "match_count": top_k,
+                "match_category": category,
+            }).execute()
+            if kw_resp.data:
+                results = [{
+                    "id": str(r.get("id", "")),
+                    "content": r.get("content", ""),
+                    "category": r.get("category", ""),
+                    "source": r.get("source", ""),
+                    "relevance": float(r.get("rank", 0)),
+                    "created_at": str(r.get("created_at", "")),
+                } for r in kw_resp.data]
+        except Exception:
+            # 终极回退：返回最近记忆
+            recent = get_store().list(user_id, category=category, limit=top_k)
+            results = [{
+                "id": r["id"], "content": r["content"],
+                "category": r["category"], "source": r["source"],
+                "relevance": 0.5,
+                "created_at": r.get("created_at", ""),
+            } for r in recent]
+    
     return {
         "query": q,
         "results": [{
             "id": r["id"], "content": r["content"],
             "category": r["category"], "source": r["source"],
-            "relevance": r["similarity"],
+            "relevance": r.get("relevance", r.get("similarity", 0)),
             "created_at": r.get("created_at", ""),
         } for r in results],
     }
+
+
+# ── Stats ────────────────────────────────────────────
+@router.get("/stats")
+@limiter.limit("60/minute")
+def memory_stats(request: Request, user_id: str = Depends(get_user)):
+    """返回用户记忆统计（总数、归档数、按类别计数）"""
+    try:
+        store = get_store()
+        st = store.stats(user_id)
+        # 按类别统计
+        by_category = {}
+        all_memories = store.list(user_id, limit=10000)
+        for m in all_memories:
+            cat = m.get("category", "other")
+            by_category[cat] = by_category.get(cat, 0) + 1
+        return {
+            "total": st.get("total", 0),
+            "archived": st.get("archived", 0),
+            "by_category": by_category,
+        }
+    except Exception:
+        # 生产环境降级：直接查 Supabase count
+        from app_state import supabase as sb
+        total_resp = sb.table("memories").select("count", count="exact") \
+            .eq("user_id", user_id).eq("is_archived", False).execute()
+        archived_resp = sb.table("memories").select("count", count="exact") \
+            .eq("user_id", user_id).eq("is_archived", True).execute()
+        return {
+            "total": total_resp.count if hasattr(total_resp, 'count') else 0,
+            "archived": archived_resp.count if hasattr(archived_resp, 'count') else 0,
+            "by_category": {},
+        }
 
 
 # ── CRUD ──────────────────────────────────────────────
 @router.get("")
 @limiter.limit("120/minute")
 def list_memories(request: Request, category: str | None = None,
+                  persona_id: str | None = None,
                   limit: int = Query(default=50, ge=1, le=200),
+                  offset: int = Query(default=0, ge=0),
                   user_id: str = Depends(get_user)):
-    return get_store().list(user_id, category=category, limit=limit)
+    all_memories = get_store().list(user_id, category=category, limit=10000)
+    # 应用 persona_id 过滤
+    if persona_id:
+        all_memories = [m for m in all_memories if str(m.get("persona_id","")) == persona_id]
+    # 分页
+    results = all_memories[offset:offset+limit]
+    return {
+        "memories": results,
+        "total": len(all_memories),
+        "limit": limit,
+        "offset": offset,
+    }
 
 
 @router.get("/{memory_id}")

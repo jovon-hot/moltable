@@ -82,6 +82,7 @@ class SupabaseMemoryRepository(Repository):
             "source": row.get("source", "manual"),
             "confidence": float(row.get("confidence", 1.0)),
             "tags": _maybe_parse(row.get("tags") or []),
+            "persona_id": str(row.get("persona_id", "")) or None,
             "is_archived": bool(row.get("is_archived", False)),
             "created_at": row.get("created_at", ""),
         }
@@ -90,7 +91,8 @@ class SupabaseMemoryRepository(Repository):
 
     def insert(self, user_id: str, content: str, embedding: List[float],
                category: str = "fact", source: str = "manual",
-               confidence: float = 1.0, tags: List[str] | None = None) -> Dict:
+               confidence: float = 1.0, tags: List[str] | None = None,
+               persona_id: str | None = None) -> Dict:
         if self._offline:
             if self._fallback:
                 return self._fallback.insert(user_id, content, embedding,
@@ -107,6 +109,8 @@ class SupabaseMemoryRepository(Repository):
             "embedding": embedding,
             "tags": tags or [],
         }
+        if persona_id:
+            payload["persona_id"] = persona_id
         resp = self._supabase.table("memories").insert(payload).execute()
         if resp.data:
             return self._dict_from_row(resp.data[0])
@@ -149,7 +153,7 @@ class SupabaseMemoryRepository(Repository):
 
         # Build update payload (skip None values)
         payload = {}
-        for k in ("content", "category", "source", "confidence", "tags", "is_archived", "embedding"):
+        for k in ("content", "category", "source", "confidence", "tags", "is_archived", "embedding", "persona_id"):
             if k in kwargs and kwargs[k] is not None:
                 payload[k] = kwargs[k]
         if not payload:

@@ -68,8 +68,9 @@ def test_list_memories(client, auth_header):
     resp = client.get("/api/memories/", headers=auth_header)
     assert resp.status_code == 200
     data = resp.json()
-    assert isinstance(data, list)
-    assert len(data) >= 1
+    assert "memories" in data
+    assert "total" in data
+    assert len(data["memories"]) >= 1
 
 
 def test_list_memories_categories(client, auth_header):
@@ -81,9 +82,9 @@ def test_list_memories_categories(client, auth_header):
     resp = client.get("/api/memories/?category=preference", headers=auth_header)
     assert resp.status_code == 200
     data = resp.json()
-    assert isinstance(data, list)
-    if data:
-        assert all(m["category"] == "preference" for m in data)
+    assert "memories" in data
+    if data["memories"]:
+        assert all(m["category"] == "preference" for m in data["memories"])
 
 
 def test_get_memory_found(client, auth_header):

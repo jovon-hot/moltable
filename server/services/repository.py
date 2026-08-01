@@ -10,7 +10,8 @@ class Repository(ABC):
     @abstractmethod
     def insert(self, user_id: str, content: str, embedding: List[float],
                category: str = "fact", source: str = "manual",
-               confidence: float = 1.0, tags: List[str] | None = None) -> Dict:
+               confidence: float = 1.0, tags: List[str] | None = None,
+               persona_id: str | None = None) -> Dict:
         ...
 
     @abstractmethod

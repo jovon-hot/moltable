@@ -14,7 +14,8 @@ class VectorStore:
     # ── CRUD ──────────────────────────────────────────
     def insert(self, user_id: str, content: str, embedding: List[float],
                category: str = "fact", source: str = "manual",
-               confidence: float = 1.0, tags: List[str] | None = None) -> Dict:
+               confidence: float = 1.0, tags: List[str] | None = None,
+               persona_id: str | None = None) -> Dict:
         mid = str(uuid.uuid4())[:8]
         now = time.strftime("%Y-%m-%dT%H:%M:%S")
         doc = {
@@ -22,6 +23,7 @@ class VectorStore:
             "embedding": embedding, "category": category,
             "source": source, "confidence": confidence,
             "tags": tags or [], "created_at": now,
+            "persona_id": persona_id,
             "is_archived": False,
         }
         self._store[mid] = doc

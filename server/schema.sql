@@ -269,6 +269,50 @@ end;
 $$;
 
 -- ============================================
+-- 关键词搜索 RPC（pgvector 回退方案）
+-- ============================================
+create or replace function match_memories_keyword(
+    query_text text,
+    match_user_id text,
+    match_count int default 5,
+    match_category text default null
+)
+returns table (
+    id uuid,
+    content text,
+    category text,
+    source text,
+    tags text[],
+    rank float,
+    created_at timestamptz
+)
+language plpgsql
+as $$
+begin
+    return query
+    select
+        m.id,
+        m.content,
+        m.category,
+        m.source,
+        m.tags,
+        ts_rank_cd(to_tsvector('simple', m.content), plainto_tsquery('simple', query_text)) as rank,
+        m.created_at
+    from memories m
+    where m.user_id::text = match_user_id
+      and m.is_archived = false
+      and (match_category is null or m.category = match_category)
+      and to_tsvector('simple', m.content) @@ plainto_tsquery('simple', query_text)
+    order by rank desc
+    limit match_count;
+end;
+$$;
+
+-- ============ 记忆 Persona 隔离 ============
+alter table memories add column if not exists persona_id uuid references personas(id) on delete set null;
+create index if not exists memories_persona_id_idx on memories (persona_id);
+
+-- ============================================
 -- RLS: 用户数据隔离
 -- ============================================
 alter table memories enable row level security;

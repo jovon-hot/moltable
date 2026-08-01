@@ -151,7 +151,18 @@ def _delete_persona(persona_id: str, user_id: str) -> bool:
 @router.get("")
 @limiter.limit("120/minute")
 def list_personas(request: Request, user_id: str = Depends(get_user)):
-    return _list_personas(user_id)
+    personas = _list_personas(user_id)
+    # 为每个 persona 计算关联的记忆数
+    try:
+        from app_state import supabase as sb
+        for p in personas:
+            cnt = sb.table("memories").select("count", count="exact") \
+                .eq("persona_id", p["id"]).execute()
+            p["memory_count"] = cnt.count if hasattr(cnt, 'count') else 0
+    except Exception:
+        for p in personas:
+            p.setdefault("memory_count", 0)
+    return personas
 
 
 @router.get("/{persona_id}")
