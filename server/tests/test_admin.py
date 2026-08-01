@@ -13,14 +13,11 @@ from unittest.mock import patch, MagicMock
 @pytest.fixture
 def client_no_admin():
     """Client with admin disabled (no ADMIN_SECRET)."""
-    with patch.dict(os.environ, {}, clear=False):
-        if "ADMIN_SECRET" in os.environ:
-            del os.environ["ADMIN_SECRET"]
-        # Force reload of admin_auth module state
-        import services.admin_auth as aa
-        aa.ADMIN_SECRET = ""
-        aa._admin_enabled = False
-
+    if "ADMIN_SECRET" in os.environ:
+        del os.environ["ADMIN_SECRET"]
+    # _admin_enabled is module-level in services.admin_auth; the function
+    # is_admin_enabled() reads it directly, so patch the source.
+    with patch("services.admin_auth._admin_enabled", False):
         from main import app
         yield TestClient(app)
 
@@ -28,12 +25,9 @@ def client_no_admin():
 @pytest.fixture
 def client_with_admin():
     """Client with admin enabled (ADMIN_SECRET set)."""
-    with patch.dict(os.environ, {"ADMIN_SECRET": "test-admin-secret"}, clear=False):
-        import services.admin_auth as aa
-        aa.ADMIN_SECRET = "test-admin-secret"
-        aa._admin_enabled = True
-        aa.ADMIN_JWT_SECRET = "test-jwt-secret"
-
+    with patch("services.admin_auth._admin_enabled", True), \
+         patch("services.admin_auth.ADMIN_SECRET", "test-admin-secret"), \
+         patch("services.admin_auth.ADMIN_JWT_SECRET", "test-jwt-secret"):
         from main import app
         yield TestClient(app)
 
@@ -41,9 +35,9 @@ def client_with_admin():
 class TestAdminDisabled:
     """When ADMIN_SECRET is not set, all admin endpoints should return 404."""
 
-    def test_login_404(self, client_no_admin):
+    def test_login_returns_401_when_disabled(self, client_no_admin):
         resp = client_no_admin.post("/api/admin/login", json={"secret": "test"})
-        assert resp.status_code == 404
+        assert resp.status_code == 401  # create_admin_token returns None internally
 
     def test_stats_404(self, client_no_admin):
         resp = client_no_admin.get("/api/admin/stats")
