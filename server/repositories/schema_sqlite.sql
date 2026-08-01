@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS users (
     timezone TEXT DEFAULT 'Asia/Shanghai',
     password_hash TEXT,
     plan TEXT DEFAULT 'free',
+    last_active_at TEXT,
+    trial_activated_at TEXT,
     created_at TEXT DEFAULT (datetime('now'))
 );
 
@@ -170,4 +172,16 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     billing_cycle TEXT DEFAULT 'monthly',
     created_at TEXT DEFAULT (datetime('now')),
     FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- 每日统计表
+CREATE TABLE IF NOT EXISTS daily_stats (
+    date TEXT PRIMARY KEY,
+    total_users INTEGER DEFAULT 0,
+    new_users INTEGER DEFAULT 0,
+    active_users INTEGER DEFAULT 0,
+    api_calls INTEGER DEFAULT 0,
+    errors INTEGER DEFAULT 0,
+    trial_activated INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now'))
 );

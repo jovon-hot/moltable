@@ -15,6 +15,8 @@ create table users (
     plan          text default 'free',
     timezone      text default 'Asia/Shanghai',
     language      text default 'zh',
+    last_active_at        timestamptz,
+    trial_activated_at    timestamptz,
     created_at    timestamptz default now(),
     updated_at    timestamptz default now()
 );
@@ -313,6 +315,20 @@ alter table memories add column if not exists persona_id uuid references persona
 create index if not exists memories_persona_id_idx on memories (persona_id);
 
 -- ============================================
+-- 每日统计表
+-- ============================================
+create table if not exists daily_stats (
+    date            date primary key,
+    total_users     integer default 0,
+    new_users       integer default 0,
+    active_users    integer default 0,
+    api_calls       integer default 0,
+    errors          integer default 0,
+    trial_activated integer default 0,
+    created_at      timestamptz default now()
+);
+
+-- ============================================
 -- RLS: 用户数据隔离
 -- ============================================
 alter table memories enable row level security;
@@ -338,3 +354,19 @@ create policy "Users can only access their own projects"
 create policy "Users can only access their own api_keys"
     on api_keys for all
     using (user_id = auth.uid());
+
+-- ── 运营统计表 ──────────────────────────────────
+create table if not exists daily_stats (
+    date            date primary key,
+    total_users     integer default 0,
+    new_users       integer default 0,
+    active_users    integer default 0,
+    api_calls       integer default 0,
+    errors          integer default 0,
+    trial_activated integer default 0,
+    created_at      timestamptz default now()
+);
+
+-- ── 用户活跃度追踪 ──────────────────────────────
+alter table users add column if not exists last_active_at timestamptz;
+alter table users add column if not exists trial_activated_at timestamptz;

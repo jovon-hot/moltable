@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /login
+Disallow: /register
+Disallow: /api/
+Disallow: /dashboard/
+
+Sitemap: https://www.moltable.ai/sitemap.xml

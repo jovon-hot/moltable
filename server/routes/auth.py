@@ -49,18 +49,21 @@ async def get_user(request: Request,
     """Extract user_id from Supabase JWT (Bearer token) or API Key (X-API-Key header).
     Also accepts X-Session-Token for anonymous session access (returns session:{token}).
     Failed authentications are logged to audit_logs with IP address.
+    Also updates last_active_at on the user row (best-effort, silently ignored on failure).
     """
     ip_address = request.client.host if request and request.client else None
+    user_id = None
+
     if authorization:
         token = authorization.removeprefix("Bearer ")
         try:
             resp = supabase.auth.get_user(token)
-            return resp.user.id
+            user_id = resp.user.id
         except Exception:
             _log_failed_auth("Invalid JWT token", ip_address)
             raise HTTPException(401, "Invalid token")
 
-    if x_api_key:
+    elif x_api_key:
         key_hash = hash_api_key(x_api_key)
         try:
             resp = supabase.table("api_keys").select("user_id, is_active").eq("key_hash", key_hash).execute()
@@ -71,14 +74,14 @@ async def get_user(request: Request,
             if not key_record.get("is_active", False):
                 _log_failed_auth("Revoked API key", ip_address)
                 raise HTTPException(401, "API key revoked")
-            return key_record["user_id"]
+            user_id = key_record["user_id"]
         except HTTPException:
             raise
         except Exception:
             _log_failed_auth("API key lookup error", ip_address)
             raise HTTPException(401, "Invalid API key")
 
-    if x_session_token:
+    elif x_session_token:
         # Anonymous session: validate token exists and not expired
         try:
             resp = supabase.table("sessions").select("session_uuid, token, expires_at, migrated_at").eq("token", x_session_token).execute()
@@ -96,15 +99,27 @@ async def get_user(request: Request,
                 if expires_at < datetime.now(timezone.utc):
                     _log_failed_auth("Session expired", ip_address)
                     raise HTTPException(401, "Session expired — create a new one")
-            return str(session.get("session_uuid", x_session_token))
+            user_id = str(session.get("session_uuid", x_session_token))
         except HTTPException:
             raise
         except Exception:
             _log_failed_auth("Session token lookup error", ip_address)
             raise HTTPException(401, "Invalid session token")
 
-    _log_failed_auth("Missing authentication headers", ip_address)
-    raise HTTPException(401, "Missing Authorization header, X-API-Key header, or X-Session-Token header")
+    else:
+        _log_failed_auth("Missing authentication headers", ip_address)
+        raise HTTPException(401, "Missing Authorization header, X-API-Key header, or X-Session-Token header")
+
+    # ── Track user activity (best-effort, silently ignored on failure) ──
+    if user_id and supabase is not None:
+        try:
+            supabase.table("users").update({
+                "last_active_at": datetime.now(timezone.utc).isoformat(),
+            }).eq("id", user_id).execute()
+        except Exception:
+            pass  # non-critical — don't fail the request over activity tracking
+
+    return user_id
 
 
 # ── API Key management ─────────────────────────────────

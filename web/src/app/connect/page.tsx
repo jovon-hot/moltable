@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useLang } from '@/contexts/LanguageContext'
 import { Copy, Check, Terminal, Monitor, Box, ArrowRight } from 'lucide-react'
 
-const API_BASE = 'https://moltable-production-15ad.up.railway.app'
+const API_BASE = 'https://api.moltable.ai'
 
 type Platform = 'hermes' | 'claude' | 'cursor' | 'generic'
 

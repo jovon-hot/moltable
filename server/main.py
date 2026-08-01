@@ -119,11 +119,12 @@ async def request_logging_middleware(request: Request, call_next):
 
 # ── Exception Handler (记录错误到监控) ──────────────────
 from app_state import record_error, get_error_count
+from services.alerting import check_and_alert
 
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    """全局异常处理：记录错误并返回 500。"""
+    """全局异常处理：记录错误并在超过阈值时发送告警。"""
     record_error(error_type=type(exc).__name__)
     logger.error(
         "[Moltable] Unhandled exception on %s %s: %s",
@@ -132,6 +133,11 @@ async def global_exception_handler(request: Request, exc: Exception):
         str(exc),
         exc_info=True,
     )
+    # 异步告警（不阻塞响应）
+    try:
+        check_and_alert()
+    except Exception:
+        pass
     return JSONResponse(
         status_code=500,
         content={"detail": "Internal server error"},
@@ -139,7 +145,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 
 # ── Routes ────────────────────────────────────────────────
-from routes import memories, provision, personas, auth, mcp, sessions, billing, v1, agents, projects
+from routes import memories, provision, personas, auth, mcp, sessions, billing, v1, agents, projects, admin
 app.include_router(memories.router)
 app.include_router(provision.router)
 app.include_router(personas.router)
@@ -150,6 +156,7 @@ app.include_router(billing.router)
 app.include_router(v1.router)
 app.include_router(agents.router)
 app.include_router(projects.router)
+app.include_router(admin.router)
 app.add_api_route("/.well-known/mcp", mcp.mcp_discovery, methods=["GET"], tags=["mcp"])
 
 
@@ -183,6 +190,21 @@ async def health(request: Request):
 
 
 # ── Startup ───────────────────────────────────────────────
+@app.on_event("startup")
+async def startup_stats_collector():
+    """Start the daily stats collector background task."""
+    import asyncio
+    from services.stats_collector import collect_daily_stats, stats_collector_loop
+    # Collect immediately on startup (only if not already collected today)
+    try:
+        collect_daily_stats()
+    except Exception as e:
+        logger.warning("Initial stats collection failed: %s", e)
+    # Start hourly loop
+    asyncio.create_task(stats_collector_loop())
+    logger.info("Daily stats collector started")
+
+
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", "8700"))
