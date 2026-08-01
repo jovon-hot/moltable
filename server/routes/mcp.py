@@ -1128,10 +1128,15 @@ def _handle_jsonrpc(
     if method == "ping":
         return jsonrpc_success(_tool_ping(None, params), req_id)
 
+    # ── 需要认证的方法（tools/list 和 initialize 不再免认证）──
     if method == "tools/list":
+        if user_id is None:
+            return jsonrpc_error(AUTH_ERROR, "Authentication required — provide X-API-Key header", req_id)
         return jsonrpc_success({"tools": MCP_TOOLS}, req_id)
 
     if method == "initialize":
+        if user_id is None:
+            return jsonrpc_error(AUTH_ERROR, "Authentication required — provide X-API-Key header", req_id)
         return jsonrpc_success({
             "protocolVersion": "2024-11-05",
             "capabilities": {

@@ -55,7 +55,7 @@ class SupabaseMemoryRepository(Repository):
 
     @staticmethod
     def _short_id() -> str:
-        return str(uuid.uuid4())[:8]
+        return str(uuid.uuid4())
 
     def _dict_from_row(self, row: dict) -> dict:
         """Normalise a Supabase row dict to the same shape as VectorStore returns.

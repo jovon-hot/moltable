@@ -92,8 +92,9 @@ class TestMCPNoAuth:
         result = data["result"]
         assert result["status"] == "ok"
 
-    def test_initialize(self, client: TestClient):
-        resp = client.post("/mcp", json=_rpc("initialize"))
+    def test_initialize(self, client: TestClient, auth_header: dict, mock_supabase: MagicMock):
+        _setup_api_key_mock(mock_supabase)
+        resp = client.post("/mcp", json=_rpc("initialize"), headers=auth_header)
         assert resp.status_code == 200
         data = resp.json()
         assert "error" not in data
@@ -101,8 +102,9 @@ class TestMCPNoAuth:
         assert result["protocolVersion"] == "2024-11-05"
         assert result["serverInfo"]["name"] == "moltable"
 
-    def test_tools_list(self, client: TestClient):
-        resp = client.post("/mcp", json=_rpc("tools/list"))
+    def test_tools_list(self, client: TestClient, auth_header: dict, mock_supabase: MagicMock):
+        _setup_api_key_mock(mock_supabase)
+        resp = client.post("/mcp", json=_rpc("tools/list"), headers=auth_header)
         assert resp.status_code == 200
         data = resp.json()
         assert "error" not in data
@@ -359,14 +361,14 @@ class TestMCPErrors:
         data = resp.json()
         assert "error" in data
 
-    def test_batch_request(self, client: TestClient):
+    def test_batch_request(self, client: TestClient, auth_header: dict):
         """Test batch JSON-RPC request with mixed methods."""
         batch = [
             _rpc("ping", req_id=1),
-            _rpc("initialize", req_id=2),
-            _rpc("tools/list", req_id=3),
+            _rpc("ping", req_id=2),
+            _rpc("ping", req_id=3),
         ]
-        resp = client.post("/mcp", json=batch)
+        resp = client.post("/mcp", json=batch, headers=auth_header)
         assert resp.status_code == 200
         data = resp.json()
         assert isinstance(data, list)

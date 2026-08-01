@@ -238,15 +238,34 @@ async def authenticate_agent(
 # ── 本地注册/登录 (SQLite 模式, 无需 Supabase) ──────────────────
 
 import hashlib
+import re
 import uuid as _uuid
 
 _API_KEY_PEPPER = os.getenv("API_KEY_PEPPER", "moltable-local-dev-pepper")
 
+# ── XSS 防护 ────────────────────────────────────────
+_HTML_TAG_RE = re.compile(r'<[^>]*>')
+
+def _sanitize(text: str) -> str:
+    """移除 HTML 标签防止 XSS。"""
+    return _HTML_TAG_RE.sub('', text or '')
+
+def _validate_email(email: str) -> bool:
+    """基础邮箱格式验证。"""
+    return bool(re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email))
+
+def _hash_password(password: str) -> str:
+    """使用 scrypt 进行密码哈希（抗 GPU 暴力破解）。"""
+    salt = _API_KEY_PEPPER.encode()[:16]
+    return hashlib.scrypt(
+        password.encode(), salt=salt, n=16384, r=8, p=1, dklen=64
+    ).hex()
+
 
 class RegisterRequest(BaseModel):
-    email: str
-    password: str = Field(..., min_length=6)
-    name: str = ""
+    email: str = Field(..., max_length=254)
+    password: str = Field(..., min_length=8, max_length=128)
+    name: str = Field(default="", max_length=200)
 
 
 class LoginRequest(BaseModel):
@@ -258,19 +277,27 @@ class LoginRequest(BaseModel):
 @limiter.limit("10/hour")
 def local_register(request: Request, body: RegisterRequest):
     """本地注册 — SQLite 模式，不依赖 Supabase。"""
+    # XSS 防护：清理 HTML 标签
+    email = _sanitize(body.email).strip().lower()
+    name = _sanitize(body.name or body.email.split("@")[0]).strip()[:200]
+    
+    # 邮箱格式验证
+    if not _validate_email(email):
+        raise HTTPException(400, "邮箱格式无效")
+    
     # 检查 email 是否已存在
-    existing = supabase.table("users").select("id").eq("email", body.email).execute()
+    existing = supabase.table("users").select("id").eq("email", email).execute()
     if existing.data:
         raise HTTPException(409, "该邮箱已注册")
 
     user_id = str(_uuid.uuid4())
-    pw_hash = hashlib.sha256((_API_KEY_PEPPER + body.password).encode()).hexdigest()
+    pw_hash = _hash_password(body.password)
 
     # 创建用户
     supabase.table("users").insert({
         "id": user_id,
-        "email": body.email,
-        "name": body.name or body.email.split("@")[0],
+        "email": email,
+        "name": name,
         "password_hash": pw_hash,
         "plan": "free",
     }).execute()
@@ -289,12 +316,12 @@ def local_register(request: Request, body: RegisterRequest):
         "is_active": True,
     }).execute()
 
-    logging.getLogger("moltable").info("新用户注册: %s (%s)", body.email, user_id)
+    logging.getLogger("moltable").info("新用户注册: %s (%s)", email, user_id)
     return {
         "user_id": user_id,
         "key": raw_key,
-        "email": body.email,
-        "name": body.name or "",
+        "email": email,
+        "name": name,
         "message": "注册成功！请保存你的 API Key，它不会再次显示。",
     }
 
@@ -302,39 +329,39 @@ def local_register(request: Request, body: RegisterRequest):
 @router.post("/login")
 @limiter.limit("30/minute")
 def local_login(request: Request, body: LoginRequest):
-    """本地登录 — 验证密码，返回 API Key。"""
+    """本地登录 — 验证密码，返回用户信息。"""
+    email = _sanitize(body.email).strip().lower()
+    
     result = supabase.table("users").select("id, email, name, password_hash") \
-        .eq("email", body.email).execute()
+        .eq("email", email).execute()
 
     if not result.data:
         raise HTTPException(401, "邮箱或密码错误")
 
     user = result.data[0]
-    expected_hash = hashlib.sha256((_API_KEY_PEPPER + body.password).encode()).hexdigest()
+    expected_hash = _hash_password(body.password)
 
     if user.get("password_hash") != expected_hash:
         raise HTTPException(401, "邮箱或密码错误")
 
     user_id = user["id"]
 
-    # 生成新的 API Key (使用相同的 PBKDF2 哈希)
-    raw_key = "molt_" + secrets.token_urlsafe(24)
-    key_hash = hash_api_key(raw_key)
-    key_id = str(_uuid.uuid4())
-
-    supabase.table("api_keys").insert({
-        "id": key_id,
-        "user_id": user_id,
-        "name": "登录密钥",
-        "key_hash": key_hash,
-        "key_prefix": raw_key[:12],
-        "is_active": True,
-    }).execute()
-
-    logging.getLogger("moltable").info("用户登录: %s (%s)", body.email, user_id)
+    logging.getLogger("moltable").info("用户登录: %s (%s)", email, user_id)
+    
+    # 返回已有的活跃 API Key（不生成新的，避免每次登录泄露密钥）
+    keys_result = supabase.table("api_keys") \
+        .select("id, name, key_prefix") \
+        .eq("user_id", user_id) \
+        .eq("is_active", True) \
+        .order("created_at", desc=True) \
+        .limit(1) \
+        .execute()
+    
+    has_existing_key = keys_result.data and len(keys_result.data) > 0
+    
     return {
         "user_id": user_id,
-        "key": raw_key,
+        "has_api_key": has_existing_key,
         "email": user["email"],
         "name": user.get("name", ""),
     }
