@@ -1,6 +1,7 @@
 """Admin authentication — JWT-based, gated by ADMIN_SECRET env var.
 
-Without ADMIN_SECRET set, admin endpoints are disabled entirely.
+All env reads happen at call-time (not import-time) so Railway env vars
+set after deployment are picked up without requiring a cold-start.
 """
 from typing import Optional
 import os
@@ -12,36 +13,32 @@ from fastapi import HTTPException, Request
 
 logger = logging.getLogger("moltable.admin_auth")
 
-ADMIN_SECRET = os.getenv("ADMIN_SECRET", "")
-ADMIN_JWT_SECRET = os.getenv("ADMIN_JWT_SECRET", ADMIN_SECRET or "moltable-admin-default-secret")
 ADMIN_TOKEN_EXPIRY_HOURS = int(os.getenv("ADMIN_TOKEN_EXPIRY_HOURS", "1"))
 
-_admin_enabled = bool(ADMIN_SECRET)
 
-if not _admin_enabled:
-    logger.info("ADMIN_SECRET not set — admin endpoints disabled")
+def _get_secret() -> str:
+    """Dynamically read ADMIN_SECRET — supports hot-reload via env var."""
+    return os.getenv("ADMIN_SECRET", "")
+
+
+def _get_jwt_secret() -> str:
+    return os.getenv("ADMIN_JWT_SECRET", _get_secret() or "moltable-admin-default-secret")
 
 
 def is_admin_enabled() -> bool:
-    """Check whether admin features are available."""
-    return _admin_enabled
+    """Check dynamically whether admin features are available."""
+    return bool(_get_secret())
 
 
 def verify_admin_secret(secret: str) -> bool:
-    """Constant-time compare the provided secret against ADMIN_SECRET."""
-    return hmac.compare_digest(secret, ADMIN_SECRET)
+    return hmac.compare_digest(secret, _get_secret())
 
 
 def _encode_admin_jwt(payload: dict) -> str:
-    """Encode a JWT for admin use."""
-    return _jwt.encode(payload, ADMIN_JWT_SECRET, algorithm="HS256")
+    return _jwt.encode(payload, _get_jwt_secret(), algorithm="HS256")
 
 
 def issue_admin_token(request: Request) -> str:
-    """Issue a short-lived JWT for the admin session.
-
-    The token embeds an issuer IP so it cannot be replayed from a different host.
-    """
     now = datetime.now(timezone.utc)
     payload = {
         "sub": "admin",
@@ -54,11 +51,8 @@ def issue_admin_token(request: Request) -> str:
 
 
 def create_admin_token(secret: str) -> Optional[str]:
-    """Verify the admin secret and return a short-lived JWT, or None if invalid.
-
-    This is the main entry point for the admin login endpoint.
-    """
-    if not _admin_enabled:
+    """Verify admin secret and return a short-lived JWT, or None."""
+    if not is_admin_enabled():
         return None
     if not verify_admin_secret(secret):
         return None
@@ -74,17 +68,10 @@ def create_admin_token(secret: str) -> Optional[str]:
 
 
 def verify_admin_token(token: str, request: Optional[Request] = None) -> Optional[dict]:
-    """Verify an admin JWT token.
-
-    Returns the decoded payload dict if valid, None otherwise.
-    Does NOT raise HTTPException — callers should check the return value.
-    """
     try:
-        claims = _jwt.decode(token, ADMIN_JWT_SECRET, algorithms=["HS256"])
+        claims = _jwt.decode(token, _get_jwt_secret(), algorithms=["HS256"])
         if claims.get("role") != "admin":
             return None
-
-        # Optional IP binding check (skip if request not available)
         if request and request.client:
             token_ip = claims.get("ip", "")
             if token_ip and token_ip != "unknown" and token_ip != request.client.host:
@@ -92,8 +79,6 @@ def verify_admin_token(token: str, request: Optional[Request] = None) -> Optiona
                     "Admin token IP mismatch: token=%s request=%s",
                     token_ip, request.client.host,
                 )
-                # Soft check — warn but don't reject (corporate proxies change IPs)
-
         return claims
     except (_jwt.ExpiredSignatureError, _jwt.InvalidTokenError):
         return None

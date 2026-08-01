@@ -1,6 +1,6 @@
 import { isLocalMode, getLocalKey } from './supabase'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8700'
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.moltable.ai'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 

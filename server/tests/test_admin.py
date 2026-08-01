@@ -15,9 +15,8 @@ def client_no_admin():
     """Client with admin disabled (no ADMIN_SECRET)."""
     if "ADMIN_SECRET" in os.environ:
         del os.environ["ADMIN_SECRET"]
-    # _admin_enabled is module-level in services.admin_auth; the function
-    # is_admin_enabled() reads it directly, so patch the source.
-    with patch("services.admin_auth._admin_enabled", False):
+    # Patch _get_secret to return empty string (admin disabled)
+    with patch("services.admin_auth._get_secret", return_value=""):
         from main import app
         yield TestClient(app)
 
@@ -25,9 +24,8 @@ def client_no_admin():
 @pytest.fixture
 def client_with_admin():
     """Client with admin enabled (ADMIN_SECRET set)."""
-    with patch("services.admin_auth._admin_enabled", True), \
-         patch("services.admin_auth.ADMIN_SECRET", "test-admin-secret"), \
-         patch("services.admin_auth.ADMIN_JWT_SECRET", "test-jwt-secret"):
+    with patch("services.admin_auth._get_secret", return_value="test-admin-secret"), \
+         patch("services.admin_auth._get_jwt_secret", return_value="test-jwt-secret"):
         from main import app
         yield TestClient(app)
 

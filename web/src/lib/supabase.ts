@@ -48,7 +48,7 @@ export function isLocalLoggedIn(): boolean {
 
 /** 本地注册 */
 export async function localRegister(email: string, password: string, name?: string) {
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8700'
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.moltable.ai'
   const res = await fetch(`${API_BASE}/api/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -65,7 +65,7 @@ export async function localRegister(email: string, password: string, name?: stri
 
 /** 本地登录 */
 export async function localLogin(email: string, password: string) {
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8700'
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.moltable.ai'
   const res = await fetch(`${API_BASE}/api/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
