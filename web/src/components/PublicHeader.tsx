@@ -16,6 +16,7 @@ export default function PublicHeader() {
   const navLinks = [
     { href: '#features', label: t.nav.features },
     { href: '#pricing', label: t.nav.pricing },
+    { href: '/connect', label: t.nav.connect },
     { href: '/docs', label: t.nav.docs },
     { href: '#about', label: t.nav.about },
   ]
