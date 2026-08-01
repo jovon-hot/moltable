@@ -66,18 +66,17 @@ async def activate_trial(request: Request, body: ActivateRequest,
                     "activated": False,
                     "message": "你已经激活了免费试用",
                     "plan": existing.data[0].get("plan", "pro"),
-                    "expires_at": existing.data[0].get("current_period_end"),
                 }
 
-            # 写入 subscriptions 表（无 stripe_subscription_id）
-            supabase.table("subscriptions").insert({
+            # 写入 subscriptions 表
+            sub_data = {
                 "user_id": user_id,
-                "status": "trialing",
+                "stripe_subscription_id": f"trial_{user_id[:8]}",
                 "plan": plan_info["plan"],
-                "plan_name": plan_info["plan_name"],
-                "current_period_start": now.isoformat(),
-                "current_period_end": expires_at.isoformat(),
-            }).execute()
+                "status": "trialing",
+                "billing_cycle": "monthly",
+            }
+            supabase.table("subscriptions").insert(sub_data).execute()
 
             # 同步更新 users.plan
             supabase.table("users").update({
@@ -121,9 +120,8 @@ async def get_subscription(request: Request, user_id: str = Depends(get_user)):
             sub = resp.data[0]
             return {
                 "plan": sub.get("plan", "free"),
-                "plan_name": sub.get("plan_name", "Pro 体验中"),
+                "plan_name": "Pro 体验中" if sub.get("plan") == "pro" else "Free",
                 "status": sub.get("status", "trialing"),
-                "expires_at": sub.get("current_period_end"),
                 "since": sub.get("created_at"),
             }
     except Exception:
