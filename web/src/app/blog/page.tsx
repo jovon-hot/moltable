@@ -2,6 +2,7 @@
 
 import { Rss } from 'lucide-react'
 import Link from 'next/link'
+import { useLang } from '@/contexts/LanguageContext'
 
 const posts = [
   {
@@ -111,6 +112,9 @@ const posts = [
 ]
 
 export default function BlogPage() {
+  const { t, lang } = useLang()
+  const isEn = lang === 'en'
+
   return (
     <div className="min-h-screen bg-ln-bg text-ln-text">
       <div className="max-w-3xl mx-auto px-6 pt-28 pb-20">
@@ -120,10 +124,12 @@ export default function BlogPage() {
             <Rss size={22} className="text-ln-accent" />
           </div>
           <h1 className="text-4xl font-heading tracking-[-0.4px] mb-3">
-            Moltable 博客
+            {isEn ? 'Moltable Blog' : 'Moltable 博客'}
           </h1>
           <p className="text-base text-ln-secondary max-w-md mx-auto">
-            AI 身份层、MCP 协议、跨平台 Persona 管理 — 关于 AI Agent 身份基础设施的深度内容。
+            {isEn
+              ? 'AI Identity, MCP protocol, cross-platform Persona — deep content about AI Agent identity infrastructure.'
+              : 'AI 身份层、MCP 协议、跨平台 Persona 管理 — 关于 AI Agent 身份基础设施的深度内容。'}
           </p>
         </div>
 
@@ -150,11 +156,12 @@ export default function BlogPage() {
                 </div>
               </div>
               <h2 className="text-xl font-heading tracking-[-0.24px] mb-2 text-ln-text group-hover:text-ln-accent transition-colors">
-                {post.title}
+                {isEn && post.titleEn ? post.titleEn : post.title}
               </h2>
               <p className="text-sm text-ln-secondary font-body leading-relaxed">
                 {post.excerpt}
               </p>
+              {isEn && <p className="text-[11px] text-ln-tertiary mt-1">{post.title}</p>}
             </Link>
           ))}
         </div>
