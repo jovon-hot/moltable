@@ -58,7 +58,11 @@ export default function PublicHeader() {
       <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <img src="/logo-horizontal.svg" alt="Moltable" className="h-8 w-auto" />
+          <img
+            src={scrolled ? "/logo-horizontal-dark.svg" : "/logo-horizontal.svg"}
+            alt="Moltable"
+            className="h-8 w-auto transition-opacity duration-200"
+          />
         </Link>
 
         {/* Desktop Nav */}

@@ -6,7 +6,7 @@
     </linearGradient>
   </defs>
 
-  <!-- Logo mark -->
+  <!-- Logo mark (boosted opacity for light bg) -->
   <g transform="translate(50,50) scale(0.52) translate(-100,-100)">
     <line x1="46" y1="162" x2="72" y2="136" stroke="#7170ff" stroke-width="1.8" stroke-opacity="0.45"/>
     <line x1="72" y1="136" x2="100" y2="162" stroke="#7170ff" stroke-width="1.8" stroke-opacity="0.45"/>
@@ -27,9 +27,9 @@
     <circle cx="128" cy="76" r="5.5" fill="none" stroke="#9d9cff" stroke-width="2"/>
   </g>
 
-  <!-- Wordmark (light for dark bg) -->
+  <!-- Wordmark (dark for light bg) -->
   <text x="120" y="56" font-family="Inter, system-ui, -apple-system, sans-serif"
-    font-weight="590" font-size="28" letter-spacing="-0.5px" fill="#f7f8f8">Moltable</text>
+    font-weight="590" font-size="28" letter-spacing="-0.5px" fill="#0f172a">Moltable</text>
 
   <!-- Tagline -->
   <text x="120" y="72" font-family="Inter, system-ui, -apple-system, sans-serif"
