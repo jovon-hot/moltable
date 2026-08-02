@@ -568,27 +568,32 @@ def consume_sync_code(request: Request, body: SyncCodeRequest):
 @router.post("/_migrate/agent-invites")
 def migrate_agent_invites(request: Request):
     """创建 agent_invites 表 + 索引（执行后删除此端点）。"""
-    from app_state import supabase, _is_sqlite
-    if _is_sqlite:
-        return {"status": "skipped", "reason": "SQLite mode"}
+    import os, psycopg2
+    db_url = os.getenv("DATABASE_URL") or os.getenv("DIRECT_URL") or ""
+    if not db_url:
+        return {"status": "error", "detail": "No DATABASE_URL set"}
+
+    ddl = """
+    create table if not exists agent_invites (
+        id uuid primary key default gen_random_uuid(),
+        user_id uuid references users(id) on delete cascade,
+        code_hash text not null,
+        code_prefix text not null,
+        status text not null default 'pending',
+        used_at timestamptz,
+        expires_at timestamptz not null,
+        created_at timestamptz default now(),
+        revoked_at timestamptz
+    );
+    create index if not exists agent_invites_user_status_idx on agent_invites (user_id, status);
+    create index if not exists agent_invites_code_hash_idx on agent_invites (code_hash);
+    """
     try:
-        # 尝试建表
-        create_sql = """create table if not exists agent_invites (
-            id uuid primary key default gen_random_uuid(),
-            user_id uuid references users(id) on delete cascade,
-            code_hash text not null,
-            code_prefix text not null,
-            status text not null default 'pending',
-            used_at timestamptz,
-            expires_at timestamptz not null,
-            created_at timestamptz default now(),
-            revoked_at timestamptz
-        )"""
-        supabase.rpc("exec_sql", {"query": create_sql}).execute()
-        idx1 = "create index if not exists agent_invites_user_status_idx on agent_invites (user_id, status)"
-        idx2 = "create index if not exists agent_invites_code_hash_idx on agent_invites (code_hash)"
-        supabase.rpc("exec_sql", {"query": idx1}).execute()
-        supabase.rpc("exec_sql", {"query": idx2}).execute()
+        conn = psycopg2.connect(db_url + "?connect_timeout=10")
+        conn.autocommit = True
+        cur = conn.cursor()
+        cur.execute(ddl)
+        conn.close()
         return {"status": "created", "table": "agent_invites"}
     except Exception as e:
-        return {"status": "error", "detail": str(e)[:200]}
+        return {"status": "error", "detail": str(e)[:300]}
