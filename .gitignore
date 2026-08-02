@@ -1,31 +1,12 @@
-# Dependencies
+node_modules/
 __pycache__/
 *.pyc
-.venv/
-venv/
-node_modules/
-.next/
-dist/
-
-# Build artifacts
-*.db
-*.db-shm
-*.db-wal
-.pytest_cache/
-
-# Secrets
 .env
 .env.local
-.env.production
-*.key
-
-# OS
+venv/
+.venv/
+.next/
+dist/
+build/
+*.log
 .DS_Store
-Thumbs.db
-
-# IDE
-.idea/
-.vscode/
-
-# Playwright / temp
-.playwright-mcp/

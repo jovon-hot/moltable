@@ -15,7 +15,7 @@ class ProjectCreate(BaseModel):
     persona_id: Optional[str] = None
     knowledge_bases: list = Field(default=[])
     tools: list = Field(default=[])
-    is_active: bool = False
+    is_active: bool = True
 
 
 class ProjectUpdate(BaseModel):
@@ -111,7 +111,7 @@ def _clean_project(row: dict) -> dict:
         "persona_id": row.get("persona_id"),
         "knowledge_bases": row.get("knowledge_bases") or [],
         "tools": row.get("tools") or [],
-        "is_active": row.get("is_active", False),
+        "is_active": row.get("is_active", True),
         "created_at": str(row.get("created_at", "")),
         "updated_at": str(row.get("updated_at", "")),
     }

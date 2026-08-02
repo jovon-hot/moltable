@@ -400,6 +400,16 @@ def _tool_search_memory(user_id: str, params: dict) -> dict:
         scored.sort(key=lambda x: x[0], reverse=True)
         results = [r for _, r in scored[:top_k]]
 
+    def _resolve_similarity(r: dict) -> float:
+        """相似度优先级: pgvector 查询结果 → keyword_score → 默认 0.5 (范围 0.0–1.0)."""
+        sim = r.get("similarity")
+        if isinstance(sim, (int, float)) and not isinstance(sim, bool):
+            return max(0.0, min(1.0, float(sim)))
+        kw = _keyword_score(query, r.get("content", ""))
+        if kw > 0:
+            return kw
+        return 0.5
+
     return {
         "query": query,
         "results": [
@@ -408,6 +418,7 @@ def _tool_search_memory(user_id: str, params: dict) -> dict:
                 "content": r["content"],
                 "category": r["category"],
                 "source": r["source"],
+                "similarity": round(_resolve_similarity(r), 3),
                 "relevance": round(_keyword_score(query, r.get("content", "")), 3),
                 "created_at": r.get("created_at", ""),
             }

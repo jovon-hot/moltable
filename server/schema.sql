@@ -106,7 +106,7 @@ create table projects (
     persona_id    uuid references personas(id) on delete set null,
     knowledge_bases jsonb default '[]',
     tools         jsonb default '[]',
-    is_active     boolean default false,
+    is_active     boolean default true,
     created_at    timestamptz default now(),
     updated_at    timestamptz default now()
 );
