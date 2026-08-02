@@ -638,6 +638,33 @@ Tests ping, gets tool list, writes `~/.hermes/mcp.json`. Merges with existing co
 
 Both scripts at repo root (`setup.py`, `connect.sh`), both executable (`chmod +x`). Tested: syntax (`py_compile` + `bash -n`), API chain (register→login→MCP tools/list with session_token).
 
+### 🔄 用户发来同步码时（换电脑 / 换 Agent）
+
+当用户发了以 `molt_sync_` 开头的字符串：
+
+1. **解析同步码** — 检测 `molt_sync_` 前缀，提取完整同步码
+2. **调用恢复端点**：
+   ```bash
+   curl -s -X POST https://api.moltable.ai/api/auth/sync \
+     -H "Content-Type: application/json" \
+     -d '{"sync_code": "molt_sync_xxx..."}'
+   ```
+   响应：`{"api_key": "molt_xxx...", "user": {"name": "赵", "email": "jo***@email.com"}}`
+
+3. **配置 Hermes MCP**：
+   ```bash
+   hermes config set mcp_servers.moltable.url "https://api.moltable.ai/mcp"
+   hermes config set mcp_servers.moltable.headers.X-API-Key "<API_KEY>"
+   ```
+
+4. **加载上下文**：
+   调用 `auto_provision()` → Agent 获得所有记忆、Persona、项目
+
+5. **回复用户**：
+   > "已恢复！找到 X 条记忆、Y 个 Persona、Z 个项目。你的 AI 环境已完全恢复。"
+
+⚠️ 同步码**一次性使用**，用后立即失效。如果用户再次发送同一同步码，会返回 409 错误。
+
 ### ⚠️ mcp.json vs config.yaml — Hermes MCP loading
 
 Hermes loads MCP servers from `config.yaml`'s `mcp_servers:` section, NOT from `~/.hermes/mcp.json`. The `connect.sh` script writes to `mcp.json` but Hermes won't pick it up unless it also appears in `config.yaml`.
