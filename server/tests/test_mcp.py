@@ -185,10 +185,11 @@ class TestMCPMemoryTools:
 
     def test_search_memory(self, client: TestClient, mock_supabase: MagicMock):
         _setup_api_key_mock(mock_supabase)
-        # First save a memory
+        # First save a memory with tags
         client.post("/mcp", json=_rpc("tools/call", {
             "name": "save_memory",
-            "arguments": {"content": "Alice 喜欢登山和户外运动", "category": "fact"},
+            "arguments": {"content": "Alice 喜欢登山和户外运动", "category": "fact",
+                          "tags": ["sports", "outdoor"]},
         }), headers={"X-API-Key": "molt_test-key-for-mcp"})
 
         # Then search
@@ -201,6 +202,9 @@ class TestMCPMemoryTools:
         result = json.loads(content_text)
         assert result["query"] == "户外运动"
         assert "results" in result
+        # Sprint 2: 每个搜索结果都带 tags 字段，且保存的标签原样返回
+        assert all("tags" in r for r in result["results"])
+        assert result["results"][0]["tags"] == ["sports", "outdoor"]
 
     @pytest.mark.skip(reason="Removed: use search_memory with tags param")
     def test_search_by_tag(self, client: TestClient, mock_supabase: MagicMock):

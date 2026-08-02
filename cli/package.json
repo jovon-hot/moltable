@@ -1,0 +1,31 @@
+{
+  "name": "@moltable/connect",
+  "version": "0.1.0",
+  "description": "One-command Moltable MCP integration for Claude Desktop, Cursor, and Hermes. No manual JSON editing.",
+  "license": "MIT",
+  "bin": {
+    "connect": "index.js",
+    "moltable-connect": "index.js"
+  },
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=14"
+  },
+  "keywords": [
+    "moltable",
+    "mcp",
+    "claude",
+    "cursor",
+    "hermes",
+    "ai-identity",
+    "memory"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jovon-hot/moltable.git"
+  }
+}

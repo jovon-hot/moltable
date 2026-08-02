@@ -22,9 +22,30 @@ Moltable 是 AI Agent 的身份同步层。一个身份接入，所有 Agent 自
 ```bash
 # 注册获取 API Key（30 秒）
 # https://moltable.ai/register
+```
 
-# 一键接入
-curl -sL https://moltable.ai/connect.sh | bash -s -- <你的API-KEY>
+### 🚀 一行接入（推荐）
+
+```bash
+# Claude Desktop
+npx @moltable/connect claude --api-key <你的API-Key>
+
+# Cursor
+npx @moltable/connect cursor --api-key <你的API-Key>
+
+# Hermes
+npx @moltable/connect hermes --api-key <你的API-Key>
+```
+
+`@moltable/connect` 自动完成：读取/创建平台 MCP 配置 → 备份原配置 → 写入 Moltable
+server（`https://api.moltable.ai/mcp` + `X-API-Key` header）→ 在线验证 API Key →
+打印接入指引。无需手动编辑任何 JSON。
+
+### 其他方式
+
+```bash
+# 一键脚本（已注册用户）
+curl -sL https://moltable.ai/connect.sh | bash -s -- <你的API-Key>
 
 # 或手动配置 MCP
 ```
@@ -34,7 +55,7 @@ curl -sL https://moltable.ai/connect.sh | bash -s -- <你的API-KEY>
   "mcpServers": {
     "moltable": {
       "type": "http",
-      "url": "https://moltable.ai/mcp",
+      "url": "https://api.moltable.ai/mcp",
       "headers": { "X-API-Key": "你的API-Key" }
     }
   }

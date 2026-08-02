@@ -73,6 +73,30 @@ def test_get_online_returns_none_when_missing(repo_online: SupabaseMemoryReposit
     assert result is None
 
 
+def test_dict_from_row_parses_json_string_tags(repo_online: SupabaseMemoryRepository) -> None:
+    """_dict_from_row() 应把 SQLite 存储的 JSON 字符串 tags 解析为 list (Sprint 2)."""
+    row = {
+        "id": "abc-1", "user_id": "u1", "content": "带标签的记忆",
+        "embedding": "[0.1, 0.2]", "category": "fact", "source": "manual",
+        "confidence": 1.0, "tags": '["report", "fost"]',
+        "is_archived": False, "created_at": "2025-01-01T00:00:00",
+    }
+    doc = repo_online._dict_from_row(row)
+    assert doc["tags"] == ["report", "fost"]
+
+
+def test_dict_from_row_tags_none_and_empty(repo_online: SupabaseMemoryRepository) -> None:
+    """_dict_from_row() 对缺失/空/空数组字符串 tags 都应返回 []."""
+    base = {
+        "id": "abc-2", "user_id": "u1", "content": "x",
+        "embedding": [], "category": "fact", "source": "manual",
+        "confidence": 1.0, "is_archived": False, "created_at": "",
+    }
+    assert repo_online._dict_from_row({**base, "tags": None})["tags"] == []
+    assert repo_online._dict_from_row({**base, "tags": []})["tags"] == []
+    assert repo_online._dict_from_row({**base, "tags": "[]"})["tags"] == []
+
+
 # ── Offline mode — fallback VectorStore ───────────────
 
 def test_insert_offline_uses_fallback(repo_offline: SupabaseMemoryRepository,

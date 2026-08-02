@@ -83,7 +83,7 @@ def jsonrpc_success(result: Any, id_val: Any) -> dict:
 MCP_TOOLS = [
     {
         "name": "search_memory",
-        "description": "语义搜索用户记忆。传入自然语言查询，返回最相关的记忆条目。",
+        "description": "语义搜索用户记忆。传入自然语言查询，返回最相关的记忆条目。每个结果包含字段: id, content, category, source, tags（标签列表）, similarity, relevance, created_at。",
         "inputSchema": {
             "type": "object",
             "properties": {
@@ -418,6 +418,7 @@ def _tool_search_memory(user_id: str, params: dict) -> dict:
                 "content": r["content"],
                 "category": r["category"],
                 "source": r["source"],
+                "tags": r.get("tags") or [],
                 "similarity": round(_resolve_similarity(r), 3),
                 "relevance": round(_keyword_score(query, r.get("content", "")), 3),
                 "created_at": r.get("created_at", ""),

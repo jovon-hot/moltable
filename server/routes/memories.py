@@ -78,6 +78,7 @@ def search_memory(request: Request, q: str = Query(..., min_length=1, max_length
             "results": [{
                 "id": r["id"], "content": r["content"],
                 "category": r["category"], "source": r["source"],
+                "tags": r.get("tags") or [],
                 "relevance": 0.5,
                 "created_at": str(r.get("created_at", "")),
             } for r in recent],
@@ -106,6 +107,7 @@ def _do_search(user_id: str, q: str, category: str | None, top_k: int):
                     "content": r.get("content", ""),
                     "category": r.get("category", ""),
                     "source": r.get("source", ""),
+                    "tags": r.get("tags") or [],
                     "relevance": float(r.get("rank", 0)),
                     "created_at": str(r.get("created_at", "")),
                 } for r in kw_resp.data]
@@ -124,6 +126,7 @@ def _do_search(user_id: str, q: str, category: str | None, top_k: int):
                         matches.append({
                             "id": m["id"], "content": m["content"],
                             "category": m["category"], "source": m["source"],
+                            "tags": m.get("tags") or [],
                             "relevance": 0.6,
                             "created_at": m.get("created_at", ""),
                         })
@@ -137,6 +140,7 @@ def _do_search(user_id: str, q: str, category: str | None, top_k: int):
         results = [{
             "id": r["id"], "content": r["content"],
             "category": r["category"], "source": r["source"],
+            "tags": r.get("tags") or [],
             "relevance": 0.5,
             "created_at": r.get("created_at", ""),
         } for r in recent]
@@ -146,6 +150,7 @@ def _do_search(user_id: str, q: str, category: str | None, top_k: int):
         "results": [{
             "id": r["id"], "content": r["content"],
             "category": r["category"], "source": r["source"],
+            "tags": r.get("tags") or [],
             "relevance": r.get("relevance", r.get("similarity", 0)),
             "created_at": r.get("created_at", ""),
         } for r in results],

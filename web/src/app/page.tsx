@@ -101,6 +101,92 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Persona Demo */}
+      <section id="persona-demo" className="px-6 py-16 max-w-5xl mx-auto">
+        {(() => {
+          const pd: any = t.personaDemo
+          return (
+            <>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs mb-4"
+                style={{ background: 'rgba(113,112,255,0.1)', color: '#9d9cff' }}>
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#7170ff' }} />
+                {pd.badge}
+              </div>
+              <h2 className="text-2xl text-center mb-3" style={{ fontWeight: 590 }}>{pd.title}</h2>
+              <p className="text-sm text-center mb-10" style={{ color: '#8a8f98' }}>{pd.subtitle}</p>
+
+              {/* Question bubble */}
+              <div className="flex flex-col items-center mb-10">
+                <div className="inline-flex items-center gap-2 px-5 py-3 rounded-[10px] text-sm"
+                  style={{ background: '#0f1011', boxShadow: '0 0 0 1px rgba(113,112,255,0.35)' }}>
+                  <span className="text-xs font-bold px-1.5 py-0.5 rounded" style={{ background: '#7170ff', color: '#fff' }}>Q</span>
+                  <span style={{ color: '#f7f8f8' }}>{pd.question}</span>
+                </div>
+                <span className="text-xs mt-3" style={{ color: '#5a5f68' }}>{pd.questionHint}</span>
+              </div>
+
+              {/* Two-column comparison */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+
+                {/* Left — Strategic Advisor */}
+                <div className="p-6 rounded-[8px] transition-all duration-200"
+                  style={{ background: '#0f1011', boxShadow: '0 0 0 1px rgba(113,112,255,0.28)' }}>
+                  <div className="flex items-center justify-between gap-2 mb-4">
+                    <h3 className="text-base" style={{ fontWeight: 590, color: '#9d9cff' }}>{pd.left.name}</h3>
+                    <span className="text-xs px-2.5 py-1 rounded-full flex-shrink-0"
+                      style={{ background: 'rgba(113,112,255,0.12)', color: '#7170ff' }}>{pd.left.role}</span>
+                  </div>
+                  <p className="text-xs mb-2" style={{ color: '#5a5f68' }}>{pd.traitsLabel}</p>
+                  <div className="flex flex-wrap gap-1.5 mb-4">
+                    {pd.left.traits.map((tr: string, i: number) => (
+                      <span key={i} className="text-xs px-2 py-1 rounded-[4px]"
+                        style={{ background: 'rgba(255,255,255,0.06)', color: '#b0b5bd' }}>{tr}</span>
+                    ))}
+                  </div>
+                  <p className="text-xs mb-2" style={{ color: '#5a5f68' }}>{pd.promptLabel}</p>
+                  <div className="text-xs leading-relaxed mb-4 p-3 rounded-[6px] font-mono"
+                    style={{ background: 'rgba(255,255,255,0.03)', color: '#8a8f98', boxShadow: '0 0 0 1px rgba(255,255,255,0.05)' }}>
+                    {pd.left.prompt}
+                  </div>
+                  <div className="text-sm leading-relaxed p-4 rounded-[8px]"
+                    style={{ background: 'rgba(113,112,255,0.07)', color: '#f7f8f8' }}>
+                    {pd.left.reply}
+                  </div>
+                </div>
+
+                {/* Right — Conservative Auditor */}
+                <div className="p-6 rounded-[8px] transition-all duration-200"
+                  style={{ background: '#0f1011', boxShadow: '0 0 0 1px rgba(248,113,113,0.25)' }}>
+                  <div className="flex items-center justify-between gap-2 mb-4">
+                    <h3 className="text-base" style={{ fontWeight: 590, color: '#f87171' }}>{pd.right.name}</h3>
+                    <span className="text-xs px-2.5 py-1 rounded-full flex-shrink-0"
+                      style={{ background: 'rgba(248,113,113,0.12)', color: '#f87171' }}>{pd.right.role}</span>
+                  </div>
+                  <p className="text-xs mb-2" style={{ color: '#5a5f68' }}>{pd.traitsLabel}</p>
+                  <div className="flex flex-wrap gap-1.5 mb-4">
+                    {pd.right.traits.map((tr: string, i: number) => (
+                      <span key={i} className="text-xs px-2 py-1 rounded-[4px]"
+                        style={{ background: 'rgba(255,255,255,0.06)', color: '#b0b5bd' }}>{tr}</span>
+                    ))}
+                  </div>
+                  <p className="text-xs mb-2" style={{ color: '#5a5f68' }}>{pd.promptLabel}</p>
+                  <div className="text-xs leading-relaxed mb-4 p-3 rounded-[6px] font-mono"
+                    style={{ background: 'rgba(255,255,255,0.03)', color: '#8a8f98', boxShadow: '0 0 0 1px rgba(255,255,255,0.05)' }}>
+                    {pd.right.prompt}
+                  </div>
+                  <div className="text-sm leading-relaxed p-4 rounded-[8px]"
+                    style={{ background: 'rgba(248,113,113,0.07)', color: '#f7f8f8' }}>
+                    {pd.right.reply}
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-xs text-center mt-8" style={{ color: '#5a5f68' }}>{pd.note}</p>
+            </>
+          )
+        })()}
+      </section>
+
       <hr style={{ borderColor: 'rgba(255,255,255,0.06)' }} />
 
       {/* Pricing */}

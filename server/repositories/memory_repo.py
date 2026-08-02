@@ -81,7 +81,7 @@ class SupabaseMemoryRepository(Repository):
             "category": row.get("category", "fact"),
             "source": row.get("source", "manual"),
             "confidence": float(row.get("confidence", 1.0)),
-            "tags": _maybe_parse(row.get("tags") or []),
+            "tags": _parse_tags(row.get("tags")),
             "persona_id": str(row.get("persona_id", "")) or None,
             "is_archived": bool(row.get("is_archived", False)),
             "created_at": row.get("created_at", ""),

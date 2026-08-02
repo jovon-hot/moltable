@@ -182,6 +182,21 @@ def test_search_memories(client, auth_header):
     assert "results" in data
 
 
+def test_search_memory_returns_tags(client, auth_header):
+    client.post(
+        "/api/memories/",
+        json={"content": "FOST 报告已完成", "category": "fact", "tags": ["report", "fost"]},
+        headers=auth_header,
+    )
+    resp = client.get("/api/memories/search?q=FOST", headers=auth_header)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "results" in data
+    # Sprint 2: 每个搜索结果都带 tags 字段，且保存的标签原样返回
+    assert all("tags" in r for r in data["results"])
+    assert any("fost" in r.get("tags", []) for r in data["results"])
+
+
 def test_search_memories_no_query(client, auth_header):
     resp = client.get("/api/memories/search", headers=auth_header)
     assert resp.status_code == 422

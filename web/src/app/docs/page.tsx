@@ -19,7 +19,7 @@ interface SidebarItem {
   id: string
   label: string
   icon: React.ElementType
-  children?: { id: string; label: string }[]
+  children?: { id: string; label: string; badge?: string }[]
 }
 
 const sidebarItems: SidebarItem[] = [
@@ -42,6 +42,8 @@ const sidebarItems: SidebarItem[] = [
       { id: 'api-update_project', label: 'update_project' },
       { id: 'api-archive_memory', label: 'archive_memory' },
       { id: 'api-ping', label: 'ping' },
+      { id: 'api-compare_personas', label: 'compare_personas', badge: '已迁移至 Agent 端' },
+      { id: 'api-match_persona', label: 'match_persona', badge: '已迁移至 Agent 端' },
     ],
   },
   { id: 'mcp', label: 'MCP 协议', icon: GitBranch },
@@ -64,6 +66,7 @@ interface ToolDef {
   params: ParamDef[]
   curlExample: string
   responseExample: string
+  migrated?: boolean
 }
 
 const apiTools: ToolDef[] = [
@@ -347,6 +350,26 @@ const apiTools: ToolDef[] = [
   }
 }`
   },
+  {
+    id: 'compare_personas',
+    name: 'compare_personas',
+    migrated: true,
+    description:
+      '（已迁移）让多个 Persona 对同一问题分别回答并对比。例如 compare_personas("是否进入东南亚市场？", ["战略顾问", "保守审核员"])。',
+    params: [],
+    curlExample: '',
+    responseExample: '',
+  },
+  {
+    id: 'match_persona',
+    name: 'match_persona',
+    migrated: true,
+    description:
+      '（已迁移）根据问题自动推荐最匹配的 Persona。例如 match_persona("如何制定增长战略？") 会返回匹配度最高的 Persona。',
+    params: [],
+    curlExample: '',
+    responseExample: '',
+  },
 ]
 
 // ─── FAQ Data ─────────────────────────────────────────────────────
@@ -562,6 +585,9 @@ export default function DocsPage() {
                           }`}
                         >
                           {child.label}
+                          {child.badge && (
+                            <span className="ml-1.5 text-[10px] px-1 py-0.5 rounded bg-ln-accent-muted/60 text-ln-accent-hover font-ui flex-shrink-0">{child.badge}</span>
+                          )}
                         </button>
                       ))}
                     </div>
@@ -759,7 +785,7 @@ hermes --mcp-auto-provision moltable`} />
           <section data-section="api">
             <h2 className="text-2xl font-heading tracking-[-0.3px] text-ln-text mb-6">API 参考</h2>
             <p className="text-ln-secondary font-body mb-8">
-              Moltable 提供 MCP JSON-RPC 2.0 接口，共 <strong className="text-ln-text">{apiTools.length}</strong> 个工具。所有请求通过 <code className="text-ln-accent-hover bg-ln-raised px-1.5 py-0.5 rounded text-[13px] font-mono">POST /mcp</code> 端点发送。
+              Moltable 提供 MCP JSON-RPC 2.0 接口，共 <strong className="text-ln-text">{apiTools.filter((t) => !t.migrated).length}</strong> 个工具，另有 {apiTools.filter((t) => t.migrated).length} 个已迁移至 Agent 端。所有请求通过 <code className="text-ln-accent-hover bg-ln-raised px-1.5 py-0.5 rounded text-[13px] font-mono">POST /mcp</code> 端点发送。
             </p>
 
             <div className="mb-8 flex flex-wrap gap-2">
@@ -774,6 +800,7 @@ hermes --mcp-auto-provision moltable`} />
                   }`}
                 >
                   {tool.name}
+                  {tool.migrated && <span className="ml-1 text-[10px] opacity-70">· 迁移</span>}
                 </button>
               ))}
             </div>
@@ -792,6 +819,15 @@ hermes --mcp-auto-provision moltable`} />
                 </div>
                 <p className="text-ln-secondary font-body mb-4">{tool.description}</p>
 
+                {tool.migrated ? (
+                  <div className="mb-4 p-4 rounded-card bg-ln-accent-muted/40 border border-ln-border-subtle">
+                    <p className="text-sm font-ui text-ln-accent-hover mb-1">⚠️ 已迁移至 Agent 端</p>
+                    <p className="text-xs text-ln-tertiary font-body leading-relaxed">
+                      该工具不再由 Moltable 服务端提供（2026-08-01 起从 MCP 工具列表中移除）。服务端不做 LLM 推理，人格匹配与多视角对比改由 Agent 端完成——Agent 读取 list_personas / get_persona 返回的 traits 与 system_prompt 后自行判断与生成。因此不会出现在 tools/list 中，直接调用会返回 -32601 方法不存在。
+                    </p>
+                  </div>
+                ) : (
+                  <>
                 <h4 className="text-sm font-ui text-ln-text mb-2">参数</h4>
                 <ParamTable params={tool.params} />
 
@@ -803,6 +839,8 @@ hermes --mcp-auto-provision moltable`} />
                   label="Response (JSON-RPC 2.0)"
                   code={tool.responseExample}
                 />
+                  </>
+                )}
               </section>
             </div>
           ))}
