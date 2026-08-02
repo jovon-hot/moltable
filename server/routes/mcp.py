@@ -123,8 +123,8 @@ MCP_TOOLS = [
                 },
                 "source": {
                     "type": "string",
-                    "description": "来源（如 hermes, claude, chatgpt, manual, agent）",
-                    "default": "agent",
+                    "description": "来源标识（推荐填写: hermes/claude/chatgpt/manual/agent）。未传时服务端从 X-Agent-Platform 请求头推断，仍无则记为 unknown",
+                    "recommended": True,
                 },
                 "confidence": {
                     "type": "number",
@@ -427,7 +427,7 @@ def _tool_search_memory(user_id: str, params: dict) -> dict:
     }
 
 
-def _tool_save_memory(user_id: str, params: dict) -> dict:
+def _tool_save_memory(user_id: str, params: dict, agent_platform: str | None = None) -> dict:
     """保存记忆"""
     # ── Enforce 100 memory limit per user ─────────────────
     existing = get_store().list(user_id, limit=0)
@@ -442,7 +442,8 @@ def _tool_save_memory(user_id: str, params: dict) -> dict:
 
     content = params.get("content", "")
     category = params.get("category", "fact")
-    source = params.get("source", "agent")
+    # source 解析: 显式传参 → X-Agent-Platform 请求头 → unknown
+    source = (params.get("source") or "").strip() or (agent_platform or "").strip() or "unknown"
     confidence = float(params.get("confidence", 1.0))
     tags = params.get("tags", [])
     force = params.get("force", False)
@@ -484,7 +485,7 @@ def _tool_save_memory(user_id: str, params: dict) -> dict:
             confidence=confidence, tags=tags,
             persona_id=persona_id,
         )
-        return {"saved": True, "id": doc["id"]}
+        return {"saved": True, "id": doc["id"], "source": source}
     except JSONRPCError:
         raise
     except Exception as e:
@@ -821,6 +822,9 @@ TOOL_DISPATCH = {
 # ── Tools that need IP address ────────────────────────────
 _IP_AWARE_TOOLS = {"auto_provision"}
 
+# ── Tools that receive X-Agent-Platform header (Agent 来源追踪) ──
+_PLATFORM_AWARE_TOOLS = {"save_memory"}
+
 
 # ═══════════════════════════════════════════════════════════
 # JSON-RPC 方法分发
@@ -830,6 +834,7 @@ def _handle_jsonrpc(
     body: dict,
     user_id: str | None,
     ip_address: str = None,
+    agent_platform: str | None = None,
 ) -> dict:
     """处理单条 JSON-RPC 2.0 请求"""
     # ── validate jsonrpc field ─────────────────────────
@@ -920,6 +925,8 @@ def _handle_jsonrpc(
         try:
             if tool_name in _IP_AWARE_TOOLS:
                 result = handler(user_id, tool_params, ip_address=ip_address)
+            elif tool_name in _PLATFORM_AWARE_TOOLS:
+                result = handler(user_id, tool_params, agent_platform=agent_platform)
             else:
                 result = handler(user_id, tool_params)
             # MCP tools/call 响应格式：将结果包裹在 content 中
@@ -978,6 +985,8 @@ async def mcp_endpoint(
     # ── 可选认证 ────────────────────────────────────
     user_id = None
     ip_address = request.client.host if request and request.client else None
+    # Agent 来源追踪: X-Agent-Platform 请求头（hermes/claude/chatgpt 等）
+    agent_platform = (request.headers.get("x-agent-platform") or "").strip() or None
     if x_api_key:
         try:
             user_id = await _resolve_api_key(x_api_key)
@@ -997,7 +1006,7 @@ async def mcp_endpoint(
                     jsonrpc_error(INVALID_REQUEST, "Invalid Request", None)
                 )
                 continue
-            responses.append(_handle_jsonrpc(req, user_id, ip_address=ip_address))
+            responses.append(_handle_jsonrpc(req, user_id, ip_address=ip_address, agent_platform=agent_platform))
         return JSONRPCResponse(responses)
     else:
         if not isinstance(body, dict):
@@ -1005,7 +1014,7 @@ async def mcp_endpoint(
                 jsonrpc_error(INVALID_REQUEST, "Request must be a JSON object", None),
                 status_code=400,
             )
-        result = _handle_jsonrpc(body, user_id, ip_address=ip_address)
+        result = _handle_jsonrpc(body, user_id, ip_address=ip_address, agent_platform=agent_platform)
         status = 200
         if "error" in result:
             code = result["error"].get("code", 0)

@@ -38,6 +38,21 @@ create table api_keys (
 create index api_keys_user_id_idx on api_keys (user_id);
 create index api_keys_key_hash_idx on api_keys (key_hash);
 
+-- ============ Agent Invites (同步码, molt_sync_xxx) ============
+create table agent_invites (
+    id            uuid primary key default gen_random_uuid(),
+    user_id       uuid references users(id) on delete cascade,
+    code_hash     text not null,                   -- PBKDF2(molt_sync_xxx) — 同 hash_api_key()
+    code_prefix   text not null,                   -- 前 12 位用于展示
+    status        text not null default 'pending', -- pending | used | revoked | expired
+    used_at       timestamptz,
+    expires_at    timestamptz not null,            -- 默认 7 天（应用层写入）
+    created_at    timestamptz default now(),
+    revoked_at    timestamptz
+);
+create index agent_invites_user_status_idx on agent_invites (user_id, status);
+create index agent_invites_code_hash_idx on agent_invites (code_hash);
+
 -- ============ Personas ============
 create table personas (
     id              uuid primary key default gen_random_uuid(),

@@ -1,18 +1,92 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { useLang } from '@/contexts/LanguageContext'
-import { Copy, Check, Terminal, Monitor, Box, ArrowRight } from 'lucide-react'
+import { Copy, Check, ArrowRight, Loader2, RotateCcw } from 'lucide-react'
 
-const API_BASE = 'https://api.moltable.ai'
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.moltable.ai'
 
 type Platform = 'hermes' | 'claude' | 'cursor' | 'generic'
+
+type KeyStatus =
+  | { state: 'idle' }
+  | { state: 'checking' }
+  | { state: 'valid'; user: { name?: string; email?: string } }
+  | { state: 'invalid'; message: string }
+  | { state: 'error'; message: string }
 
 export default function OnboardingPage() {
   const { t, lang } = useLang()
   const [platform, setPlatform] = useState<Platform>('hermes')
   const [copied, setCopied] = useState('')
   const [apiKey, setApiKey] = useState('')
+  const [keyStatus, setKeyStatus] = useState<KeyStatus>({ state: 'idle' })
+
+  // ── API Key 实时验证 ──────────────────────────────
+  const seqRef = useRef(0)                       // guards against stale responses
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const controllerRef = useRef<AbortController | null>(null)
+
+  const validateKey = useCallback(async (raw: string) => {
+    const key = raw.trim()
+    if (key.length <= 20) {
+      setKeyStatus({ state: 'idle' })
+      return
+    }
+    const seq = ++seqRef.current
+    controllerRef.current?.abort()
+    const controller = new AbortController()
+    controllerRef.current = controller
+    setKeyStatus({ state: 'checking' })
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/me`, {
+        headers: { 'X-API-Key': key },
+        signal: controller.signal,
+      })
+      if (seq !== seqRef.current) return // a newer check superseded this one
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setKeyStatus({ state: 'valid', user: { name: data?.name, email: data?.email } })
+      } else {
+        const body = await res.json().catch(() => null)
+        const detail = body && typeof body.detail === 'string' ? body.detail : ''
+        setKeyStatus({ state: 'invalid', message: detail })
+      }
+    } catch (err) {
+      if ((err as Error)?.name === 'AbortError') return
+      if (seq !== seqRef.current) return
+      setKeyStatus({
+        state: 'error',
+        message: lang === 'zh' ? '网络错误，请重试' : 'Network error, please retry',
+      })
+    }
+  }, [lang])
+
+  const handleApiKeyChange = (value: string) => {
+    setApiKey(value)
+    if (timerRef.current) clearTimeout(timerRef.current)
+    const key = value.trim()
+    if (key.length <= 20) {
+      seqRef.current++           // invalidate any in-flight check
+      controllerRef.current?.abort()
+      setKeyStatus({ state: 'idle' })
+      return
+    }
+    // debounce: only fire once the user pauses typing/pasting
+    timerRef.current = setTimeout(() => validateKey(value), 400)
+  }
+
+  const retryValidate = () => {
+    if (timerRef.current) clearTimeout(timerRef.current)
+    validateKey(apiKey)
+  }
+
+  useEffect(() => {
+    return () => {
+      controllerRef.current?.abort()
+      if (timerRef.current) clearTimeout(timerRef.current)
+    }
+  }, [])
 
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text)
@@ -96,7 +170,7 @@ export default function OnboardingPage() {
         {
           title: lang === 'zh' ? 'MCP JSON-RPC 端点' : 'MCP JSON-RPC endpoint',
           code: `POST ${API_BASE}/mcp
-Header: X-API-Key: <your-key>
+Header: X-API-Key: ***
 Content-Type: application/json`
         },
         {
@@ -130,7 +204,7 @@ Content-Type: application/json`
             <input
               type="text"
               value={apiKey}
-              onChange={e => setApiKey(e.target.value)}
+              onChange={e => handleApiKeyChange(e.target.value)}
               placeholder="molt_xxxxxxxxxxxx"
               className="flex-1 px-4 py-2.5 rounded-lg text-sm font-mono outline-none transition-all"
               style={{ background: '#08090a', color: '#7170ff', boxShadow: '0 0 0 1px rgba(255,255,255,0.08)' }}
@@ -145,6 +219,51 @@ Content-Type: application/json`
               {lang === 'zh' ? '免费注册' : 'Sign Up'}
             </a>
           </div>
+          {/* Live validation status */}
+          {keyStatus.state !== 'idle' && (
+            <div className="mt-3 flex items-center gap-2 text-sm">
+              {keyStatus.state === 'checking' && (
+                <>
+                  <Loader2 size={14} className="animate-spin" style={{ color: '#8a8f98' }} />
+                  <span style={{ color: '#8a8f98' }}>{lang === 'zh' ? '验证中…' : 'Verifying…'}</span>
+                </>
+              )}
+              {keyStatus.state === 'valid' && (
+                <>
+                  <span style={{ color: '#34d399' }}>✅</span>
+                  <span style={{ color: '#34d399', fontWeight: 500 }}>
+                    {keyStatus.user.name || keyStatus.user.email || (lang === 'zh' ? 'API Key 有效' : 'Valid API Key')}
+                  </span>
+                  {keyStatus.user.name && keyStatus.user.email && (
+                    <span style={{ color: '#8a8f98' }}> · {keyStatus.user.email}</span>
+                  )}
+                </>
+              )}
+              {keyStatus.state === 'invalid' && (
+                <>
+                  <span style={{ color: '#f87171' }}>❌</span>
+                  <span style={{ color: '#f87171' }}>
+                    {lang === 'zh' ? 'API Key 无效' : 'Invalid API Key'}
+                    {keyStatus.message ? `（${keyStatus.message}）` : ''}
+                  </span>
+                </>
+              )}
+              {keyStatus.state === 'error' && (
+                <>
+                  <span style={{ color: '#fbbf24' }}>⚠️</span>
+                  <span style={{ color: '#fbbf24' }}>{keyStatus.message}</span>
+                  <button
+                    onClick={retryValidate}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs transition-all hover:opacity-90"
+                    style={{ background: 'rgba(255,255,255,0.08)', color: '#fbbf24', fontWeight: 500 }}
+                  >
+                    <RotateCcw size={12} />
+                    {lang === 'zh' ? '重试' : 'Retry'}
+                  </button>
+                </>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Platform Tabs */}

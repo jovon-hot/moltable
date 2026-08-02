@@ -12,7 +12,7 @@ router = APIRouter(prefix="/api/memories", tags=["memories"])
 class MemoryCreate(BaseModel):
     content: str = Field(..., min_length=1, max_length=10000, description="Memory content")
     category: str = Field(default="fact", pattern=r"^(preference|decision|fact|project|insight|task|relationship)$")
-    source: str = Field(default="manual", max_length=200)
+    source: str | None = Field(default=None, max_length=200, description="来源（hermes/claude/chatgpt/manual/agent）。未传时从 X-Agent-Platform 请求头推断，仍无则记 unknown")
     confidence: float = Field(default=1.0, ge=0.0, le=1.0)
     tags: list[str] = Field(default=[], max_length=50)
     persona_id: str | None = Field(default=None, description="关联的 Persona ID")
@@ -49,13 +49,17 @@ def save_memory(request: Request, body: MemoryCreate, force: bool = Query(False)
                 "message": "Similar memories found. Use ?force=true to overwrite.",
             }
 
+    # source 解析: 显式传参 → X-Agent-Platform 请求头 → unknown
+    agent_platform = (request.headers.get("x-agent-platform") or "").strip()
+    source = ((body.source or "").strip() or agent_platform or "unknown")[:200]
+
     doc = get_store().insert(
         user_id, body.content, vec,
-        category=body.category, source=body.source,
+        category=body.category, source=source,
         confidence=body.confidence, tags=body.tags,
         persona_id=body.persona_id,
     )
-    return {"saved": True, "id": doc["id"]}
+    return {"saved": True, "id": doc["id"], "source": source}
 
 
 # ── Search ────────────────────────────────────────────

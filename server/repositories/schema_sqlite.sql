@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
     email TEXT UNIQUE,
     name TEXT,
     timezone TEXT DEFAULT 'Asia/Shanghai',
+    language TEXT DEFAULT 'zh',
     password_hash TEXT,
     plan TEXT DEFAULT 'free',
     last_active_at TEXT,
@@ -26,6 +27,21 @@ CREATE TABLE IF NOT EXISTS api_keys (
     created_at TEXT DEFAULT (datetime('now')),
     last_used_at TEXT
 );
+
+-- 同步码（molt_sync_xxx — Agent 身份找回，一次性使用）
+CREATE TABLE IF NOT EXISTS agent_invites (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id),
+    code_hash TEXT UNIQUE NOT NULL,
+    code_prefix TEXT NOT NULL,
+    status TEXT DEFAULT 'pending',
+    used_at TEXT,
+    expires_at TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now')),
+    revoked_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_agent_invites_user ON agent_invites(user_id, status);
+CREATE INDEX IF NOT EXISTS idx_agent_invites_hash ON agent_invites(code_hash);
 
 -- 匿名会话
 CREATE TABLE IF NOT EXISTS sessions (

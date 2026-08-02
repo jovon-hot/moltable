@@ -431,3 +431,134 @@ def local_login(request: Request, body: LoginRequest):
         "email": user["email"],
         "name": user.get("name", ""),
     }
+
+
+# ── 同步码 (molt_sync_xxx) — Agent 身份找回 ──────────────────
+# Sprint 1 方案：同步码为一次性邀请函，消费后返回账号级 API Key + 用户信息。
+# 存储安全：code_hash 用 hash_api_key()（PBKDF2-HMAC-SHA256），明文不落库。
+
+class SyncCodeRequest(BaseModel):
+    sync_code: str = Field(..., min_length=1, max_length=256, description="一次性同步码 molt_sync_xxx")
+
+
+def _hash_sync_code(code: str) -> str:
+    """同步码哈希 — 复用 hash_api_key() 的 PBKDF2 算法。"""
+    return hash_api_key(code)
+
+
+def _parse_expiry(value) -> "datetime | None":
+    """解析 expires_at（兼容 'Z' 后缀与 datetime 对象）。"""
+    if not value:
+        return None
+    if isinstance(value, datetime):
+        return value
+    try:
+        return datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except (ValueError, TypeError):
+        return None
+
+
+@router.get("/sync-code")
+@limiter.limit("20/hour")
+def generate_sync_code(request: Request, user_id: str = Depends(get_user)):
+    """生成新同步码 — 旧码立即作废（pending → revoked）。"""
+    from datetime import timedelta
+    raw_code = "molt_sync_" + secrets.token_urlsafe(24)
+    code_hash = _hash_sync_code(raw_code)
+    prefix = raw_code[:12]
+    now = datetime.now(timezone.utc)
+    expires_at = now + timedelta(days=7)
+
+    # 旧码全部作废
+    supabase.table("agent_invites").update({
+        "status": "revoked",
+        "revoked_at": now.isoformat(),
+    }).eq("user_id", user_id).eq("status", "pending").execute()
+
+    supabase.table("agent_invites").insert({
+        "id": str(_uuid.uuid4()),
+        "user_id": user_id,
+        "code_hash": code_hash,
+        "code_prefix": prefix,
+        "status": "pending",
+        "expires_at": expires_at.isoformat(),
+        "created_at": now.isoformat(),
+    }).execute()
+
+    logging.getLogger("moltable").info("同步码已生成: user=%s prefix=%s", user_id, prefix)
+    return {
+        "sync_code": raw_code,
+        "expires_at": expires_at.isoformat(),
+        "note": "一次性使用，7 天有效；生成新码即作废旧码。",
+    }
+
+
+@router.post("/sync")
+@limiter.limit("10/minute")
+def consume_sync_code(request: Request, body: SyncCodeRequest):
+    """同步码消费（无认证 — 新 Agent 首次接入）→ 返回账号级 API Key + 用户信息。
+
+    - 校验 code（pending + 未过期）→ 标记 used（一次性）→ 返回账号级 key。
+    - 已使用 / 已作废 / 已过期 → 409（幂等防重放）。
+    """
+    raw_code = (body.sync_code or "").strip()
+    if not raw_code.startswith("molt_sync_"):
+        raise HTTPException(400, "同步码格式无效")
+
+    code_hash = _hash_sync_code(raw_code)
+    resp = supabase.table("agent_invites").select("id, user_id, status, expires_at") \
+        .eq("code_hash", code_hash).execute()
+    if not resp.data:
+        raise HTTPException(404, "同步码无效或不存在")
+
+    invite = resp.data[0]
+    now = datetime.now(timezone.utc)
+    status = invite.get("status")
+
+    if status == "used":
+        raise HTTPException(409, "同步码已使用")
+    if status == "revoked":
+        raise HTTPException(409, "同步码已作废 — 请重新生成")
+    expires_at = _parse_expiry(invite.get("expires_at"))
+    if expires_at and expires_at < now:
+        raise HTTPException(409, "同步码已过期")
+
+    user_id = invite["user_id"]
+
+    # 一次性：标记 used（条件更新，防并发双花）
+    supabase.table("agent_invites").update({
+        "status": "used",
+        "used_at": now.isoformat(),
+    }).eq("id", invite["id"]).eq("status", "pending").execute()
+
+    # 返回账号级 API Key（明文不落库，仅存哈希 — 与注册一致）
+    raw_key = "molt_" + secrets.token_urlsafe(24)
+    supabase.table("api_keys").insert({
+        "id": str(_uuid.uuid4()),
+        "user_id": user_id,
+        "name": "同步码恢复",
+        "key_hash": hash_api_key(raw_key),
+        "key_prefix": raw_key[:12],
+        "is_active": True,
+    }).execute()
+
+    # 用户信息（best-effort）
+    user = {"id": user_id, "name": "", "email": ""}
+    try:
+        uresp = supabase.table("users").select("id, name, email").eq("id", user_id).execute()
+        if uresp.data:
+            u = uresp.data[0]
+            user = {
+                "id": u.get("id") or user_id,
+                "name": u.get("name") or "",
+                "email": u.get("email") or "",
+            }
+    except Exception:
+        pass
+
+    logging.getLogger("moltable").info("同步码已消费: user=%s", user_id)
+    return {
+        "api_key": raw_key,
+        "user": user,
+        "note": "身份已恢复 — 请保存 API Key，它不会再次显示。",
+    }
