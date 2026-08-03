@@ -17,7 +17,7 @@ export type SourceTag = 'measured' | 'public' | 'not_public' | 'na'
 
 export interface BenchmarkMetric {
   id: string
-  score: number
+  score: number | null
   target: number
   unit?: string
   trend?: MetricTrend

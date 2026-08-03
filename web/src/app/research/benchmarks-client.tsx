@@ -149,7 +149,7 @@ export default function BenchmarksClient({ data }: { data: BenchmarkData | null 
 
               {/* 当前得分（大数字） */}
               <div className="mt-6 flex items-baseline gap-1">
-                {ran ? (
+                {ran && m!.score != null ? (
                   <>
                     <span className="text-5xl font-heading tracking-tight text-ln-text">
                       {formatScore(m!.score)}
