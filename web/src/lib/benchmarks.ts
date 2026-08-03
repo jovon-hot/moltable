@@ -44,8 +44,13 @@ export interface BenchmarkData {
 
 export function loadBenchmarks(): BenchmarkData | null {
   try {
-    // npm run build / dev 的工作目录是 web/，benchmarks/ 在仓库根目录
-    const file = path.join(process.cwd(), '..', 'benchmarks', 'results', 'benchmarks.json')
+    // Vercel 构建时根目录是 web/，benchmarks/ 在上层不可访问 — 备用 public/benchmarks.json
+    let file = path.join(process.cwd(), '..', 'benchmarks', 'results', 'benchmarks.json')
+    if (!fs.existsSync(file)) {
+      file = path.join(process.cwd(), 'public', 'benchmarks.json')
+    }
+    if (!fs.existsSync(file)) return null
+
     const raw = fs.readFileSync(file, 'utf-8')
     const data = JSON.parse(raw) as BenchmarkData
     if (!data || data.status !== 'completed' || !Array.isArray(data.metrics) || data.metrics.length === 0) {

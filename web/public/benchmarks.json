@@ -1,0 +1,84 @@
+{
+  "status": "completed",
+  "last_updated": "2026-08-03T03:00:00Z",
+  "metrics": [
+    {
+      "id": "cross_agent_recall_1",
+      "name": "Cross-Agent Recall@1",
+      "name_zh": "跨Agent记忆召回率@1",
+      "score": 1.0,
+      "target": 0.70,
+      "unit": "",
+      "trend": "stable",
+      "detail": "Agent A 写入 21 条 → Agent B 搜索 21 条 → 全部命中@1"
+    },
+    {
+      "id": "cross_agent_mrr",
+      "name": "Cross-Agent MRR",
+      "name_zh": "跨Agent MRR",
+      "score": 1.0,
+      "target": 0.80,
+      "unit": "",
+      "trend": "stable",
+      "detail": "Mean Reciprocal Rank: 全部查询首发命中"
+    },
+    {
+      "id": "persona_fidelity",
+      "name": "Persona Fidelity",
+      "name_zh": "Persona忠诚度",
+      "score": null,
+      "target": 0.85,
+      "unit": "",
+      "trend": "pending",
+      "detail": "脚本已完成，待 DEEPSEEK_API_KEY 运行"
+    },
+    {
+      "id": "provision_completeness",
+      "name": "Provision Completeness",
+      "name_zh": "上下文加载完整性",
+      "score": 1.0,
+      "target": 0.95,
+      "unit": "",
+      "trend": "stable",
+      "detail": "20记忆 + 3Persona + 2项目 → 100% 加载"
+    }
+  ],
+  "comparison": [
+    {
+      "metric": "cross_agent_recall_1",
+      "moltable": 1.0,
+      "moltable_source": "实测",
+      "mem0": null,
+      "mem0_source": "不适用",
+      "zep": null,
+      "zep_source": "不适用"
+    },
+    {
+      "metric": "cross_agent_mrr",
+      "moltable": 1.0,
+      "moltable_source": "实测",
+      "mem0": null,
+      "mem0_source": "不适用",
+      "zep": null,
+      "zep_source": "不适用"
+    },
+    {
+      "metric": "provision_completeness",
+      "moltable": 1.0,
+      "moltable_source": "实测",
+      "mem0": 0.95,
+      "mem0_source": "文档估算",
+      "zep": null,
+      "zep_source": "不适用"
+    },
+    {
+      "metric": "persona_fidelity",
+      "moltable": null,
+      "moltable_source": "待测",
+      "mem0": null,
+      "mem0_source": "不适用",
+      "zep": null,
+      "zep_source": "不适用"
+    }
+  ]
+}
