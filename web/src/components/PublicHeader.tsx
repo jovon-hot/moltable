@@ -57,13 +57,20 @@ export default function PublicHeader() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
+        {/* Logo: icon + text */}
+        <Link href="/" className="flex items-center gap-2.5">
           <img
-            src={scrolled ? "/logo-horizontal-dark.svg" : "/logo-horizontal.svg"}
-            alt="Moltable"
-            className="h-8 w-auto transition-opacity duration-200"
+            src={scrolled ? "/logo-icon-dark.svg" : "/logo-icon.svg"}
+            alt=""
+            className="h-9 w-auto transition-all duration-200"
           />
+          <span className={`text-lg font-semibold tracking-tight transition-colors duration-200 ${
+            scrolled ? 'text-ln-text' : 'text-white'
+          }`}
+            style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif' }}
+          >
+            Moltable
+          </span>
         </Link>
 
         {/* Desktop Nav */}
