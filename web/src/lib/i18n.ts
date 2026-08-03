@@ -2,7 +2,7 @@ export type Lang = 'zh' | 'en'
 
 export const translations = {
   zh: {
-    nav: { features: '功能', pricing: '定价', about: '关于', docs: '文档', connect: '接入', blog: '博客', faq: 'FAQ', login: '登录', start: '免费开始' },
+    nav: { features: '功能', pricing: '定价', about: '关于', docs: '文档', connect: '接入', research: '评测', blog: '博客', faq: 'FAQ', login: '登录', start: '免费开始' },
     hero: {
       tagline: 'DID+VC · 开源 MIT',
       title: '你的 AI 为什么每次都要重新认识你？',
@@ -128,6 +128,49 @@ export const translations = {
       step3desc: 'AI 自动认识你，开始无缝对话',
     },
     common: { loading: '加载中...', empty: '暂无数据', save: '保存', cancel: '取消', delete: '删除', edit: '编辑', search: '搜索', add: '添加', confirm: '确定', openMenu: '打开菜单', closeMenu: '关闭菜单' },
+    benchmarks: {
+      title: '评测基准',
+      titleEn: 'Benchmarks',
+      subtitle: 'Moltable 用三个自研维度持续评测「AI 身份同步」质量。结果由评测脚本在干净测试账号上运行生成，构建时自动加载。',
+      lastRun: '最近运行',
+      never: '尚未运行',
+      notRunTitle: '基准测试尚未运行',
+      notRunDesc: '评测脚本正在准备中。运行完成后，结果会自动展示在这里。',
+      notRunHint: '触发方式：在仓库根目录运行 benchmarks 下的评测脚本。',
+      metric: {
+        crossAgentRecall: {
+          name: 'Cross-Agent Recall',
+          nameZh: '跨 Agent 记忆召回',
+          desc: 'Agent A 写入记忆，Agent B 通过 auto_provision 加载后语义查询，衡量记忆能否跨 Agent 准确召回。',
+        },
+        personaFidelity: {
+          name: 'Persona Fidelity',
+          nameZh: 'Persona 忠诚度',
+          desc: '同一 Persona 在多轮对话中是否持续遵守 System Prompt 设定的人格与表达习惯。',
+        },
+        provisionCompleteness: {
+          name: 'Provision Completeness',
+          nameZh: '上下文加载完整性',
+          desc: 'auto_provision 一次性加载的偏好 / Persona / 项目 / 决策是否完整无遗漏。',
+        },
+      },
+      currentScore: '当前得分',
+      target: '目标',
+      trendUp: '较上次上升',
+      trendDown: '较上次下降',
+      trendFlat: '与上次持平',
+      comparisonTitle: '与 mem0 / Zep 对比',
+      comparisonSub: 'mem0 与 Zep 均为通用记忆层产品，Moltable 为身份同步层——重叠维度有限，对比仅供参考。',
+      colDimension: '评测维度',
+      colMoltable: 'Moltable',
+      colMem0: 'mem0',
+      colZep: 'Zep',
+      sourceMeasured: 'moltable 实测',
+      sourcePublic: 'mem0 公开',
+      sourceNotPublic: 'Zep 未公开',
+      sourceNa: '不适用',
+      dataNote: '数据来源：Moltable 数值为本仓库 benchmarks/ 脚本实测；mem0 数值来自其公开发布的基准（LoCoMo / LongMemEval / BEAM）；Zep 未公开发布可复现的基准数值。',
+    },
     dashboard_ui: {
       overview: '概览',
       settings: '设置',
@@ -268,7 +311,7 @@ export const translations = {
   },
 
   en: {
-    nav: { features: 'Features', pricing: 'Pricing', about: 'About', docs: 'Docs', connect: 'Connect', blog: 'Blog', faq: 'FAQ', login: 'Sign In', start: 'Get Started' },
+    nav: { features: 'Features', pricing: 'Pricing', about: 'About', docs: 'Docs', connect: 'Connect', research: 'Research', blog: 'Blog', faq: 'FAQ', login: 'Sign In', start: 'Get Started' },
     hero: {
       tagline: 'DID+VC · Open Source MIT',
       title: 'Why does your AI have to relearn who you are every time?',
@@ -394,6 +437,49 @@ export const translations = {
       step3desc: 'Your AI knows you — start seamless conversations',
     },
     common: { loading: 'Loading...', empty: 'No data', save: 'Save', cancel: 'Cancel', delete: 'Delete', edit: 'Edit', search: 'Search', add: 'Add', confirm: 'Confirm', openMenu: 'Open Menu', closeMenu: 'Close Menu' },
+    benchmarks: {
+      title: 'Benchmarks',
+      titleEn: '评测基准',
+      subtitle: 'Moltable continuously measures AI identity sync quality across three self-defined dimensions. Results are produced by benchmark scripts on clean test accounts and loaded at build time.',
+      lastRun: 'Last run',
+      never: 'Not yet',
+      notRunTitle: 'Benchmarks have not been run yet',
+      notRunDesc: 'The benchmark scripts are being prepared. Results will appear here automatically once they complete.',
+      notRunHint: 'To trigger: run the benchmark scripts under benchmarks/ from the repo root.',
+      metric: {
+        crossAgentRecall: {
+          name: 'Cross-Agent Recall',
+          nameZh: '跨 Agent 记忆召回',
+          desc: 'Agent A writes memories; Agent B loads them via auto_provision and issues semantic queries. Measures whether memories are recalled accurately across agents.',
+        },
+        personaFidelity: {
+          name: 'Persona Fidelity',
+          nameZh: 'Persona 忠诚度',
+          desc: 'Whether a persona consistently follows the personality and expression style defined in its system prompt across multiple turns.',
+        },
+        provisionCompleteness: {
+          name: 'Provision Completeness',
+          nameZh: '上下文加载完整性',
+          desc: 'Whether auto_provision loads the full set of preferences / personas / projects / decisions without omission.',
+        },
+      },
+      currentScore: 'Current score',
+      target: 'Target',
+      trendUp: 'Up from last run',
+      trendDown: 'Down from last run',
+      trendFlat: 'Flat vs last run',
+      comparisonTitle: 'vs mem0 / Zep',
+      comparisonSub: 'mem0 and Zep are general memory-layer products while Moltable is an identity-sync layer — overlap is limited, so the comparison is for reference only.',
+      colDimension: 'Dimension',
+      colMoltable: 'Moltable',
+      colMem0: 'mem0',
+      colZep: 'Zep',
+      sourceMeasured: 'Moltable measured',
+      sourcePublic: 'mem0 public',
+      sourceNotPublic: 'Zep not public',
+      sourceNa: 'N/A',
+      dataNote: 'Data sources: Moltable values are measured by the benchmarks/ scripts in this repo; mem0 values come from its published benchmarks (LoCoMo / LongMemEval / BEAM); Zep has not published reproducible benchmark numbers.',
+    },
     dashboard_ui: {
       overview: 'Overview',
       settings: 'Settings',

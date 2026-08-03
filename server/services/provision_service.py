@@ -1,6 +1,6 @@
 """Shared auto_provision service — used by both REST and MCP endpoints."""
 
-from app_state import get_persona_version
+from app_state import get_persona_version, _is_sqlite
 
 
 def auto_provision(supabase, user_id: str, ip_address: str = None) -> dict:
@@ -29,32 +29,41 @@ def auto_provision(supabase, user_id: str, ip_address: str = None) -> dict:
             user_data = {"name": None, "timezone": "Asia/Shanghai", "language": "zh"}
 
     # 2. Preferences & rules (category=preference)
-    prefs_resp = (
-        supabase.table("memories")
-        .select("content, tags")
-        .eq("user_id", user_id)
-        .eq("category", "preference")
-        .execute()
-    )
+    prefs_resp = None
+    try:
+        prefs_resp = (
+            supabase.table("memories")
+            .select("content, tags")
+            .eq("user_id", user_id)
+            .eq("category", "preference")
+            .execute()
+        )
+    except Exception:
+        prefs_resp = None
     preferences = []
     rules = []
-    for p in prefs_resp.data or []:
+    for p in (prefs_resp.data if prefs_resp is not None else None) or []:
         if "rule" in (p.get("tags") or []):
             rules.append(p["content"])
         else:
             preferences.append(p["content"])
 
     # 3. Active projects (full environment including knowledge_bases + tools)
-    projects = (
-        supabase.table("projects")
-        .select("id, name, description, persona_id, knowledge_bases, tools")
-        .eq("user_id", user_id)
-        .eq("is_active", True)
-        .execute()
-    )
+    projects_data = []
+    try:
+        projects = (
+            supabase.table("projects")
+            .select("id, name, description, persona_id, knowledge_bases, tools")
+            .eq("user_id", user_id)
+            .eq("is_active", True)
+            .execute()
+        )
+        projects_data = projects.data or []
+    except Exception:
+        projects_data = []
 
     projects_env = []
-    for p in (projects.data or []):
+    for p in projects_data:
         projects_env.append({
             "id": p.get("id", ""),
             "name": p.get("name", ""),
@@ -65,34 +74,62 @@ def auto_provision(supabase, user_id: str, ip_address: str = None) -> dict:
         })
 
     # 4. Recent decisions
-    decisions = (
-        supabase.table("decisions")
-        .select("content")
-        .eq("user_id", user_id)
-        .order("decided_at", desc=True)
-        .limit(10)
-        .execute()
-    )
+    decisions_data = []
+    try:
+        decisions = (
+            supabase.table("decisions")
+            .select("content")
+            .eq("user_id", user_id)
+            .order("decided_at", desc=True)
+            .limit(10)
+            .execute()
+        )
+        decisions_data = decisions.data or []
+    except Exception:
+        decisions_data = []
 
     # 5. Available personas
-    personas = (
-        supabase.table("personas")
-        .select("id, name, description, type")
-        .eq("user_id", user_id)
-        .eq("is_active", True)
-        .execute()
-    )
+    personas_data = []
+    try:
+        personas = (
+            supabase.table("personas")
+            .select("id, name, description, type")
+            .eq("user_id", user_id)
+            .eq("is_active", True)
+            .execute()
+        )
+        personas_data = personas.data or []
+    except Exception:
+        personas_data = []
+    if not personas_data and _is_sqlite:
+        # SQLite mode: personas live in the in-memory persona store, not the
+        # SQLite personas table (routes/personas.py `_is_offline()` gate).
+        from services.persona_store import get_persona_store
+        personas_data = [
+            {
+                "id": p["id"],
+                "name": p["name"],
+                "description": p.get("description"),
+                "type": p.get("type", "constructed"),
+            }
+            for p in get_persona_store().list(user_id)
+        ]
 
     # 6. Core knowledge (facts + projects)
-    facts = (
-        supabase.table("memories")
-        .select("content, category")
-        .eq("user_id", user_id)
-        .in_("category", ["fact", "project"])
-        .order("created_at", desc=True)
-        .limit(20)
-        .execute()
-    )
+    facts_data = []
+    try:
+        facts = (
+            supabase.table("memories")
+            .select("content, category")
+            .eq("user_id", user_id)
+            .in_("category", ["fact", "project"])
+            .order("created_at", desc=True)
+            .limit(20)
+            .execute()
+        )
+        facts_data = facts.data or []
+    except Exception:
+        facts_data = []
 
     # 7. Audit log (skip for sessions — no real user_id)
     if not is_session:
@@ -104,8 +141,8 @@ def auto_provision(supabase, user_id: str, ip_address: str = None) -> dict:
                 "details": {
                     "preferences": len(preferences),
                     "rules": len(rules),
-                    "projects": len(projects.data or []),
-                    "personas": len(personas.data or []),
+                    "projects": len(projects_data),
+                    "personas": len(personas_data),
                 },
             }).execute()
         except Exception:
@@ -130,13 +167,13 @@ def auto_provision(supabase, user_id: str, ip_address: str = None) -> dict:
         "rules": rules,
         "preferences": preferences,
         "active_projects": projects_env,
-        "recent_decisions": [d["content"] for d in (decisions.data or [])],
+        "recent_decisions": [d["content"] for d in decisions_data],
         "available_personas": [
             {"id": p["id"], "name": p["name"], "description": p.get("description"), "type": p["type"]}
-            for p in (personas.data or [])
+            for p in personas_data
         ],
         "core_knowledge": [
             {"content": f["content"], "type": f["category"]}
-            for f in (facts.data or [])
+            for f in facts_data
         ],
     }

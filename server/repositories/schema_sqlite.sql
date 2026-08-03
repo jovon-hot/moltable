@@ -86,14 +86,18 @@ CREATE TABLE IF NOT EXISTS personas (
 );
 CREATE INDEX IF NOT EXISTS idx_personas_user ON personas(user_id);
 
--- 项目
+-- 项目 (aligned with schema.sql — persona_id/knowledge_bases/tools/updated_at)
 CREATE TABLE IF NOT EXISTS projects (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL REFERENCES users(id),
     name TEXT NOT NULL,
     description TEXT,
+    persona_id TEXT,
+    knowledge_bases TEXT DEFAULT '[]',
+    tools TEXT DEFAULT '[]',
     is_active INTEGER DEFAULT 1,
-    created_at TEXT DEFAULT (datetime('now'))
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_projects_user ON projects(user_id);
 

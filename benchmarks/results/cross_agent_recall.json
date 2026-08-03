@@ -1,0 +1,236 @@
+{
+  "benchmark": "cross_agent_recall",
+  "timestamp": "2026-08-03T08:22:29+0800",
+  "server": "http://127.0.0.1:8700",
+  "embedding_model": "server-side (paraphrase-multilingual-MiniLM-L12-v2 recommended)",
+  "n_memories": 21,
+  "n_categories": 7,
+  "top_k": 5,
+  "targets": {
+    "recall@1": 0.7,
+    "mrr": 0.8
+  },
+  "metrics": {
+    "recall@1": 1.0,
+    "recall@3": 1.0,
+    "recall@5": 1.0,
+    "mrr": 1.0,
+    "per_category": {
+      "preference": {
+        "n": 3,
+        "recall@1": 1.0,
+        "recall@5": 1.0,
+        "mrr": 1.0
+      },
+      "decision": {
+        "n": 3,
+        "recall@1": 1.0,
+        "recall@5": 1.0,
+        "mrr": 1.0
+      },
+      "fact": {
+        "n": 3,
+        "recall@1": 1.0,
+        "recall@5": 1.0,
+        "mrr": 1.0
+      },
+      "project": {
+        "n": 3,
+        "recall@1": 1.0,
+        "recall@5": 1.0,
+        "mrr": 1.0
+      },
+      "insight": {
+        "n": 3,
+        "recall@1": 1.0,
+        "recall@5": 1.0,
+        "mrr": 1.0
+      },
+      "task": {
+        "n": 3,
+        "recall@1": 1.0,
+        "recall@5": 1.0,
+        "mrr": 1.0
+      },
+      "relationship": {
+        "n": 3,
+        "recall@1": 1.0,
+        "recall@5": 1.0,
+        "mrr": 1.0
+      }
+    },
+    "conflicts_forced": 0,
+    "memory_count_seen_by_agent_b": 21
+  },
+  "passed": true,
+  "queries": [
+    {
+      "category": "preference",
+      "memory": "用户喜欢在早晨喝一杯美式咖啡来提神",
+      "query": "早上喝什么咖啡提神？",
+      "target_id": "1986c56f-ff56-4edc-8263-eb491598340b",
+      "rank": 1,
+      "top1": "用户喜欢在早晨喝一杯美式咖啡来提神"
+    },
+    {
+      "category": "preference",
+      "memory": "用户偏好使用暗色模式的软件界面",
+      "query": "软件界面喜欢深色还是浅色？",
+      "target_id": "a3ce9fa9-f296-4eab-b490-6c55c0ff08c0",
+      "rank": 1,
+      "top1": "用户偏好使用暗色模式的软件界面"
+    },
+    {
+      "category": "preference",
+      "memory": "用户不喜欢吃香菜和榴莲",
+      "query": "有哪些食物是用户讨厌的？",
+      "target_id": "0dee1ab9-945a-4e48-83ab-aa9dcc967c51",
+      "rank": 1,
+      "top1": "用户不喜欢吃香菜和榴莲"
+    },
+    {
+      "category": "decision",
+      "memory": "团队决定把项目上线时间推迟到十一月",
+      "query": "项目什么时候正式上线？",
+      "target_id": "cdc5638a-76e2-4242-9b87-5b8075dadfe0",
+      "rank": 1,
+      "top1": "团队决定把项目上线时间推迟到十一月"
+    },
+    {
+      "category": "decision",
+      "memory": "用户决定不买燃油车，改买电动车",
+      "query": "买车的时候选油车还是电车？",
+      "target_id": "c1385b72-4186-4783-856b-efc5585fa302",
+      "rank": 1,
+      "top1": "用户决定不买燃油车，改买电动车"
+    },
+    {
+      "category": "decision",
+      "memory": "公司确定新办公室选址在望京科技园区",
+      "query": "新办公室选在哪里？",
+      "target_id": "68c5a6c1-6e9d-4799-ba95-8fba22c43b39",
+      "rank": 1,
+      "top1": "公司确定新办公室选址在望京科技园区"
+    },
+    {
+      "category": "fact",
+      "memory": "用户的生日是十一月十五日",
+      "query": "用户什么时候过生日？",
+      "target_id": "74e1e6e4-cacc-4d14-a789-60e5c6f12686",
+      "rank": 1,
+      "top1": "用户的生日是十一月十五日"
+    },
+    {
+      "category": "fact",
+      "memory": "用户住在上海浦东新区，工作在陆家嘴",
+      "query": "用户住在哪个城市哪个区？",
+      "target_id": "af664510-0f74-4d8b-a3a5-8382b6ffef5c",
+      "rank": 1,
+      "top1": "用户住在上海浦东新区，工作在陆家嘴"
+    },
+    {
+      "category": "fact",
+      "memory": "用户的母语是中文，英语水平是中级",
+      "query": "用户会说哪几种语言？",
+      "target_id": "492dd262-2818-4245-8c99-2be9b7bcecbd",
+      "rank": 1,
+      "top1": "用户的母语是中文，英语水平是中级"
+    },
+    {
+      "category": "project",
+      "memory": "跨境电商独立站项目正在进行，目标市场是美国",
+      "query": "目前在做哪个市场的电商项目？",
+      "target_id": "d4b7f09a-3235-43a6-9b60-fd4bf4fdf268",
+      "rank": 1,
+      "top1": "跨境电商独立站项目正在进行，目标市场是美国"
+    },
+    {
+      "category": "project",
+      "memory": "智能家居控制App项目已经进入内测阶段",
+      "query": "智能家居App开发到什么阶段了？",
+      "target_id": "67fb7d77-f1b4-428a-9a6b-018224089318",
+      "rank": 1,
+      "top1": "智能家居控制App项目已经进入内测阶段"
+    },
+    {
+      "category": "project",
+      "memory": "公司官网改版项目预计下个月启动",
+      "query": "官网改版什么时候开始？",
+      "target_id": "3cfe81c7-540c-4f98-a40c-8fe0d1caefc8",
+      "rank": 1,
+      "top1": "公司官网改版项目预计下个月启动"
+    },
+    {
+      "category": "insight",
+      "memory": "用户发现早睡早起后工作效率提升了很多",
+      "query": "怎样做才能提高工作效率？",
+      "target_id": "d056eb21-628f-4b62-a6e7-9ad828173674",
+      "rank": 1,
+      "top1": "用户发现早睡早起后工作效率提升了很多"
+    },
+    {
+      "category": "insight",
+      "memory": "数据分析显示周末下午是用户最专注的时间段",
+      "query": "用户什么时候状态最专注？",
+      "target_id": "0d98c161-3577-46a7-9b33-3a0310b61041",
+      "rank": 1,
+      "top1": "数据分析显示周末下午是用户最专注的时间段"
+    },
+    {
+      "category": "insight",
+      "memory": "复盘发现短视频投放的转化率比图文内容更高",
+      "query": "哪种内容形式的投放转化更好？",
+      "target_id": "1dcf4a9b-fdae-455a-a2d5-fa4110288609",
+      "rank": 1,
+      "top1": "复盘发现短视频投放的转化率比图文内容更高"
+    },
+    {
+      "category": "task",
+      "memory": "下周三之前需要完成季度销售报告",
+      "query": "季度销售报告什么时候交？",
+      "target_id": "970f35ad-e4ec-49e2-be82-2f6870eb052b",
+      "rank": 1,
+      "top1": "下周三之前需要完成季度销售报告"
+    },
+    {
+      "category": "task",
+      "memory": "明天上午十点约了牙医复诊",
+      "query": "明天上午有什么安排？",
+      "target_id": "ff7278eb-9ce5-4758-8864-859016899cb2",
+      "rank": 1,
+      "top1": "明天上午十点约了牙医复诊"
+    },
+    {
+      "category": "task",
+      "memory": "本周六要参加朋友的婚礼，需要准备礼金",
+      "query": "周六有什么活动要参加？",
+      "target_id": "adf17b26-6ce0-4c78-87aa-c47e664ce463",
+      "rank": 1,
+      "top1": "本周六要参加朋友的婚礼，需要准备礼金"
+    },
+    {
+      "category": "relationship",
+      "memory": "用户最好的朋友是大学室友李明",
+      "query": "用户最好的朋友是谁？",
+      "target_id": "9158ca00-06e8-47d1-beb6-c81da4ebff64",
+      "rank": 1,
+      "top1": "用户最好的朋友是大学室友李明"
+    },
+    {
+      "category": "relationship",
+      "memory": "用户和导师王教授保持每月一次的面谈",
+      "query": "用户多久和导师见一次面？",
+      "target_id": "e4448e5e-6dce-4309-aad8-8d624b965449",
+      "rank": 1,
+      "top1": "用户和导师王教授保持每月一次的面谈"
+    },
+    {
+      "category": "relationship",
+      "memory": "用户的妹妹在杭州读研究生",
+      "query": "用户的妹妹在哪里上学？",
+      "target_id": "81295dea-d016-4aa1-8ca7-28ec89652d25",
+      "rank": 1,
+      "top1": "用户的妹妹在杭州读研究生"
+    }
+  ]
+}

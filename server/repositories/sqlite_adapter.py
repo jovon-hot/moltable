@@ -26,7 +26,7 @@ DB_PATH = os.getenv(
 
 class Result:
     """模拟 Supabase 返回的 Result 对象"""
-    def __init__(self, data: list):
+    def __init__(self, data):  # list or dict (single() → dict, Supabase semantics)
         self.data = data
 
     def __len__(self):
@@ -178,11 +178,13 @@ class QueryBuilder:
             else:
                 cursor.execute(sql, params)
                 if self._single_row:
+                    # Supabase semantics: .single().execute() → data is a dict,
+                    # not a list (all route/service consumers use .data.get(...))
                     row = cursor.fetchone()
                     if row:
                         cols = [desc[0] for desc in cursor.description]
-                        return Result([dict(zip(cols, row))])
-                    return Result([])
+                        return Result(dict(zip(cols, row)))
+                    return Result({})
                 rows = cursor.fetchall()
                 cols = [desc[0] for desc in cursor.description]
                 return Result([dict(zip(cols, row)) for row in rows])

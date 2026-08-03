@@ -213,14 +213,21 @@ class SupabaseMemoryRepository(Repository):
             # Fallback to in-memory search on RPC failure
             if self._fallback:
                 return self._fallback.search(user_id, query_embedding, top_k, threshold, category)
-            # SQLite mode: load all memories and return by recency
-            # (trigram hash embeddings are too sparse for cosine similarity)
+            # SQLite mode: rank by cosine similarity when embeddings are dense
+            # (real sentence-transformers vectors). Trigram-hash vectors are too
+            # sparse for cosine similarity — fall back to recency in that case.
             try:
                 all_memories = self.list(user_id, category=category, limit=10000)
                 if not all_memories:
                     return []
+                dense = sum(1 for v in query_embedding if abs(v) > 1e-6) >= 64
                 results = []
-                for mem in all_memories[:top_k]:
+                for mem in all_memories:
+                    emb = mem.get("embedding") or []
+                    if dense and len(emb) == len(query_embedding):
+                        sim = _cosine_sim(query_embedding, emb)
+                    else:
+                        sim = 0.5  # sparse trigram vectors: no meaningful cosine
                     results.append({
                         "id": mem["id"],
                         "user_id": user_id,
@@ -228,10 +235,12 @@ class SupabaseMemoryRepository(Repository):
                         "category": mem.get("category", ""),
                         "source": mem.get("source", ""),
                         "tags": _parse_tags(mem.get("tags")),
-                        "similarity": 0.5,  # dummy score for SQLite mode
+                        "similarity": round(sim, 4),
                         "created_at": mem.get("created_at", ""),
                     })
-                return results
+                if dense:
+                    results.sort(key=lambda r: r["similarity"], reverse=True)
+                return results[:top_k]
             except Exception:
                 return []
 

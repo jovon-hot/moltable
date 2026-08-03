@@ -53,7 +53,7 @@ async def activate_trial(request: Request, body: ActivateRequest,
     now = datetime.now(timezone.utc)
     expires_at = now + timedelta(days=TRIAL_DAYS)
 
-    if supabase is not None and not _is_sqlite:
+    if supabase is not None:
         try:
             # 更新 users.plan（最简单可靠的方案）
             supabase.table("users").update({

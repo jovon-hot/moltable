@@ -16,7 +16,7 @@ from fastapi import APIRouter, Depends, Header, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from app_state import limiter, supabase, get_store
+from app_state import limiter, supabase, get_store, _is_sqlite
 from routes.auth import get_user, authenticate_agent
 from services.embedding import embed
 from services.verifier_service import get_verifier
@@ -499,8 +499,9 @@ def _tool_get_persona(user_id: str, params: dict) -> dict:
     if not persona_id:
         raise JSONRPCError(INVALID_PARAMS, "Missing required parameter: persona_id")
 
-    # Try supabase first, fallback to in-memory persona store
-    if supabase is not None:
+    # Try supabase first, fallback to in-memory persona store.
+    # SQLite mode: personas live in the in-memory store.
+    if supabase is not None and not _is_sqlite:
         try:
             result = (
                 supabase.table("personas")
@@ -541,8 +542,10 @@ def _tool_get_persona(user_id: str, params: dict) -> dict:
 
 def _tool_list_personas(user_id: str, params: dict) -> dict:
     """列出所有 Persona"""
-    # Try supabase first, fallback to in-memory persona store
-    if supabase is not None:
+    # Try supabase first, fallback to in-memory persona store.
+    # SQLite mode: personas live in the in-memory store (routes/personas.py
+    # `_is_offline()` gate) — the SQLite personas table is never written.
+    if supabase is not None and not _is_sqlite:
         try:
             result = (
                 supabase.table("personas")
