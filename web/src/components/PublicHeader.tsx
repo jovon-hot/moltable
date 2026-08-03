@@ -62,9 +62,9 @@ export default function PublicHeader() {
           <img
             src={scrolled ? "/logo-icon-dark.svg" : "/logo-icon.svg"}
             alt=""
-            className="h-9 w-auto transition-all duration-200"
+            className="h-10 w-auto transition-all duration-200"
           />
-          <span className={`text-lg font-semibold tracking-tight transition-colors duration-200 ${
+          <span className={`text-xl font-bold tracking-tight transition-colors duration-200 ${
             scrolled ? 'text-ln-text' : 'text-white'
           }`}
             style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif' }}
