@@ -3,7 +3,7 @@
   "outputDirectory": "web/.next",
   "installCommand": "cd web && npm install --production=false",
   "framework": "nextjs",
-  "regions": ["hkg1"],
+  "regions": ["sin1"],
   "headers": [
     {
       "source": "/(.*)",
