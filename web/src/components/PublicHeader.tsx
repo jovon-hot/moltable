@@ -60,7 +60,7 @@ export default function PublicHeader() {
         {/* Logo: icon + text */}
         <Link href="/" className="flex items-center gap-2.5">
           <img
-            src={"/logo-icon.png"}
+            src={scrolled ? "/logo-icon-dark.svg" : "/logo-icon.svg"}
             alt=""
             className="h-10 w-auto transition-all duration-200"
           />

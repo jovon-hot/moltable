@@ -1,40 +1,44 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#ffffff"/>
+    <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fff"/>
       <stop offset="100%" stop-color="#c4b5fd"/>
     </linearGradient>
-    <radialGradient id="glow" cx="100" cy="136" r="80" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#c4b5fd" stop-opacity="0.3"/>
-      <stop offset="100%" stop-color="#c4b5fd" stop-opacity="0"/>
-    </radialGradient>
   </defs>
 
-  <!-- Glow -->
-  <circle cx="100" cy="136" r="80" fill="url(#glow)"/>
+  <!-- Connecting lines from central hex to outer nodes -->
+  <line x1="100" y1="50" x2="100" y2="20" stroke="white" stroke-width="2.5" stroke-opacity="0.9"/>
+  <line x1="158" y1="85" x2="183" y2="68" stroke="white" stroke-width="2.5" stroke-opacity="0.9"/>
+  <line x1="158" y1="135" x2="183" y2="152" stroke="white" stroke-width="2.5" stroke-opacity="0.9"/>
+  <line x1="100" y1="170" x2="100" y2="200" stroke="white" stroke-width="2.5" stroke-opacity="0.9"/>
+  <line x1="42" y1="135" x2="17" y2="152" stroke="white" stroke-width="2.5" stroke-opacity="0.9"/>
+  <line x1="42" y1="85" x2="17" y2="68" stroke="white" stroke-width="2.5" stroke-opacity="0.9"/>
 
-  <!-- Bonds — thick white/purple -->
-  <line x1="46" y1="162" x2="72" y2="136" stroke="white" stroke-width="3" stroke-opacity="0.75"/>
-  <line x1="72" y1="136" x2="100" y2="162" stroke="white" stroke-width="3" stroke-opacity="0.75"/>
-  <line x1="100" y1="162" x2="128" y2="136" stroke="white" stroke-width="3" stroke-opacity="0.55"/>
-  <line x1="128" y1="136" x2="154" y2="162" stroke="white" stroke-width="3" stroke-opacity="0.55"/>
-  <line x1="72" y1="136" x2="72" y2="76" stroke="white" stroke-width="2.5" stroke-opacity="0.55"/>
-  <line x1="128" y1="136" x2="128" y2="76" stroke="white" stroke-width="2.5" stroke-opacity="0.4"/>
-  <line x1="72" y1="76" x2="128" y2="76" stroke="white" stroke-width="2.5" stroke-opacity="0.4"/>
+  <!-- Central hex ring -->
+  <polygon points="100,50 158,85 158,135 100,170 42,135 42,85" fill="none" stroke="white" stroke-width="3" stroke-opacity="0.9"/>
 
-  <!-- Orbital ellipse -->
-  <ellipse cx="100" cy="118" rx="60" ry="56" fill="none" stroke="white" stroke-width="1.8" stroke-dasharray="8 12" opacity="0.4"/>
+  <!-- Inner connecting lines (star pattern) -->
+  <line x1="100" y1="50" x2="100" y2="170" stroke="white" stroke-width="1.5" stroke-opacity="0.5"/>
+  <line x1="42" y1="85" x2="158" y2="135" stroke="white" stroke-width="1.5" stroke-opacity="0.5"/>
+  <line x1="158" y1="85" x2="42" y2="135" stroke="white" stroke-width="1.5" stroke-opacity="0.5"/>
 
-  <!-- Center nucleus -->
-  <circle cx="100" cy="136" r="10" fill="url(#g)"/>
-  <circle cx="100" cy="136" r="5.5" fill="white" opacity="0.9"/>
-  <circle cx="100" cy="136" r="3" fill="#c4b5fd"/>
+  <!-- Center point -->
+  <circle cx="100" cy="110" r="5" fill="url(#grad)"/>
+  <circle cx="100" cy="110" r="2" fill="white"/>
 
-  <!-- Orbital nodes -->
-  <circle cx="46" cy="162" r="8" fill="none" stroke="white" stroke-width="3"/>
-  <circle cx="72" cy="162" r="8" fill="none" stroke="white" stroke-width="3"/>
-  <circle cx="128" cy="162" r="8" fill="none" stroke="white" stroke-width="3"/>
-  <circle cx="154" cy="162" r="8" fill="none" stroke="white" stroke-width="3"/>
-  <circle cx="72" cy="76" r="8" fill="none" stroke="white" stroke-width="3"/>
-  <circle cx="128" cy="76" r="8" fill="none" stroke="white" stroke-width="3"/>
+  <!-- Outer nodes -->
+  <circle cx="100" cy="20" r="6" fill="none" stroke="white" stroke-width="2.5"/>
+  <circle cx="183" cy="68" r="6" fill="none" stroke="white" stroke-width="2.5"/>
+  <circle cx="183" cy="152" r="6" fill="none" stroke="white" stroke-width="2.5"/>
+  <circle cx="100" cy="200" r="6" fill="none" stroke="white" stroke-width="2.5"/>
+  <circle cx="17" cy="152" r="6" fill="none" stroke="white" stroke-width="2.5"/>
+  <circle cx="17" cy="68" r="6" fill="none" stroke="white" stroke-width="2.5"/>
+
+  <!-- Inner nodes (on hex vertices) -->
+  <circle cx="100" cy="50" r="4" fill="white"/>
+  <circle cx="158" cy="85" r="4" fill="white"/>
+  <circle cx="158" cy="135" r="4" fill="white"/>
+  <circle cx="100" cy="170" r="4" fill="white"/>
+  <circle cx="42" cy="135" r="4" fill="white"/>
+  <circle cx="42" cy="85" r="4" fill="white"/>
 </svg>
