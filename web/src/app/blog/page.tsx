@@ -6,6 +6,14 @@ import { useLang } from '@/contexts/LanguageContext'
 
 const posts = [
   {
+    slug: 'moltable-vs-mem0-identity-vs-memory',
+    date: '2026-08-05',
+    title: 'Moltable vs mem0：AI Identity Layer 和 Memory Layer 的本质区别',
+    titleEn: 'Moltable vs mem0: Identity Layer vs Memory Layer — The Essential Difference',
+    excerpt: '为什么你的 AI Agent 有了记忆还是不认识你？本文从架构哲学、数据模型、多 Agent 协作三个维度，深度剖析 Identity Layer 和 Memory Layer 的本质差异，帮你做出正确的技术选型。',
+    tags: ['对比', 'mem0', 'Identity', 'Memory'],
+  },
+  {
     slug: 'three-minute-env-recovery',
     date: '2026-08-04',
     title: '换电脑不换脑子：3 分钟恢复完整 AI 开发环境实战指南',
