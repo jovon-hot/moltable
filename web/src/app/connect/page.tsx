@@ -256,6 +256,13 @@ Content-Type: application/json`
               <span className="text-sm" style={{ color: '#34d399', fontWeight: 510 }}>
                 {lang === 'zh' ? '✅ Pro 90天试用已激活 — 全部功能已解锁' : '✅ Pro 90-Day Trial Activated — All Features Unlocked'}
               </span>
+              <a
+                href={`/share?key=${apiKey}`}
+                className="ml-auto text-xs px-3 py-1 rounded-md transition-all"
+                style={{ background: 'rgba(52,211,153,0.15)', color: '#34d399', fontWeight: 510, textDecoration: 'none' }}
+              >
+                🔥 {lang === 'zh' ? '炫耀一下' : 'Share'}
+              </a>
             </div>
           </div>
         )}
