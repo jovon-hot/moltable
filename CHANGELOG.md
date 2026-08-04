@@ -1,6 +1,16 @@
 # Changelog
 
-## 2026-08-05
+## 2026-08-05 (R2)
+- **增长**: 新建 /compare 竞品对比页 — Moltable vs mem0 vs Zep 15维功能对比
+- **增长**: 对比页含架构分析、定价对比、适用场景推荐（双语 zh/en）
+- **SEO**: 对比页完整 metadata + canonical URL，目标关键词"mem0 alternative"
+- **SEO**: 为三大核心博客添加 per-post metadata + Article JSON-LD 结构化数据
+- **分析**: 根布局集成 Umami Analytics（NEXT_PUBLIC_UMAMI_WEBSITE_ID 可配置）
+- **SEO**: 更新 sitemap.xml 含 /compare 路由 + 全部 15 篇博客文章 URL
+- **内容**: 创建 docs/social/2026-08-05.md 对比页推广社交媒体内容（5 帖）
+- **提交**: [本次] - 3 commits (comparison page, blog SEO, structured data + social)
+
+## 2026-08-05 (R1)
 - **健康**: 全端点扫描 6/6 通过 (200)
 - **审计**: npm audit web 0 vulns, server 0 vulns
 - **清理**: 删除 3,357 个旧 session 文件，释放 ~345MB 磁盘空间
