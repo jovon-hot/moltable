@@ -9,7 +9,10 @@ Supports:
 Includes a simple in-memory cache to avoid re-encoding identical texts.
 """
 
-import os, logging, hashlib, struct
+import hashlib
+import logging
+import os
+import struct
 from threading import Lock
 
 logger = logging.getLogger("moltable.embedding")

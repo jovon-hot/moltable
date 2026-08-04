@@ -3,11 +3,10 @@
 Runs every hour.  Does NOT depend on daily_stats table (created separately
 in Supabase SQL editor).  All queries handle missing columns gracefully.
 """
-import os
-import logging
 import asyncio
-from datetime import datetime, timezone, date, timedelta
-
+import logging
+import os
+from datetime import date, timedelta
 from typing import Optional
 
 from app_state import supabase
@@ -99,7 +98,6 @@ def get_today_stats(_db=None) -> dict:
     today = date.today().isoformat()
     week_start = (date.today() - timedelta(days=date.today().weekday())).isoformat()
 
-    from app_state import get_error_count
 
     return {
         "total_users": _safe_count("users"),

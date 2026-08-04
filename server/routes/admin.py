@@ -6,14 +6,20 @@ Roles:
 
 No ADMIN_SECRET env var needed. Accounts stored in admin_users table.
 """
-import logging, os
-from fastapi import APIRouter, Request, HTTPException, Depends
+import logging
+import os
+
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
 import app_state
 from services.admin_auth import (
-    login_admin, require_admin, require_staff,
-    create_admin_account, list_admin_accounts, toggle_admin_account,
+    create_admin_account,
+    list_admin_accounts,
+    login_admin,
+    require_admin,
+    require_staff,
+    toggle_admin_account,
 )
 
 logger = logging.getLogger("moltable.admin")

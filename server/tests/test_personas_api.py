@@ -8,7 +8,7 @@ so these tests hit the mock as expected.
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
@@ -16,9 +16,9 @@ from fastapi.testclient import TestClient
 
 @pytest.fixture
 def client() -> TestClient:
-    from main import app
     # Patch at call time — _is_offline() reads this attr on each call
     import routes.personas as rp
+    from main import app
     orig = rp._is_sqlite
     rp._is_sqlite = False
     yield TestClient(app)

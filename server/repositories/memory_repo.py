@@ -1,10 +1,11 @@
 """Supabase pgvector repository — persistent memory storage"""
 from __future__ import annotations
-from typing import List, Dict, Optional
-import time, uuid
+
+import time
+import uuid
+from typing import Dict, List, Optional
 
 from services.repository import Repository
-from services.embedding import embed as _embed_service
 
 
 def _cosine_sim(a: List[float], b: List[float]) -> float:
@@ -209,7 +210,7 @@ class SupabaseMemoryRepository(Repository):
                     "created_at": r.get("created_at", ""),
                 })
             return results
-        except Exception as exc:
+        except Exception:
             # Fallback to in-memory search on RPC failure
             if self._fallback:
                 return self._fallback.search(user_id, query_embedding, top_k, threshold, category)

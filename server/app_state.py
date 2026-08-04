@@ -1,7 +1,9 @@
 """Shared app state — avoids circular imports between main.py and route modules."""
 import logging
 import os
+
 from dotenv import load_dotenv
+
 load_dotenv()
 
 from slowapi import Limiter
@@ -9,7 +11,7 @@ from slowapi.util import get_remote_address
 
 # supabase 包是可选的——未安装时用 SQLite
 try:
-    from supabase import create_client, Client
+    from supabase import Client, create_client
     _has_supabase = True
 except ImportError:
     _has_supabase = False
@@ -45,8 +47,8 @@ _store = None
 def get_store():
     global _store
     if _store is None:
-        from services.vector_store import VectorStore
         from repositories.memory_repo import SupabaseMemoryRepository
+        from services.vector_store import VectorStore
         # SQLite mode: no in-memory VectorStore fallback; the repo handles its own
         _fallback = None if _is_sqlite else VectorStore()
         _store = SupabaseMemoryRepository(supabase, fallback_store=_fallback)

@@ -1,10 +1,12 @@
 """Project routes — manage project environments with knowledge_bases and tools."""
+from datetime import datetime, timezone
 from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
-from app_state import supabase, limiter
+
+from app_state import limiter, supabase
 from routes.auth import get_user
-from datetime import datetime, timezone
 
 router = APIRouter(prefix="/api/projects", tags=["projects"])
 

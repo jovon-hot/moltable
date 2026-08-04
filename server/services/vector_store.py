@@ -1,7 +1,10 @@
 from __future__ import annotations
+
 """In-memory vector store — zero-dependency pgvector replacement"""
-from typing import List, Dict
-import math, uuid, time
+import math
+import time
+import uuid
+from typing import Dict, List
 
 
 class VectorStore:

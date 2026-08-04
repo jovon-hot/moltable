@@ -1,9 +1,11 @@
 """Session routes — anonymous session tokens for zero-registration Agent access"""
 import secrets
 from datetime import datetime, timedelta, timezone
+
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
-from app_state import supabase, limiter, get_store, _is_sqlite
+
+from app_state import _is_sqlite, get_store, limiter, supabase
 
 router = APIRouter(prefix="/api/sessions", tags=["sessions"])
 

@@ -1,7 +1,8 @@
 """Repository abstract base class for CRUD operations"""
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
 
 
 class Repository(ABC):

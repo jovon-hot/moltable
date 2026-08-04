@@ -3,8 +3,10 @@ Test fixtures for Moltable pytest suite.
 """
 
 from __future__ import annotations
+
 import os
 from unittest.mock import MagicMock, patch
+
 import pytest
 
 os.environ.pop("SUPABASE_URL", None)
@@ -15,6 +17,7 @@ os.environ["API_KEY_PEPPER"] = "test-pepper-for-ci"
 
 # ── Global mocks ─────────────────────────────────────
 from services.vector_store import VectorStore
+
 _test_store = VectorStore()
 
 def _mock_get_store():

@@ -7,13 +7,12 @@ and do not require a live Supabase instance.
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
 from repositories.memory_repo import SupabaseMemoryRepository
 from services.vector_store import VectorStore
-
 
 # ── Fixtures ──────────────────────────────────────────
 

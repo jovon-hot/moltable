@@ -6,6 +6,7 @@ import os
 import signal
 import sys
 import time as _time
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -20,7 +21,7 @@ logging.basicConfig(
 logger = logging.getLogger("moltable")
 
 # ── Shared state (avoids circular imports) ────────────────
-from app_state import supabase, limiter, allowed_origins, get_store
+from app_state import allowed_origins, limiter, supabase
 
 # ── DeepSeek ──────────────────────────────────────────────
 deepseek_key = os.getenv("DEEPSEEK_API_KEY")
@@ -37,10 +38,12 @@ else:
 # ── Lifespan (replaces deprecated on_event) ────────────────
 from contextlib import asynccontextmanager
 
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     """Startup: launch daily stats collector background task."""
     import asyncio
+
     from services.stats_collector import collect_daily_stats, stats_collector_loop
     # Collect immediately on startup (only if not already collected today)
     try:
@@ -139,7 +142,7 @@ async def request_logging_middleware(request: Request, call_next):
 
 
 # ── Exception Handler (记录错误到监控) ──────────────────
-from app_state import record_error, get_error_count
+from app_state import get_error_count, record_error
 from services.alerting import check_and_alert
 
 
@@ -166,7 +169,21 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 
 # ── Routes ────────────────────────────────────────────────
-from routes import memories, provision, personas, auth, mcp, sessions, billing, v1, agents, projects, admin, experiments
+from routes import (
+    admin,
+    agents,
+    auth,
+    billing,
+    experiments,
+    mcp,
+    memories,
+    personas,
+    projects,
+    provision,
+    sessions,
+    v1,
+)
+
 app.include_router(memories.router)
 app.include_router(provision.router)
 app.include_router(personas.router)

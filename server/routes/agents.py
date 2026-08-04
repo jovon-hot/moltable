@@ -22,10 +22,10 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from pydantic import BaseModel, Field
 
-from app_state import supabase, limiter
+from app_state import limiter, supabase
 from routes.auth import get_user
 from services.issuer_service import get_issuer
-from services.verifier_service import get_verifier, AuthContext
+from services.verifier_service import AuthContext, get_verifier
 
 logger = logging.getLogger("moltable")
 

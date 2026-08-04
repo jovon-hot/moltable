@@ -13,10 +13,10 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Request, HTTPException, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
-from app_state import supabase, _is_sqlite, limiter
+from app_state import _is_sqlite, limiter, supabase
 from services.admin_auth import require_staff
 
 logger = logging.getLogger("moltable.experiments")

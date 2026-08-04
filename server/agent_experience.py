@@ -14,14 +14,9 @@ Moltable DID+VC Agent 端到端验证脚本
 依赖: cryptography, pyjwt, httpx
 """
 
-import hashlib
-import json
-import os
 import secrets
-import sys
 import uuid
-from datetime import datetime, timezone, timedelta
-
+from datetime import datetime, timedelta, timezone
 
 # ═══════════════════════════════════════════════════════
 # 工具函数
@@ -125,7 +120,7 @@ class MoltableAPI:
                 persona_vcs.append({"persona_id": persona["id"], "vc": p_vc})
 
         print_result(True, f"DID 已注册: {did}")
-        print_result(True, f"AgentIdentityCredential 已签发 (90 天有效)")
+        print_result(True, "AgentIdentityCredential 已签发 (90 天有效)")
         if persona_vcs:
             print_result(True, f"PersonaDelegationCredential × {len(persona_vcs)} 已签发")
 
@@ -357,7 +352,7 @@ def main():
     public_key_hex = secrets.token_hex(32)  # 32 bytes = 64 hex chars
     print(f"  Agent 本地生成 Ed25519 密钥对 (公钥: {public_key_hex[:20]}...)")
 
-    enroll_result = agent.enroll(enrollment_token, public_key_hex, "hermes", "我的AI助手")
+    _enroll_result = agent.enroll(enrollment_token, public_key_hex, "hermes", "我的AI助手")
 
     # ── 步骤 4: 加载上下文 ──
     ctx = agent.provision()
@@ -373,7 +368,7 @@ def main():
     # ── 步骤 7: 换电脑 ──
     new_token = api.create_enrollment_token(user_id, "hermes")["token"]
     new_public_key = secrets.token_hex(32)
-    print(f"  [模拟] 新电脑 Agent 生成新密钥对")
+    print("  [模拟] 新电脑 Agent 生成新密钥对")
     agent.relocate(new_token, new_public_key)
 
     # ── 步骤 8: 验证 ──
@@ -391,14 +386,14 @@ def main():
     total_vcs = len(api.credentials)
 
     print(f"\n{'='*60}")
-    print(f" 验证结果汇总")
+    print(" 验证结果汇总")
     print(f"{'='*60}")
     print(f"  用户数:       {len(api.users)}")
     print(f"  Agent 数:     {len(api.dids)} (活跃: {active_dids}, 已吊销: {revoked_dids})")
     print(f"  VC 总数:      {total_vcs}")
     print(f"  记忆数:       {len(api.memories[user_id])}")
     print(f"  Persona 数:   {len(api.personas[user_id])}")
-    print(f"\n  ✅ 全部流程验证通过！")
+    print("\n  ✅ 全部流程验证通过！")
 
 
 if __name__ == "__main__":

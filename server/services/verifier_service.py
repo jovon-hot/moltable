@@ -30,7 +30,6 @@ from typing import List, Optional
 
 import jwt
 from cryptography.hazmat.primitives.asymmetric import ed25519
-from cryptography.hazmat.primitives import serialization
 
 from app_state import supabase
 

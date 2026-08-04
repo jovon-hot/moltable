@@ -1,7 +1,8 @@
 """auto_provision — Agent一键配置 (REST endpoint)"""
 from fastapi import APIRouter, Depends, Request
-from pydantic import BaseModel, Field
-from app_state import supabase, limiter
+from pydantic import BaseModel
+
+from app_state import limiter, supabase
 from routes.auth import get_user
 from services.provision_service import auto_provision
 

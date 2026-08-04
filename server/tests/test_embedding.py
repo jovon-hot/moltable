@@ -6,9 +6,11 @@ When sentence_transformers is unavailable, the module falls back to trigram hash
 """
 
 from __future__ import annotations
+
 from unittest.mock import MagicMock, patch
-import pytest
+
 import numpy as np
+import pytest
 
 
 @pytest.fixture(autouse=True)

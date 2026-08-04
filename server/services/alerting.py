@@ -3,12 +3,12 @@
 Configure ALERT_WEBHOOK_URL in environment.  Alerts are fire-and-forget
 and never block the main request path.
 """
-import os
 import json
 import logging
+import os
 import threading
-from urllib.request import Request, urlopen
 from urllib.error import URLError
+from urllib.request import Request, urlopen
 
 logger = logging.getLogger("moltable.alerting")
 

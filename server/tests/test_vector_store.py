@@ -7,9 +7,8 @@ Tests the VectorStore class directly with no external dependencies.
 from __future__ import annotations
 
 import math
-from typing import List
-from services.vector_store import VectorStore, _cosine
 
+from services.vector_store import VectorStore, _cosine
 
 # ── Cosine similarity helper ───────────────────────────
 

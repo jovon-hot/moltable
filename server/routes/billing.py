@@ -3,12 +3,14 @@
 激活即获得 90 天 Pro 体验，无需支付信息。
 后续收费功能待 Stripe 账户开通后再接入。
 """
-import os
 import logging
+import os
 from datetime import datetime, timedelta, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
-from app_state import limiter, supabase, _is_sqlite
+
+from app_state import _is_sqlite, limiter, supabase
 from routes.auth import get_user
 
 logger = logging.getLogger("moltable.billing")

@@ -9,12 +9,9 @@ Agent 路由测试 —— DID 注册、VC 签发、Enrollment Token、Agent 列�
 
 from __future__ import annotations
 
-import json
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
-import pytest
 from fastapi.testclient import TestClient
-
 
 # ═══════════════════════════════════════════════════════════════
 # 辅助函数

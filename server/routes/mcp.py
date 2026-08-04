@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """Moltable MCP HTTP Transport — JSON-RPC 2.0 协议端点
 
 MCP (Model Context Protocol) 2024-11-05 规范实现:
@@ -8,18 +9,16 @@ MCP (Model Context Protocol) 2024-11-05 规范实现:
 """
 
 import json
-from datetime import datetime, timezone
 import traceback
+from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import APIRouter, Depends, Header, Request
+from fastapi import APIRouter, Header, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from app_state import limiter, supabase, get_store, _is_sqlite
-from routes.auth import get_user, authenticate_agent
+from app_state import _is_sqlite, get_store, limiter, supabase
 from services.embedding import embed
-from services.verifier_service import get_verifier
 
 router = APIRouter(tags=["mcp"])
 
@@ -574,8 +573,8 @@ def _tool_auto_provision(user_id: str, params: dict, ip_address: str = None) -> 
             pass
 
     # In-memory fallback: build from persona store + vector store
-    from services.persona_store import get_persona_store
     from app_state import get_persona_version
+    from services.persona_store import get_persona_store
     store = get_store()
     pstore = get_persona_store()
     personas = pstore.list(user_id)
@@ -944,7 +943,7 @@ def _handle_jsonrpc(
             }, req_id)
         except JSONRPCError as e:
             return jsonrpc_error(e.code, e.message, req_id, e.data)
-        except Exception as e:
+        except Exception:
             traceback.print_exc()
             return jsonrpc_error(
                 INTERNAL_ERROR,

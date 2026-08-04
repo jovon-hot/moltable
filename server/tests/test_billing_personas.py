@@ -1,5 +1,4 @@
 """Tests: billing plans + health + well-known (no auth required)."""
-import pytest
 from fastapi.testclient import TestClient
 
 

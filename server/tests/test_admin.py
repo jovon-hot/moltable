@@ -1,7 +1,9 @@
 """Tests: Admin API — core auth flows."""
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 from fastapi.testclient import TestClient
+
 import main
 
 
@@ -32,7 +34,8 @@ def clear_failure_store():
 
 def _patch_app_state(sb=None, is_sqlite=False):
     """Returns list of started patches. Caller must stop() each."""
-    import app_state, services.admin_auth
+    import app_state
+    import services.admin_auth
     patches = [
         patch.object(app_state, "supabase", sb),
         patch.object(app_state, "_is_sqlite", is_sqlite),

@@ -1,8 +1,10 @@
 from __future__ import annotations
+
 """Memory routes — CRUD + semantic search with in-memory vector store"""
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
-from app_state import limiter, get_store
+
+from app_state import get_store, limiter
 from routes.auth import get_user
 from services.embedding import embed
 
@@ -19,10 +21,11 @@ def _apply_time_decay(results: list[dict]) -> list[dict]:
     
     Inspired by: Zep temporal knowledge graph, OpenAI memory recency weighting.
     """
-    import math, time as _time_module
+    import math
+    import time as _time_module
     now = _time_module.time()
     HALF_LIFE_SECONDS = 7 * 24 * 3600  # 7 days
-    
+
     for r in results:
         created_str = r.get("created_at", "")
         age_seconds = float(HALF_LIFE_SECONDS)  # default: max age
@@ -34,14 +37,14 @@ def _apply_time_decay(results: list[dict]) -> list[dict]:
                 age_seconds = max(0, now - dt.timestamp())
             except Exception:
                 pass
-        
+
         # Decay factor: 1.0 for now, 0.5 for half-life, approaches 0 for very old
         decay = math.exp(-math.log(2) * age_seconds / HALF_LIFE_SECONDS)
         # Blend: 80% similarity + 20% time boost
         base_relevance = r.get("relevance", r.get("similarity", 0.5))
         r["relevance"] = round(0.8 * base_relevance + 0.2 * decay, 4)
         r["time_boost"] = round(decay, 4)
-    
+
     # Re-sort by blended relevance
     results.sort(key=lambda r: r.get("relevance", 0), reverse=True)
     return results
@@ -112,7 +115,7 @@ def search_memory(request: Request, q: str = Query(..., min_length=1, max_length
         if time_decay and results.get("results"):
             results["results"] = _apply_time_decay(results["results"])
         return results
-    except Exception as e:
+    except Exception:
         # 兜底：任何错误都返回最近记忆，不崩溃
         recent = get_store().list(user_id, category=category, limit=top_k)
         return {
@@ -131,7 +134,7 @@ def search_memory(request: Request, q: str = Query(..., min_length=1, max_length
 def _do_search(user_id: str, q: str, category: str | None, top_k: int):
     vec = embed(q)
     results = get_store().search(user_id, vec, top_k=top_k, category=category)
-    
+
     # 如果 pgvector 返回空，回退到关键词搜索（全文索引）
     if not results and not get_store()._offline:
         try:
@@ -155,7 +158,7 @@ def _do_search(user_id: str, q: str, category: str | None, top_k: int):
                 } for r in kw_resp.data]
         except Exception:
             pass
-        
+
         # 关键词搜索也返回空 → ILIKE 回退
         if not results:
             try:
@@ -186,7 +189,7 @@ def _do_search(user_id: str, q: str, category: str | None, top_k: int):
             "relevance": 0.5,
             "created_at": r.get("created_at", ""),
         } for r in recent]
-    
+
     return {
         "query": q,
         "results": [{
@@ -472,7 +475,6 @@ def consolidate_memories(request: Request, body: ConsolidateRequest,
     prompt = strategy_prompts.get(body.strategy, strategy_prompts["merge"]) + memory_texts
 
     # Use DeepSeek for consolidation
-    from app_state import supabase as _sb_check
     deepseek_key = __import__("os").getenv("DEEPSEEK_API_KEY")
     consolidated_text = None
 

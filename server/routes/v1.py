@@ -17,8 +17,6 @@ async def v1_proxy(request: Request, path: str):
     the canonical prefix and /api/* becomes the redirect.
     """
     # Re-route to the non-versioned path
-    from fastapi.routing import APIRoute
-    from main import app
 
     # Forward to the actual handler via internal redirect
     new_path = f"/api/{path}"

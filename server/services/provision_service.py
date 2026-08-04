@@ -1,6 +1,6 @@
 """Shared auto_provision service — used by both REST and MCP endpoints."""
 
-from app_state import get_persona_version, _is_sqlite
+from app_state import _is_sqlite, get_persona_version
 
 
 def auto_provision(supabase, user_id: str, ip_address: str = None) -> dict:

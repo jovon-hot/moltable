@@ -2,12 +2,16 @@
 """Auth routes — Supabase JWT verification + API key management"""
 import hashlib
 import logging
-import secrets
 import os
+import secrets
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, Header, Request
+
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from pydantic import BaseModel, Field
-from app_state import supabase, limiter
+
+from app_state import limiter, supabase
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -195,7 +199,7 @@ def revoke_api_key(request: Request, key_id: str, user_id: str = Depends(get_use
 @limiter.limit("60/minute")
 def get_me(request: Request, user_id: str = Depends(get_user)):
     """Return current user info + plan + usage stats."""
-    from services.quota import get_usage, PLAN_NAMES, PLAN_LIMITS
+    from services.quota import PLAN_NAMES, get_usage
     try:
         resp = supabase.table("users").select("id,email,name,timezone,language,plan,created_at").eq("id", user_id).execute()
         if resp.data:
@@ -219,7 +223,7 @@ def get_me(request: Request, user_id: str = Depends(get_user)):
 # 相比 get_user() 返回纯 user_id 字符串，
 # authenticate_agent() 返回 AuthContext（含 did, persona_id, scopes）。
 
-from services.verifier_service import get_verifier, AuthContext
+from services.verifier_service import AuthContext, get_verifier
 
 
 async def authenticate_agent(
@@ -279,7 +283,6 @@ async def authenticate_agent(
 
 # ── 本地注册/登录 (SQLite 模式, 无需 Supabase) ──────────────────
 
-import hashlib
 import re
 import uuid as _uuid
 
@@ -322,11 +325,11 @@ def local_register(request: Request, body: RegisterRequest):
     # XSS 防护：清理 HTML 标签
     email = _sanitize(body.email).strip().lower()
     name = _sanitize(body.name or body.email.split("@")[0]).strip()[:200]
-    
+
     # 邮箱格式验证
     if not _validate_email(email):
         raise HTTPException(400, "邮箱格式无效")
-    
+
     # 检查 email 是否已存在
     existing = supabase.table("users").select("id").eq("email", email).execute()
     if existing.data:
@@ -387,7 +390,7 @@ def local_register(request: Request, body: RegisterRequest):
 def local_login(request: Request, body: LoginRequest):
     """本地登录 — 验证密码，返回用户信息。"""
     email = _sanitize(body.email).strip().lower()
-    
+
     result = supabase.table("users").select("id, email, name, password_hash") \
         .eq("email", email).execute()
 
@@ -403,7 +406,7 @@ def local_login(request: Request, body: LoginRequest):
     user_id = user["id"]
 
     logging.getLogger("moltable").info("用户登录: %s (%s)", email, user_id)
-    
+
     # 返回已有的活跃 API Key（不生成新的，避免每次登录泄露密钥）
     keys_result = supabase.table("api_keys") \
         .select("id, name, key_prefix") \
@@ -412,17 +415,17 @@ def local_login(request: Request, body: LoginRequest):
         .order("created_at", desc=True) \
         .limit(1) \
         .execute()
-    
+
     has_existing_key = keys_result.data and len(keys_result.data) > 0
-    
+
     # 创建临时 session token（7 天有效，用于前端登录态）
-    from datetime import timedelta
     import uuid as _ses_uuid
+    from datetime import timedelta
     session_id = str(_ses_uuid.uuid4())
     session_token = "mol_" + secrets.token_urlsafe(32)
     now = datetime.now(timezone.utc)
     expires = now + timedelta(days=7)
-    
+
     supabase.table("sessions").insert({
         "id": session_id,
         "session_uuid": session_id,
@@ -431,7 +434,7 @@ def local_login(request: Request, body: LoginRequest):
         "created_at": now.isoformat(),
         "expires_at": expires.isoformat(),
     }).execute()
-    
+
     return {
         "user_id": user_id,
         "has_api_key": has_existing_key,
@@ -576,7 +579,9 @@ def consume_sync_code(request: Request, body: SyncCodeRequest):
 @router.post("/_migrate/agent-invites")
 def migrate_agent_invites(request: Request):
     """创建 agent_invites 表 + 索引（执行后删除此端点）。"""
-    import os, psycopg2
+    import os
+
+    import psycopg2
     db_url = os.getenv("DATABASE_URL") or os.getenv("DIRECT_URL") or ""
     if not db_url:
         return {"status": "error", "detail": "No DATABASE_URL set"}

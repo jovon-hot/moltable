@@ -6,15 +6,21 @@ Two roles:
 
 Brute-force protection: 5 failures → 15-min IP cooldown (per role).
 """
-import os, logging, hmac, hashlib, secrets, time, re
-from typing import Optional
-from datetime import datetime, timedelta, timezone
+import hashlib
+import hmac
+import logging
+import os
+import re
+import secrets
+import time
 from collections import defaultdict
+from datetime import datetime, timedelta, timezone
+from typing import Optional
 
 import jwt as _jwt
 from fastapi import HTTPException, Request
 
-from app_state import supabase, _is_sqlite
+from app_state import supabase
 
 logger = logging.getLogger("moltable.admin_auth")
 

@@ -1,7 +1,10 @@
 """Moltable MCP Server — stdio 入口，通过 HTTP 代理到 mcp.py JSON-RPC 端点"""
 
-import os, json, sys, httpx
-from mcp.server import Server, NotificationOptions
+import json
+import os
+
+import httpx
+from mcp.server import NotificationOptions, Server
 from mcp.server.models import InitializationCapabilities
 from mcp.server.stdio import stdio_server
 

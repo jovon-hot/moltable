@@ -5,8 +5,9 @@ Set env: RESEND_API_KEY=re_xxxxxxxx
 
 Fallback: logs to console when no key configured.
 """
-import os
 import logging
+import os
+
 import httpx
 
 logger = logging.getLogger("moltable.email")

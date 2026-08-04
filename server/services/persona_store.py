@@ -1,7 +1,9 @@
 """In-memory Persona store — zero-dependency fallback when Supabase is unavailable."""
 from __future__ import annotations
-from typing import List, Dict, Optional
-import uuid, time
+
+import time
+import uuid
+from typing import Dict, List, Optional
 
 
 class InMemoryPersonaStore:

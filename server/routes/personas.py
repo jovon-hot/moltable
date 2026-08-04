@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 Persona routes — 人格管理 (Phase 2)
 支持 Supabase 持久化 + In-memory fallback (offline 模式)
@@ -7,8 +8,8 @@ Persona routes — 人格管理 (Phase 2)
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
-from app_state import supabase, limiter
-from app_state import bump_persona_version, _is_sqlite
+
+from app_state import _is_sqlite, bump_persona_version, limiter, supabase
 from routes.auth import get_user
 from services.persona_store import get_persona_store
 

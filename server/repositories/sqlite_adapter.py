@@ -5,9 +5,9 @@ SQLite Adapter — Supabase API 兼容层
 仅用 Python stdlib sqlite3，无需安装任何额外依赖。
 """
 
-import sqlite3
 import json
 import os
+import sqlite3
 
 
 def _serialize_value(val):
@@ -16,7 +16,7 @@ def _serialize_value(val):
         return json.dumps(val, ensure_ascii=False)
     return val
 import threading
-from typing import Optional, List
+from typing import List, Optional
 
 DB_PATH = os.getenv(
     "MOLTABLE_DB_PATH",
@@ -295,7 +295,7 @@ def init_schema(client: SQLiteClient):
         for stmt in sql.split(";"):
             stmt = stmt.strip()
             # 去掉行首的注释行，避免注释+SQL在同一块被跳过
-            lines = [l for l in stmt.split("\n") if not l.strip().startswith("--")]
+            lines = [line for line in stmt.split("\n") if not line.strip().startswith("--")]
             stmt = "\n".join(lines).strip()
             if stmt:
                 try:
