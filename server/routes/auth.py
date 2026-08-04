@@ -365,6 +365,14 @@ def local_register(request: Request, body: RegisterRequest):
     }).execute()
 
     logging.getLogger("moltable").info("新用户注册: %s (%s)", email, user_id)
+
+    # 发送欢迎邮件（如果配置了 Resend API Key）
+    try:
+        from email_utils import send_welcome_email
+        send_welcome_email(email, raw_key)
+    except Exception:
+        pass
+
     return {
         "user_id": user_id,
         "key": raw_key,
