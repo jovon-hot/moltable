@@ -4,6 +4,7 @@ __pycache__/
 .env
 .env.local
 venv/
+venv311/
 .venv/
 .next/
 dist/
