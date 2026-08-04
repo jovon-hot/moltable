@@ -14,6 +14,14 @@ const posts = [
     tags: ['对比', 'mem0', 'Identity', 'Memory'],
   },
   {
+    slug: 'why-ai-forgets-you',
+    date: '2026-08-05',
+    title: '为什么你的 AI 每次都不记得你是谁 —— 以及 2026 年的终极解决方案',
+    titleEn: 'Why Your AI Forgets You Every Day — And the 2026 Fix',
+    excerpt: '每天早上打开 Claude，它都像第一次见你。不是 AI 笨，是你的身份数据从没被真正存储过。本文剖析 AI「失忆」的五个根因，并给出 Moltable 的三层身份架构解决方案——一次配置，所有 Agent 共享。',
+    tags: ['痛点', 'Identity', '教程'],
+  },
+  {
     slug: 'three-minute-env-recovery',
     date: '2026-08-04',
     title: '换电脑不换脑子：3 分钟恢复完整 AI 开发环境实战指南',

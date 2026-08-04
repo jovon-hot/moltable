@@ -48,3 +48,11 @@
 - **修复**: 添加 `venv311/` 到 `.gitignore`，避免 1.3G 虚拟环境目录被跟踪
 - **审计**: npm audit 发现 2 个 HIGH 级别漏洞（Next.js 14.2.35 → 需跨大版本升级至 16.x，暂缓）
 - **提交**: bb6a1d7 - chore: add venv311/ to .gitignore
+
+## 2026-08-05 (R5 — 夜间维护·功能开发)
+- **功能**: 记忆健康评分系统 — `GET /api/memories/health` 全面健康报告
+- **功能**: 记忆自动清理 — `POST /api/memories/health/cleanup` 自动归档低质量记忆
+- **新服务**: `services/memory_health.py` — 陈腐度检测、矛盾检测、重复聚类、完整性评分
+- **测试**: 新增 14 个测试 (test_memory_health.py) — 年龄计算、矛盾检测、健康评分、重复检测、报告生成
+- **竞品对齐**: 抗衡 Cognee improve()、Zep temporal knowledge graph — Moltable 独有健康评分体系
+- **提交**: [本次] - feat: memory health scoring + staleness detection + auto-cleanup

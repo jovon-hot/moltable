@@ -554,3 +554,62 @@ def consolidate_memories(request: Request, body: ConsolidateRequest,
         "original_count": len(memories),
         "strategy": body.strategy,
     }
+
+
+# ═══════════════════════════════════════════════════════════
+#  Memory Health & Staleness Scoring
+# ═══════════════════════════════════════════════════════════
+
+@router.get("/health")
+@limiter.limit("20/minute")
+def memory_health_report(request: Request, user_id: str = Depends(get_user)):
+    """Generate a comprehensive health report for all memories.
+
+    Scores each memory (0-100) based on:
+      - Age/staleness: older memories lose points
+      - Completeness: very short memories flagged
+      - Duplication: near-duplicate groups detected
+      - Contradictions: possible conflicting facts identified
+
+    Returns actionable recommendations: archive, consolidate, review, enrich.
+
+    Inspired by: Cognee improve(), Zep temporal knowledge graph.
+    """
+    from services.memory_health import generate_health_report
+
+    store = get_store()
+    report = generate_health_report(user_id, store)
+
+    return {
+        "summary": {
+            "total": report.total,
+            "healthy": report.healthy,
+            "stale": report.stale,
+            "duplicate_clusters": report.duplicate_clusters,
+            "incomplete": report.incomplete,
+            "contradiction_pairs": report.contradiction_pairs,
+            "average_health": report.average_health,
+            "health_pct": round(report.average_health, 1),
+        },
+        "recommendations": report.recommendations,
+        "worst_memories": report.per_memory[:10],  # 10 lowest-scoring
+    }
+
+
+@router.post("/health/cleanup")
+@limiter.limit("5/minute")
+def memory_health_cleanup(request: Request, user_id: str = Depends(get_user)):
+    """Auto-cleanup low-quality memories.
+
+    Automatically archives memories with health score < 30 that are
+    clearly redundant (duplicates). Never touches contradictory memories
+    (those need human review).
+
+    Returns summary of actions taken.
+    """
+    from services.memory_health import auto_cleanup
+
+    store = get_store()
+    result = auto_cleanup(user_id, store)
+
+    return result
