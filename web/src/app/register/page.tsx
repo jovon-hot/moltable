@@ -17,8 +17,13 @@ export default function RegisterPage() {
     setLoading(true)
     setError('')
     try {
-      await localRegister(email, password)
-      window.location.href = '/dashboard'
+      const data = await localRegister(email, password)
+      // 🪄 魔法时刻：直接跳到接入页，预填 API Key
+      if (data.key) {
+        window.location.href = `/connect?key=${encodeURIComponent(data.key)}&new=true`
+      } else {
+        window.location.href = '/dashboard'
+      }
     } catch (err: any) {
       setError(err.message || a.registerFailed)
     }

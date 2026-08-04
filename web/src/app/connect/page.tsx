@@ -2,7 +2,8 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { useLang } from '@/contexts/LanguageContext'
-import { Copy, Check, ArrowRight, Loader2, RotateCcw } from 'lucide-react'
+import { Copy, Check, ArrowRight, Loader2, RotateCcw, Sparkles, Zap } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.moltable.ai'
 
@@ -17,10 +18,40 @@ type KeyStatus =
 
 export default function OnboardingPage() {
   const { t, lang } = useLang()
+  const searchParams = useSearchParams()
   const [platform, setPlatform] = useState<Platform>('hermes')
   const [copied, setCopied] = useState('')
   const [apiKey, setApiKey] = useState('')
   const [keyStatus, setKeyStatus] = useState<KeyStatus>({ state: 'idle' })
+  const isNewUser = searchParams.get('new') === 'true'
+
+  // ── API Key validation (also callable from useEffect) ──
+  const validateKeyStatic = useCallback(async (key: string) => {
+    const controller = new AbortController()
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/me`, {
+        headers: { 'X-API-Key': key },
+        signal: controller.signal,
+      })
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setKeyStatus({ state: 'valid', user: { name: data?.name, email: data?.email } })
+      } else {
+        setKeyStatus({ state: 'invalid', message: '' })
+      }
+    } catch {
+      setKeyStatus({ state: 'error', message: '' })
+    }
+  }, [])
+
+  // Pre-fill key from URL param
+  useEffect(() => {
+    const keyFromUrl = searchParams.get('key')
+    if (keyFromUrl) {
+      setApiKey(keyFromUrl)
+      validateKeyStatic(keyFromUrl)
+    }
+  }, [searchParams, validateKeyStatic])
 
   // ── API Key 实时验证 ──────────────────────────────
   const seqRef = useRef(0)                       // guards against stale responses
@@ -185,6 +216,24 @@ Content-Type: application/json`
     <div className="min-h-screen" style={{ background: '#08090a', color: '#f7f8f8' }}>
       {/* Hero */}
       <div className="max-w-4xl mx-auto px-6 pt-24 pb-16">
+        {/* 🪄 Magic moment banner for new users */}
+        {isNewUser && (
+          <div className="mb-10 p-5 rounded-xl animate-in" style={{ background: 'linear-gradient(135deg, rgba(113,112,255,0.15), rgba(113,112,255,0.04))', boxShadow: '0 0 0 1px rgba(113,112,255,0.2)' }}>
+            <div className="flex items-start gap-3">
+              <Sparkles size={22} style={{ color: '#7170ff', marginTop: 2 }} />
+              <div>
+                <h2 className="text-lg mb-1" style={{ fontWeight: 600, color: '#f7f8f8' }}>
+                  {lang === 'zh' ? '🎉 注册成功！你的 AI 即将认识你' : '🎉 Registered! Your AI Is About to Know You'}
+                </h2>
+                <p className="text-sm mb-0" style={{ color: '#8a8f98', lineHeight: 1.6 }}>
+                  {lang === 'zh'
+                    ? '下方是你的专属 API Key，已自动填入。复制配置 → 粘贴到 AI 工具 → 你的 AI 就能获取你的偏好和记忆。全程 30 秒。'
+                    : 'Your API key is filled in below. Copy the config → paste into your AI tool → your AI will know your preferences and memories. Takes 30 seconds.'}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
         <h1 className="text-3xl sm:text-4xl mb-4" style={{ fontWeight: 590, letterSpacing: '-0.5px' }}>
           {lang === 'zh' ? '30 秒接入 Moltable' : 'Connect in 30 Seconds'}
         </h1>

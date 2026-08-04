@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 
 export const metadata: Metadata = {
   title: '30 秒接入 Moltable — AI Identity Sync 配置指南',
@@ -12,5 +13,5 @@ export const metadata: Metadata = {
 }
 
 export default function ConnectLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>
+  return <Suspense fallback={<div />}>{children}</Suspense>
 }
