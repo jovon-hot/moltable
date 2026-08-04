@@ -43,5 +43,30 @@ export const metadata: Metadata = {
 }
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return children
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Article',
+            headline: 'arXiv 最新论文：AI Agent 的「持续身份」——多锚点架构如何让 Agent 不再失忆',
+            description:
+              '2026年3月 arXiv 论文提出多锚点身份理论：参考人类记忆障碍的神经科学研究，论证 AI Agent 需要五个锚点来维持持续身份。',
+            datePublished: '2026-08-04',
+            author: { '@type': 'Organization', name: 'Moltable' },
+            publisher: {
+              '@type': 'Organization',
+              name: 'Moltable',
+              logo: { '@type': 'ImageObject', url: 'https://www.moltable.ai/logo.svg' },
+            },
+            mainEntityOfPage: { '@type': 'WebPage', '@id': 'https://www.moltable.ai/blog/agent-persistent-identity-research' },
+            image: 'https://www.moltable.ai/logo-horizontal.svg',
+          }),
+        }}
+      />
+      {children}
+    </>
+  )
 }

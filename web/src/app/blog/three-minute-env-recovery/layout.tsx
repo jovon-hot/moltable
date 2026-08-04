@@ -43,5 +43,30 @@ export const metadata: Metadata = {
 }
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return children
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Article',
+            headline: '换电脑不换脑子：3 分钟恢复完整 AI 开发环境实战指南',
+            description:
+              '换一台新 Mac，AI 全部失忆了？本文手把手教你用 Moltable 在 3 分钟内恢复完整 AI 工作环境。含 Claude、Cursor、Codex 多 Agent 同步方案。',
+            datePublished: '2026-08-04',
+            author: { '@type': 'Organization', name: 'Moltable' },
+            publisher: {
+              '@type': 'Organization',
+              name: 'Moltable',
+              logo: { '@type': 'ImageObject', url: 'https://www.moltable.ai/logo.svg' },
+            },
+            mainEntityOfPage: { '@type': 'WebPage', '@id': 'https://www.moltable.ai/blog/three-minute-env-recovery' },
+            image: 'https://www.moltable.ai/logo-horizontal.svg',
+          }),
+        }}
+      />
+      {children}
+    </>
+  )
 }

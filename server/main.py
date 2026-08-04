@@ -34,11 +34,32 @@ if deepseek_key:
 else:
     logger.warning("DEEPSEEK_API_KEY missing — LLM features disabled")
 
+# ── Lifespan (replaces deprecated on_event) ────────────────
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """Startup: launch daily stats collector background task."""
+    import asyncio
+    from services.stats_collector import collect_daily_stats, stats_collector_loop
+    # Collect immediately on startup (only if not already collected today)
+    try:
+        collect_daily_stats()
+    except Exception as e:
+        logger.warning("Initial stats collection failed: %s", e)
+    # Start hourly loop
+    asyncio.create_task(stats_collector_loop())
+    logger.info("Daily stats collector started")
+    yield  # app runs here
+    # Shutdown
+    logger.info("Moltable shutting down")
+
 # ── FastAPI App ───────────────────────────────────────────
 app = FastAPI(
     title="Moltable — AI Identity Layer",
     version="0.1.0",
-    description="Cross-AI identity system: Identity → Persona → Agent"
+    description="Cross-AI identity system: Identity → Persona → Agent",
+    lifespan=lifespan,
 )
 
 # ── Security Headers Middleware ───────────────────────────
@@ -187,22 +208,6 @@ async def health(request: Request):
         "db_required": supabase is not None,
         "error_count": get_error_count(),
     }
-
-
-# ── Startup ───────────────────────────────────────────────
-@app.on_event("startup")
-async def startup_stats_collector():
-    """Start the daily stats collector background task."""
-    import asyncio
-    from services.stats_collector import collect_daily_stats, stats_collector_loop
-    # Collect immediately on startup (only if not already collected today)
-    try:
-        collect_daily_stats()
-    except Exception as e:
-        logger.warning("Initial stats collection failed: %s", e)
-    # Start hourly loop
-    asyncio.create_task(stats_collector_loop())
-    logger.info("Daily stats collector started")
 
 
 if __name__ == "__main__":

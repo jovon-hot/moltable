@@ -42,5 +42,30 @@ export const metadata: Metadata = {
 }
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return children
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Article',
+            headline: 'AI Agent 记忆系统全景对比 2026：mem0 vs Zep vs Moltable',
+            description:
+              '从开源到商业，从向量搜索到图谱记忆——2026年主流AI Agent记忆系统横向对比。mem0、Zep、Moltable 功能/架构/定价全维度分析。',
+            datePublished: '2026-07-10',
+            author: { '@type': 'Organization', name: 'Moltable' },
+            publisher: {
+              '@type': 'Organization',
+              name: 'Moltable',
+              logo: { '@type': 'ImageObject', url: 'https://www.moltable.ai/logo.svg' },
+            },
+            mainEntityOfPage: { '@type': 'WebPage', '@id': 'https://www.moltable.ai/blog/agent-memory-landscape-2026' },
+            image: 'https://www.moltable.ai/logo-horizontal.svg',
+          }),
+        }}
+      />
+      {children}
+    </>
+  )
 }
