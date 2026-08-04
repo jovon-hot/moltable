@@ -6,6 +6,14 @@ import { useLang } from '@/contexts/LanguageContext'
 
 const posts = [
   {
+    slug: 'agent-persistent-identity-research',
+    date: '2026-08-04',
+    title: 'arXiv 最新论文：AI Agent 的「持续身份」——多锚点架构如何让 Agent 不再失忆',
+    titleEn: 'New arXiv Paper: Persistent Identity in AI Agents — Multi-Anchor Architecture',
+    excerpt: '2026年3月 arXiv 论文提出多锚点身份理论：参考人类记忆障碍的神经科学研究，论证 AI Agent 需要偏好、决策、关系、价值观、叙事五个锚点来维持持续身份。Moltable 的三层架构恰好完整实现了这一理论。',
+    tags: ['研究', 'Identity', '架构', '论文解读'],
+  },
+  {
     slug: 'ai-agent-trends-2026h2',
     date: '2026-08-08',
     title: '2026 下半年 AI Agent 趋势：从工具到伙伴，从记忆到身份',
