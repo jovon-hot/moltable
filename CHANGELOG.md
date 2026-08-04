@@ -1,3 +1,9 @@
+## 2026-08-05 (R3)
+- **增长**: A/B 测试框架上线 — 实验 CRUD、权重随机分配、转化追踪、管理面板
+- **内容**: 发布 Moltable vs mem0 深度对比博客 — Identity Layer vs Memory Layer 架构分析
+- **增长**: 增强增长报告 v2 — 漏斗分析、异常检测、实验面板集成
+- **内容**: 社交媒体文案 5 篇（Twitter/LinkedIn/即刻）
+
 # Changelog
 
 ## 2026-08-05 (R2)
