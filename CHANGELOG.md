@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-08-05
+- **健康**: 全端点扫描 6/6 通过 (200)
+- **审计**: npm audit web 0 vulns, server 0 vulns
+- **清理**: 删除 3,357 个旧 session 文件，释放 ~345MB 磁盘空间
+- **状态**: 无修复需要，代码库干净，最新 commit 已部署
+
 ## 2026-08-04 (R2)
 - **安全**: npm audit 0 vulns — 升级 Next.js 14.2.35→15.5.22 (修复 2 HIGH + 13 MODERATE 漏洞)
 - **安全**: 升级 React 18→19, React-DOM 18→19, @types/react 18→19
