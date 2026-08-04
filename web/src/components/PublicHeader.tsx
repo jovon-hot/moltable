@@ -60,7 +60,7 @@ export default function PublicHeader() {
         {/* Logo */}
         <Link href="/" className="flex items-center">
           <img
-            src="/logo-icon.png"
+            src="/logo-icon.svg"
             alt="Moltable"
             className="h-10 w-auto transition-all duration-200"
           />
