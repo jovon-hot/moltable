@@ -9,6 +9,44 @@ from services.embedding import embed
 router = APIRouter(prefix="/api/memories", tags=["memories"])
 
 
+# ── Time-decay helper ──────────────────────────────────────
+def _apply_time_decay(results: list[dict]) -> list[dict]:
+    """Boost recency: blend semantic similarity with time decay.
+    
+    Uses exponential decay with half-life of 7 days. Newer memories get
+    a slight boost in relevance score. Result is still primarily ranked
+    by similarity, but with recent items slightly favored.
+    
+    Inspired by: Zep temporal knowledge graph, OpenAI memory recency weighting.
+    """
+    import math, time as _time_module
+    now = _time_module.time()
+    HALF_LIFE_SECONDS = 7 * 24 * 3600  # 7 days
+    
+    for r in results:
+        created_str = r.get("created_at", "")
+        age_seconds = float(HALF_LIFE_SECONDS)  # default: max age
+        if created_str:
+            try:
+                # Parse ISO timestamp
+                from datetime import datetime
+                dt = datetime.fromisoformat(created_str.replace("Z", "+00:00"))
+                age_seconds = max(0, now - dt.timestamp())
+            except Exception:
+                pass
+        
+        # Decay factor: 1.0 for now, 0.5 for half-life, approaches 0 for very old
+        decay = math.exp(-math.log(2) * age_seconds / HALF_LIFE_SECONDS)
+        # Blend: 80% similarity + 20% time boost
+        base_relevance = r.get("relevance", r.get("similarity", 0.5))
+        r["relevance"] = round(0.8 * base_relevance + 0.2 * decay, 4)
+        r["time_boost"] = round(decay, 4)
+    
+    # Re-sort by blended relevance
+    results.sort(key=lambda r: r.get("relevance", 0), reverse=True)
+    return results
+
+
 class MemoryCreate(BaseModel):
     content: str = Field(..., min_length=1, max_length=10000, description="Memory content")
     category: str = Field(default="fact", pattern=r"^(preference|decision|fact|project|insight|task|relationship)$")
@@ -67,9 +105,13 @@ def save_memory(request: Request, body: MemoryCreate, force: bool = Query(False)
 @limiter.limit("120/minute")
 def search_memory(request: Request, q: str = Query(..., min_length=1, max_length=500),
                   category: str | None = None, top_k: int = Query(default=5, ge=1, le=50),
+                  time_decay: bool = Query(default=False, description="Boost recent memories in rankings"),
                   user_id: str = Depends(get_user)):
     try:
-        return _do_search(user_id, q, category, top_k)
+        results = _do_search(user_id, q, category, top_k)
+        if time_decay and results.get("results"):
+            results["results"] = _apply_time_decay(results["results"])
+        return results
     except Exception as e:
         # 兜底：任何错误都返回最近记忆，不崩溃
         recent = get_store().list(user_id, category=category, limit=top_k)
@@ -256,3 +298,257 @@ def archive_memory(request: Request, memory_id: str, user_id: str = Depends(get_
     if not get_store().update(memory_id, user_id, is_archived=True):
         raise HTTPException(404, detail="Memory not found")
     return {"status": "archived", "memory_id": memory_id}
+
+
+# ── Duplicate Detection ────────────────────────────
+class DuplicateGroup(BaseModel):
+    representative: dict
+    duplicates: list[dict]
+    count: int
+    avg_similarity: float
+
+@router.get("/duplicates")
+@limiter.limit("30/minute")
+def find_duplicates(
+    request: Request,
+    threshold: float = Query(default=0.85, ge=0.7, le=0.99),
+    user_id: str = Depends(get_user),
+):
+    """Find clusters of near-duplicate memories for consolidation.
+
+    Uses cosine similarity on embeddings to find memory groups where
+    pairwise similarity exceeds the threshold. Returns groups sorted by
+    count descending (most duplicated first).
+
+    Inspired by: OpenAI Dreaming V3 memory synthesis, Cognee session distillation.
+    """
+    store = get_store()
+    all_memories = store.list(user_id, limit=500)
+
+    if len(all_memories) < 2:
+        return {"groups": [], "total_memories": len(all_memories)}
+
+    # Build group index: group_id -> list of memory dicts
+    groups: list[list[dict]] = []
+    used: set[str] = set()
+
+    for i, a in enumerate(all_memories):
+        if a["id"] in used:
+            continue
+        emb_a = a.get("embedding") or []
+        if not emb_a:
+            continue
+
+        group = [a]
+        used.add(a["id"])
+
+        for j, b in enumerate(all_memories):
+            if i == j or b["id"] in used:
+                continue
+            emb_b = b.get("embedding") or []
+            if not emb_b:
+                continue
+
+            try:
+                from repositories.memory_repo import _cosine_sim
+                sim = _cosine_sim(emb_a, emb_b)
+            except Exception:
+                continue
+
+            if sim >= threshold:
+                group.append(b)
+                used.add(b["id"])
+
+        if len(group) >= 2:
+            groups.append(group)
+
+    # Sort by group size descending
+    groups.sort(key=lambda g: len(g), reverse=True)
+
+    result_groups = []
+    for group in groups:
+        # Pick the most recent as representative
+        rep = max(group, key=lambda m: m.get("created_at", ""))
+        dups = [m for m in group if m["id"] != rep["id"]]
+        similarities = []
+        try:
+            from repositories.memory_repo import _cosine_sim
+            rep_emb = rep.get("embedding") or []
+            for d in dups:
+                d_emb = d.get("embedding") or []
+                if rep_emb and d_emb:
+                    similarities.append(_cosine_sim(rep_emb, d_emb))
+        except Exception:
+            pass
+        avg_sim = round(sum(similarities) / len(similarities), 3) if similarities else 0.0
+
+        result_groups.append({
+            "representative": {
+                "id": rep["id"],
+                "content": rep["content"][:200],
+                "category": rep.get("category", ""),
+                "created_at": rep.get("created_at", ""),
+                "source": rep.get("source", ""),
+            },
+            "duplicates": [{
+                "id": m["id"],
+                "content": m["content"][:200],
+                "category": m.get("category", ""),
+                "created_at": m.get("created_at", ""),
+            } for m in dups],
+            "count": len(group),
+            "avg_similarity": avg_sim,
+        })
+
+    return {
+        "groups": result_groups[:20],
+        "total_memories": len(all_memories),
+        "threshold": threshold,
+    }
+
+
+# ── Memory Consolidation ───────────────────────────
+class ConsolidateRequest(BaseModel):
+    memory_ids: list[str] = Field(..., min_length=2, max_length=20, description="Memory IDs to consolidate")
+    strategy: str = Field(default="merge", pattern=r"^(merge|summarize|deduplicate)$",
+                         description="merge=blend into one, summarize=extract key insight, deduplicate=keep best")
+
+@router.post("/consolidate")
+@limiter.limit("10/minute")
+def consolidate_memories(request: Request, body: ConsolidateRequest,
+                         user_id: str = Depends(get_user)):
+    """Consolidate multiple related memories into one synthesized memory.
+
+    Uses DeepSeek LLM to intelligently merge/summarize related memories.
+    The result is stored as a new memory (category='insight' for summarize,
+    category='fact' for merge/deduplicate).
+
+    Original memories are archived after successful consolidation.
+
+    Inspired by: OpenAI Dreaming V3 (background memory synthesis),
+    Cognee session distillation, Zep temporal knowledge graph.
+    """
+    store = get_store()
+
+    # Fetch all memories and verify ownership
+    memories = []
+    for mid in body.memory_ids:
+        mem = store.get(mid, user_id)
+        if not mem:
+            raise HTTPException(404, f"Memory {mid} not found")
+        memories.append(mem)
+
+    if len(memories) < 2:
+        raise HTTPException(400, "Need at least 2 memories to consolidate")
+
+    # Prepare LLM prompt
+    import logging
+    logger_local = logging.getLogger("moltable.consolidate")
+
+    memory_texts = "\n\n---\n\n".join([
+        f"[Memory {i+1}] ({m['category']}, {m.get('source','unknown')})\n{m['content']}"
+        for i, m in enumerate(memories)
+    ])
+
+    strategy_prompts = {
+        "merge": (
+            "You are a memory consolidation engine. Below are several related memories "
+            "from the same user. Merge them into ONE coherent, non-redundant memory that "
+            "preserves all unique facts while eliminating repetition. "
+            "Respond with ONLY the consolidated memory text — no JSON, no explanation.\n\n"
+        ),
+        "summarize": (
+            "You are a memory synthesis engine. Below are several related memories from the "
+            "same user. Extract the KEY INSIGHT or pattern that emerges across all of them. "
+            "Respond with ONLY the insight text (1-3 sentences) — no JSON, no explanation.\n\n"
+        ),
+        "deduplicate": (
+            "You are a memory deduplication engine. Below are several related memories from the "
+            "same user that likely say the same thing in different ways. Pick the BEST, clearest "
+            "version of the fact and return ONLY that text. Do not add new information.\n\n"
+        ),
+    }
+
+    prompt = strategy_prompts.get(body.strategy, strategy_prompts["merge"]) + memory_texts
+
+    # Use DeepSeek for consolidation
+    from app_state import supabase as _sb_check
+    deepseek_key = __import__("os").getenv("DEEPSEEK_API_KEY")
+    consolidated_text = None
+
+    if deepseek_key:
+        try:
+            from openai import OpenAI
+            client = OpenAI(api_key=deepseek_key, base_url="https://api.deepseek.com/v1")
+
+            resp = client.chat.completions.create(
+                model="deepseek-chat",
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.3,
+                max_tokens=500,
+            )
+            consolidated_text = resp.choices[0].message.content.strip()
+            if not consolidated_text:
+                raise ValueError("Empty response from LLM")
+            logger_local.info("Consolidated %d memories (strategy=%s)", len(memories), body.strategy)
+        except Exception as e:
+            logger_local.warning("DeepSeek consolidation failed: %s — using fallback", e)
+            consolidated_text = None
+
+    if not consolidated_text:
+        # Fallback: pick the longest memory content as the base
+        longest = max(memories, key=lambda m: len(m["content"]))
+        sources = [m.get("source", "unknown")[:50] for m in memories]
+        consolidated_text = (
+            f"[Consolidated from {len(memories)} related memories]\n\n"
+            f"{longest['content']}\n\n"
+            f"--- Additional context merged ---\n"
+            + "\n".join([f"• {m['content'][:200]}" for m in memories if m['id'] != longest['id']])
+        )
+
+    # Determine category and source
+    category_map = {"summarize": "insight", "merge": "fact", "deduplicate": "fact"}
+    new_category = category_map.get(body.strategy, "fact")
+    sources = list(set(m.get("source", "unknown")[:30] for m in memories))
+    new_source = "+".join(sources[:3]) if sources else "consolidated"
+
+    # Combine tags
+    all_tags: list[str] = []
+    for m in memories:
+        for t in (m.get("tags") or []):
+            if t not in all_tags:
+                all_tags.append(t)
+
+    # Create consolidated memory
+    from services.embedding import embed as embed_fn
+    new_vec = embed_fn(consolidated_text)
+
+    new_doc = store.insert(
+        user_id, consolidated_text, new_vec,
+        category=new_category,
+        source=f"consolidated:{new_source}",
+        confidence=0.9,
+        tags=all_tags[:20],
+        persona_id=memories[0].get("persona_id"),
+    )
+
+    # Archive original memories
+    archived_count = 0
+    for m in memories:
+        try:
+            store.update(m["id"], user_id, is_archived=True)
+            archived_count += 1
+        except Exception:
+            pass
+
+    return {
+        "consolidated": {
+            "id": new_doc["id"],
+            "content": consolidated_text,
+            "category": new_category,
+            "source": new_source,
+        },
+        "archived_count": archived_count,
+        "original_count": len(memories),
+        "strategy": body.strategy,
+    }

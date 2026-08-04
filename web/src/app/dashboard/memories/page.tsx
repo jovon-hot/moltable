@@ -5,7 +5,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { useLang } from '@/contexts/LanguageContext'
 import { apiFetch } from '@/lib/api'
 import { timeAgo } from '@/lib/timeago'
-import { Loader2, Search, Plus, ChevronDown, Edit2, Save, X, Trash2, Archive, Clock, Tag } from 'lucide-react'
+import { Loader2, Search, Plus, ChevronDown, Edit2, Save, X, Trash2, Archive, Clock, Tag, Layers, Sparkles } from 'lucide-react'
 
 const CAT_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   preference: { bg: 'bg-[rgba(250,204,21,0.08)]', text: 'text-[#eab308]', border: 'shadow-[0_0_0_1px_rgba(250,204,21,0.2)]' },
@@ -50,6 +50,13 @@ export default function MemoriesPage() {
   const [newCategory, setNewCategory] = useState('fact')
   const [adding, setAdding] = useState(false)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [timeDecay, setTimeDecay] = useState(false)
+  const [showConsolidate, setShowConsolidate] = useState(false)
+  const [duplicateGroups, setDuplicateGroups] = useState<any[]>([])
+  const [dupLoading, setDupLoading] = useState(false)
+  const [selectedForConsolidation, setSelectedForConsolidation] = useState<Set<string>>(new Set())
+  const [consolidating, setConsolidating] = useState(false)
+  const [consolidateStrategy, setConsolidateStrategy] = useState('merge')
 
   const showDemoToast = () => toast(lang === 'zh' ? '演示模式下不可用 — 注册后开始使用' : 'Not available in demo — sign up to get started', 'info')
 
@@ -61,6 +68,7 @@ export default function MemoriesPage() {
       if (off) url += `&offset=${off}`
       if (query) {
         url = `/api/memories/search?q=${encodeURIComponent(query)}&top_k=${PAGE_SIZE}`
+        if (timeDecay) url += '&time_decay=true'
         const data = await apiFetch<{ results: any[] }>(url)
         const results = data.results || data
         setMemories(Array.isArray(results) ? results : [])
@@ -76,7 +84,7 @@ export default function MemoriesPage() {
       setMemories(DEMO_MEMORIES)
       setHasMore(false)
     } finally { setLoading(false) }
-  }, [toast])
+  }, [toast, timeDecay])
 
   useEffect(() => { fetchMemories() }, [])
 
@@ -88,6 +96,48 @@ export default function MemoriesPage() {
     if (isDemo) { showDemoToast(); return }
     const newOff = offset + PAGE_SIZE; setOffset(newOff)
     fetchMemories(search || undefined, category, newOff, true)
+  }
+
+  // ── Duplicate Detection ──────────────────────────
+  const fetchDuplicates = async () => {
+    if (isDemo) { showDemoToast(); return }
+    setDupLoading(true)
+    try {
+      const data = await apiFetch<{ groups: any[] }>('/api/memories/duplicates')
+      setDuplicateGroups(data.groups || [])
+      setShowConsolidate(true)
+    } catch (err: any) {
+      toast(err?.message || 'Failed to check duplicates', 'error')
+    } finally { setDupLoading(false) }
+  }
+
+  const toggleConsolidationSelect = (id: string) => {
+    setSelectedForConsolidation(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id) else next.add(id)
+      return next
+    })
+  }
+
+  const handleConsolidate = async () => {
+    if (isDemo) { showDemoToast(); return }
+    const ids = Array.from(selectedForConsolidation)
+    if (ids.length < 2) { toast(d.dashboard_ui?.consolidateBtn?.replace('{count}', String(0)) || 'Need at least 2', 'error'); return }
+    setConsolidating(true)
+    try {
+      const data = await apiFetch<{ consolidated: any; archived_count: number }>('/api/memories/consolidate', {
+        method: 'POST',
+        body: JSON.stringify({ memory_ids: ids, strategy: consolidateStrategy }),
+      })
+      toast(d.consolidateSuccess as string, 'success')
+      setSelectedForConsolidation(new Set())
+      setShowConsolidate(false)
+      // Refresh memories
+      setOffset(0)
+      await fetchMemories(search || undefined, category)
+    } catch (err: any) {
+      toast(err?.message || (d.consolidateFailed as string), 'error')
+    } finally { setConsolidating(false) }
   }
   const handleSave = async () => {
     if (isDemo) { showDemoToast(); return }
@@ -174,6 +224,100 @@ export default function MemoriesPage() {
           {CATEGORIES.map(c => (<option key={c.value} value={c.value}>{c.label}</option>))}
         </select>
       </div>
+
+      {!isDemo && (<div className="flex items-center gap-3 mb-4">
+        <label className="flex items-center gap-2 text-xs text-ln-tertiary font-ui cursor-pointer select-none">
+          <input type="checkbox" checked={timeDecay} onChange={e => setTimeDecay(e.target.checked)}
+            className="w-3.5 h-3.5 rounded border-ln-tertiary accent-ln-accent" />
+          <Clock size={12} /> {d.timeDecayToggle}
+        </label>
+        <button onClick={fetchDuplicates} disabled={dupLoading}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-btn text-xs font-ui bg-ln-btn-bg text-ln-secondary shadow-border transition-all duration-150 hover:bg-ln-hover disabled:opacity-50">
+          {dupLoading ? <Loader2 size={11} className="animate-spin" /> : <Layers size={11} />}
+          {d.consolidateTitle}
+        </button>
+      </div>)}
+
+      {showConsolidate && (
+        <div className="mb-6 p-5 rounded-card bg-ln-surface shadow-card animate-in">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h3 className="text-sm font-heading text-ln-text flex items-center gap-2">
+                <Sparkles size={14} className="text-ln-accent" /> {d.consolidateTitle}
+              </h3>
+              <p className="text-xs text-ln-tertiary mt-1">
+                {duplicateGroups.length > 0
+                  ? `${duplicateGroups.length} ${d.duplicatesFound}`
+                  : d.noDuplicates}
+              </p>
+            </div>
+            <button onClick={() => { setShowConsolidate(false); setSelectedForConsolidation(new Set()) }}
+              className="p-1.5 rounded-btn text-ln-tertiary hover:text-ln-secondary transition-colors">
+              <X size={14} />
+            </button>
+          </div>
+
+          {duplicateGroups.length > 0 && (
+            <>
+              <div className="flex items-center gap-3 mb-3">
+                <label className="flex items-center gap-1.5 text-xs text-ln-tertiary font-ui">
+                  {d.consolidateStrategy}:
+                </label>
+                <select value={consolidateStrategy} onChange={e => setConsolidateStrategy(e.target.value)}
+                  className="px-2.5 py-1 rounded-btn text-xs font-body bg-ln-bg text-ln-secondary shadow-border-subtle outline-none">
+                  <option value="merge">{d.consolidateMerge}</option>
+                  <option value="summarize">{d.consolidateSummarize}</option>
+                  <option value="deduplicate">{d.consolidateDeduplicate}</option>
+                </select>
+              </div>
+
+              <div className="space-y-2 max-h-64 overflow-y-auto mb-3">
+                {duplicateGroups.slice(0, 10).map((group, gi) => (
+                  <div key={gi} className="p-3 rounded-btn bg-ln-bg border border-dashed border-ln-border/20">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs text-ln-accent font-ui">{group.count} {d.duplicatesFound}</span>
+                      <span className="text-xs text-ln-tertiary">
+                        {(group.avg_similarity * 100).toFixed(0)}% {d.matchPercent}
+                      </span>
+                    </div>
+                    <div className="space-y-1.5">
+                      {[group.representative, ...group.duplicates].map((m: any) => (
+                        <label key={m.id}
+                          className="flex items-start gap-2 px-2 py-1 rounded text-xs cursor-pointer hover:bg-ln-surface transition-colors">
+                          <input type="checkbox"
+                            checked={selectedForConsolidation.has(m.id)}
+                            onChange={() => toggleConsolidationSelect(m.id)}
+                            className="mt-0.5 w-3 h-3 rounded accent-ln-accent" />
+                          <span className="text-ln-text leading-relaxed line-clamp-2">{m.content}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-ln-border/10">
+                <button onClick={() => {
+                  if (selectedForConsolidation.size === 0) {
+                    const allIds = duplicateGroups.flatMap(g => [g.representative.id, ...g.duplicates.map((d: any) => d.id)])
+                    setSelectedForConsolidation(new Set(allIds))
+                  } else {
+                    setSelectedForConsolidation(new Set())
+                  }
+                }} className="text-xs text-ln-accent hover:underline font-ui">
+                  {d.selectAll}
+                </button>
+                <button onClick={handleConsolidate}
+                  disabled={consolidating || selectedForConsolidation.size < 2}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-btn text-sm font-ui bg-ln-accent text-white hover:bg-ln-accent-hover disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150">
+                  {consolidating ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                  {consolidating ? d.consolidating : ((d.consolidateBtn as string).replace('{count}', String(selectedForConsolidation.size)))}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       {showAddForm && (
         <div className="flex flex-col sm:flex-row gap-2 mb-6 p-4 rounded-card bg-ln-surface shadow-card animate-in">
