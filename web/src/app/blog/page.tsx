@@ -184,12 +184,20 @@ export default function BlogPage() {
 
         {/* RSS / Subscribe hint */}
         <div className="mt-16 pt-8 border-t border-ln-border text-center">
+          <p className="text-sm text-ln-tertiary mb-3">
+            {isEn
+              ? 'Want a detailed comparison? Check our '
+              : '想看详细对比？查看'}
+            <Link href="/compare" className="text-ln-accent hover:underline font-medium">
+              {isEn ? 'Moltable vs mem0 vs Zep comparison' : 'Moltable vs mem0 vs Zep 平台对比'}
+            </Link>
+          </p>
           <p className="text-sm text-ln-tertiary">
-            更多内容即将发布 · 关注{' '}
+            {isEn ? 'More content coming · Follow ' : '更多内容即将发布 · 关注 '}
             <a href="https://github.com/moltable" className="text-ln-accent hover:underline">
               GitHub
             </a>
-            {' '}获取更新
+            {' '}{isEn ? 'for updates' : '获取更新'}
           </p>
         </div>
       </div>
