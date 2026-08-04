@@ -3,9 +3,13 @@
 import { useState } from 'react'
 import { localRegister } from '@/lib/supabase'
 import { useLang } from '@/contexts/LanguageContext'
+import { useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 
-export default function RegisterPage() {
+function RegisterForm() {
   const { t } = useLang()
+  const searchParams = useSearchParams()
+  const planParam = searchParams.get('plan') || ''
   const a = t.auth
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -18,9 +22,11 @@ export default function RegisterPage() {
     setError('')
     try {
       const data = await localRegister(email, password)
-      // 🪄 魔法时刻：直接跳到接入页，预填 API Key
       if (data.key) {
-        window.location.href = `/connect?key=${encodeURIComponent(data.key)}&new=true`
+        // 🪄 魔法时刻：直接跳到接入页
+        const params = new URLSearchParams({ key: data.key, new: 'true' })
+        if (planParam === 'pro') params.set('plan', 'pro')
+        window.location.href = `/connect?${params.toString()}`
       } else {
         window.location.href = '/dashboard'
       }
@@ -35,7 +41,9 @@ export default function RegisterPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <h1 className="text-2xl mb-1" style={{ fontWeight: 590, letterSpacing: '-0.3px', color: '#f7f8f8' }}>{a.registerTitle}</h1>
-          <p className="text-sm" style={{ color: '#8a8f98' }}>Moltable</p>
+          <p className="text-sm" style={{ color: '#8a8f98' }}>
+            {planParam === 'pro' ? 'Pro · 90天免费' : 'Moltable'}
+          </p>
         </div>
 
         <form onSubmit={handleRegister} className="space-y-3">
@@ -68,4 +76,8 @@ export default function RegisterPage() {
       </div>
     </div>
   )
+}
+
+export default function RegisterPage() {
+  return <Suspense fallback={<div />}><RegisterForm /></Suspense>
 }

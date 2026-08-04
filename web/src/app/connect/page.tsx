@@ -24,6 +24,19 @@ export default function OnboardingPage() {
   const [apiKey, setApiKey] = useState('')
   const [keyStatus, setKeyStatus] = useState<KeyStatus>({ state: 'idle' })
   const isNewUser = searchParams.get('new') === 'true'
+  const planFromUrl = searchParams.get('plan') || ''
+
+  // ── Auto-activate trial for Pro signups ──
+  const activateTrialIfPro = async (key: string) => {
+    if (planFromUrl !== 'pro') return
+    try {
+      await fetch(`${API_BASE}/api/billing/activate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-API-Key': key },
+        body: JSON.stringify({ plan: 'pro', accept_terms: true }),
+      })
+    } catch { /* silent */ }
+  }
 
   // ── API Key validation (also callable from useEffect) ──
   const validateKeyStatic = useCallback(async (key: string) => {
@@ -50,6 +63,7 @@ export default function OnboardingPage() {
     if (keyFromUrl) {
       setApiKey(keyFromUrl)
       validateKeyStatic(keyFromUrl)
+      activateTrialIfPro(keyFromUrl)
     }
   }, [searchParams, validateKeyStatic])
 
@@ -231,6 +245,17 @@ Content-Type: application/json`
                     : 'Your API key is filled in below. Copy the config → paste into your AI tool → your AI will know your preferences and memories. Takes 30 seconds.'}
                 </p>
               </div>
+            </div>
+          </div>
+        )}
+        {/* Pro trial banner */}
+        {planFromUrl === 'pro' && isNewUser && (
+          <div className="mb-8 p-4 rounded-xl" style={{ background: 'linear-gradient(135deg, rgba(52,211,153,0.1), rgba(52,211,153,0.02))', boxShadow: '0 0 0 1px rgba(52,211,153,0.25)' }}>
+            <div className="flex items-center gap-2">
+              <Zap size={18} style={{ color: '#34d399' }} />
+              <span className="text-sm" style={{ color: '#34d399', fontWeight: 510 }}>
+                {lang === 'zh' ? '✅ Pro 90天试用已激活 — 全部功能已解锁' : '✅ Pro 90-Day Trial Activated — All Features Unlocked'}
+              </span>
             </div>
           </div>
         )}
