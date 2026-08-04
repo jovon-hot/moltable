@@ -9,7 +9,10 @@
 - **健康**: 全端点 7/7 通过 ✅
 - **Python**: 依赖全部最新且兼容（无强制升级导致的冲突）
 - **JS依赖**: Next.js 16 / Tailwind 4 / TypeScript 7 均为跨大版本升级，需人工迁移评估
-- **提交**: c431a35 - chore: lint fixes
+- **内容**: 新博客「为什么你的 AI 每次都不记得你是谁」— ~2500字痛点文章，含三层架构图、对比表、CTAs
+- **增长**: Claude Code Plugin 上线 — .mcp.json 一键配置 + install.sh 自动安装脚本 + MOLTABLE.md Claude 命令
+- **功能**: Memory Health Scoring 引擎 — 四维评分（时效/完整度/重复/矛盾），自动清理低质量记忆
+- **提交**: [本次] - 3 commits (lint fixes, blog + memory health, claude-code plugin)
 
 ## 2026-08-05 (R3)
 - **增长**: A/B 测试框架上线 — 实验 CRUD、权重随机分配、转化追踪、管理面板

@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "moltable": {
+      "type": "http",
+      "url": "https://api.moltable.ai/mcp",
+      "headers": {
+        "X-API-Key": "${MOLTABLE_API_KEY}"
+      }
+    }
+  }
+}
