@@ -1,3 +1,16 @@
+## 2026-08-05 (R4 — 夜间维护)
+- **安全**: npm audit → 0 vulns (web)；pip audit → 0 vulns (server)
+- **测试**: 全测试套件通过 — 112 passed, 3 skipped, 1.00s
+- **代码质量**: Ruff 从 176 → 54 错误（自动修复 111 + 手动修复 11）
+- **Bug修复**: routes/auth.py — 修复 `logger` 未定义导致运行时崩溃的 bug
+- **Bug修复**: routes/auth.py — 修复 f-string 语法错误
+- **清理**: agent_experience.py 未使用变量, sqlite_adapter.py 歧义变量名
+- **构建**: Next.js build 成功 — 首页 JS 103kB (shared), Vercel SIN1 HIT cache
+- **健康**: 全端点 7/7 通过 ✅
+- **Python**: 依赖全部最新且兼容（无强制升级导致的冲突）
+- **JS依赖**: Next.js 16 / Tailwind 4 / TypeScript 7 均为跨大版本升级，需人工迁移评估
+- **提交**: c431a35 - chore: lint fixes
+
 ## 2026-08-05 (R3)
 - **增长**: A/B 测试框架上线 — 实验 CRUD、权重随机分配、转化追踪、管理面板
 - **内容**: 发布 Moltable vs mem0 深度对比博客 — Identity Layer vs Memory Layer 架构分析
