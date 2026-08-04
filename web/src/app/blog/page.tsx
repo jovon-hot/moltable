@@ -6,6 +6,14 @@ import { useLang } from '@/contexts/LanguageContext'
 
 const posts = [
   {
+    slug: 'three-minute-env-recovery',
+    date: '2026-08-04',
+    title: '换电脑不换脑子：3 分钟恢复完整 AI 开发环境实战指南',
+    titleEn: 'New Machine, Same Brain: Full AI Dev Environment Recovery in 3 Minutes',
+    excerpt: '换一台新 Mac 之后，Claude、Cursor、Codex 全部失忆了？本文手把手教你用 Moltable 在 3 分钟内恢复完整的 AI 工作环境——从 Persona 到 MCP 配置，从项目记忆到工具偏好，一条命令全搞定。',
+    tags: ['教程', '实战', 'Identity', 'MCP'],
+  },
+  {
     slug: 'agent-persistent-identity-research',
     date: '2026-08-04',
     title: 'arXiv 最新论文：AI Agent 的「持续身份」——多锚点架构如何让 Agent 不再失忆',
