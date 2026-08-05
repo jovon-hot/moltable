@@ -919,8 +919,8 @@ hermes --mcp-auto-provision moltable`} />
               <p>所有 <code className="text-ln-accent-hover bg-ln-raised px-1.5 py-0.5 rounded text-[13px] font-mono">tools/list</code> 和 <code className="text-ln-accent-hover bg-ln-raised px-1.5 py-0.5 rounded text-[13px] font-mono">tools/call</code> 请求需要在请求头中携带 API Key：</p>
               <CodeBlock label="认证 Header" code={`X-API-Key: mt_YOUR_API_KEY_HERE`} />
               <p>
-                <code className="text-ln-accent-hover bg-ln-raised px-1.5 py-0.5 rounded text-[13px] font-mono">ping</code> 和
-                <code className="text-ln-accent-hover bg-ln-raised px-1.5 py-0.5 rounded text-[13px] font-mono">initialize</code> 不需要认证。
+                <code className="text-ln-accent-hover bg-ln-raised px-1.5 py-0.5 rounded text-[13px] font-mono">ping</code> 不需要认证。
+                <code className="text-ln-accent-hover bg-ln-raised px-1.5 py-0.5 rounded text-[13px] font-mono">initialize</code> 需要 API Key 认证（与标准 MCP 不同，出于安全考虑）。
               </p>
 
               <h3 className="text-lg font-ui text-ln-text">支持的方法</h3>
@@ -935,7 +935,7 @@ hermes --mcp-auto-provision moltable`} />
                   </thead>
                   <tbody>
                     {[
-                      ['initialize', 'MCP 协议初始化', '否'],
+                      ['initialize', 'MCP 协议初始化', '是（安全设计）'],
                       ['ping', '心跳检测', '否'],
                       ['tools/list', '列出所有可用工具', '是'],
                       ['tools/call', '调用指定工具', '是'],
