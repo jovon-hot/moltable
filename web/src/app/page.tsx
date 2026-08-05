@@ -74,7 +74,7 @@ export default function LandingPage() {
         <div className="flex items-center justify-center gap-3">
           <Link href="/register" className="px-6 py-2.5 rounded-[6px] text-sm font-medium transition-all hover:opacity-90"
             style={{ background: '#4338CA', color: '#fff', fontWeight: 510 }}>
-            {t.pricing.free.cta}
+            {(t.hero as any).heroCta}
           </Link>
           <Link href="/login" className="px-6 py-2.5 rounded-[6px] text-sm font-medium transition-all hover:opacity-90"
             style={{ background: 'rgba(255,255,255,0.06)', color: '#ffffff', fontWeight: 510 }}>
