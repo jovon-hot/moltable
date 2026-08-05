@@ -82,6 +82,10 @@ export default function LandingPage() {
           </Link>
         </div>
         <p className="mt-3 text-xs" style={{ color: '#5a5f68' }}>{(t.hero as any).trust}</p>
+        <a href="#persona-demo" className="inline-block mt-4 text-xs transition-all hover:opacity-80"
+          style={{ color: '#828fff' }}>
+          {(t.hero as any).seeHow}
+        </a>
       </section>
 
       {/* Features */}
