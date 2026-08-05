@@ -81,6 +81,7 @@ export default function LandingPage() {
             {t.nav.login}
           </Link>
         </div>
+        <p className="mt-3 text-xs" style={{ color: '#5a5f68' }}>{(t.hero as any).trust}</p>
       </section>
 
       {/* Features */}
