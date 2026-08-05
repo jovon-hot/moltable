@@ -80,8 +80,10 @@ export default function MemoriesPage() {
         setHasMore(list.length >= PAGE_SIZE)
       }
     } catch (err: any) {
-      setIsDemo(true)
-      setMemories(DEMO_MEMORIES)
+      // Only show demo if truly unauthenticated — network errors show empty state
+      const localKey = typeof window !== 'undefined' ? localStorage.getItem('moltable_key') : null
+      if (!localKey) { setIsDemo(true); setMemories(DEMO_MEMORIES) }
+      else { setIsDemo(false); setMemories([]) }
       setHasMore(false)
     } finally { setLoading(false) }
   }, [toast, timeDecay])

@@ -43,8 +43,36 @@ export default function SettingsPage() {
     finally { setLoading(false) }
   }
 
-  const handleCreateKey = async () => { showDemoToast() }
-  const handleRevokeKey = async (id: string, name: string) => { showDemoToast() }
+  const handleCreateKey = async () => {
+    if (isDemo) { showDemoToast(); return }
+    setCreating(true)
+    try {
+      const name = newKeyName.trim() || `Key ${apiKeys.length + 1}`
+      const data = await apiFetch<{ key: string; name: string }>('/api/auth/api-keys', {
+        method: 'POST',
+        body: JSON.stringify({ name }),
+      })
+      setNewKey(data.key)
+      setNewKeyName('')
+      // Reload key list
+      const keys = await apiFetch<ApiKey[]>('/api/auth/api-keys')
+      setApiKeys(Array.isArray(keys) ? keys : [])
+      toast(lang === 'zh' ? '密钥已创建' : 'Key created', 'success')
+    } catch (err: any) {
+      toast(err.message || (lang === 'zh' ? '创建失败' : 'Creation failed'), 'error')
+    }
+    finally { setCreating(false) }
+  }
+  const handleRevokeKey = async (id: string, name: string) => {
+    if (isDemo) { showDemoToast(); return }
+    try {
+      await apiFetch(`/api/auth/api-keys/${id}`, { method: 'DELETE' })
+      setApiKeys(prev => prev.filter(k => k.id !== id))
+      toast((lang === 'zh' ? '已吊销: ' : 'Revoked: ') + name, 'info')
+    } catch (err: any) {
+      toast(err.message || (lang === 'zh' ? '吊销失败' : 'Revoke failed'), 'error')
+    }
+  }
   const showDemoToast = () => toast(lang === 'zh' ? '演示模式 — 注册后可用' : 'Demo mode — sign up to use', 'info')
   const copyNewKey = () => { if (newKey) { navigator.clipboard.writeText(newKey); setCopied(true); setTimeout(() => setCopied(false), 2000) } }
 
