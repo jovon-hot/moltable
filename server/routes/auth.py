@@ -6,6 +6,8 @@ import os
 import secrets
 from datetime import datetime, timezone
 
+from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
+
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from pydantic import BaseModel, Field
 
@@ -302,9 +304,14 @@ def _validate_email(email: str) -> bool:
 def _hash_password(password: str) -> str:
     """使用 scrypt 进行密码哈希（抗 GPU 暴力破解）。"""
     salt = _API_KEY_PEPPER.encode()[:16]
-    return hashlib.scrypt(
-        password.encode(), salt=salt, n=16384, r=8, p=1, dklen=64
-    ).hex()
+    try:
+        return hashlib.scrypt(
+            password.encode(), salt=salt, n=16384, r=8, p=1, dklen=64
+        ).hex()
+    except AttributeError:
+        # macOS LibreSSL fallback
+        kdf = Scrypt(salt=salt, length=64, n=16384, r=8, p=1)
+        return kdf.derive(password.encode()).hex()
 
 
 class RegisterRequest(BaseModel):

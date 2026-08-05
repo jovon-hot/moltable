@@ -11,6 +11,8 @@ Produces actionable recommendations: archive, update, consolidate, keep.
 Inspired by: Cognee improve(), Zep temporal knowledge graph, OpenAI Dreaming V3.
 """
 
+from __future__ import annotations
+
 import logging
 import math
 import time as _time
