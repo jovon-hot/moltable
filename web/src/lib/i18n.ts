@@ -385,7 +385,7 @@ export const translations = {
     },
     pricing: {
       title: 'Pricing',
-      subtitle: 'Free trial while Stripe is being set up. Full Pro features for all new users.',
+      subtitle: '90-day free trial · No credit card · Cancel anytime',
       monthly: 'Free Trial',
       yearly: 'Coming Soon',
       savePercent: '',
@@ -393,7 +393,7 @@ export const translations = {
       free: { name: 'Free', price: '$0', desc: 'Basic tier · Always free', cta: 'Get Started' },
       pro: {
         name: 'Pro · Free Trial', priceMonthly: '$0/mo', priceYearly: '', priceYearlyMonthly: '',
-        desc: 'All Pro features free until Stripe goes live. Early adopters get launch pricing.',
+        desc: '90 days free. Then ¥19/mo or ¥149/yr. Early adopters get launch discounts.',
         descShort: 'Full features · 90-day trial',
         cta: '🔥 Activate Free', ctaYearly: '', badge: 'Free Trial',
       },
