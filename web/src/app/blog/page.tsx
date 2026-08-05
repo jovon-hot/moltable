@@ -6,6 +6,15 @@ import { useLang } from '@/contexts/LanguageContext'
 
 const posts = [
   {
+    slug: 'rag-vs-finetuning-vs-identity',
+    date: '2026-08-06',
+    title: 'RAG vs Fine-Tuning vs Identity Layer：AI 个性化的不可能三角与破局之道',
+    titleEn: 'RAG vs Fine-Tuning vs Identity Layer: The AI Personalization Trilemma and How to Solve It',
+    excerpt:
+      'RAG 喂文档，Fine-Tuning 改模型，Identity Layer 建模身份——三种 AI 个性化方案各有致命缺陷。本文从架构哲学、成本模型、时效性和准确度四个维度，深度分析 AI 个性化的「不可能三角」，并给出三层组合架构的最佳实践。',
+    tags: ['对比', 'RAG', 'Fine-Tuning', 'Identity', '架构'],
+  },
+  {
     slug: 'hidden-cost-of-ai-amnesia',
     date: '2026-08-06',
     title: 'AI 失忆的真实成本：开发者每年浪费多少小时在「重新认识你」上？',
