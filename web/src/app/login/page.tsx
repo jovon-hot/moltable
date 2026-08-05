@@ -50,8 +50,8 @@ export default function LoginPage() {
             required />
           {error && <p className="text-sm" style={{ color: '#f87171' }}>{error}</p>}
           <button type="submit" disabled={loading}
-            className="w-full py-2.5 rounded-[8px] text-sm font-medium disabled:opacity-50 transition-all hover:opacity-90"
-            style={{ background: '#4338CA', color: '#111', fontWeight: 510 }}>
+            className="w-full px-4 py-2.5 rounded-[6px] text-sm font-medium text-white"
+            style={{ background: '#4338CA', fontWeight: 510 }}>
             {loading ? a.loggingIn : a.loginBtn}
           </button>
         </form>

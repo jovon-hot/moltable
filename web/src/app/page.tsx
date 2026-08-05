@@ -78,7 +78,7 @@ export default function LandingPage() {
       </div>
 
       {/* ── Features ── */}
-      <section className="px-6 py-20 max-w-5xl mx-auto">
+      <section id="features" className="px-6 py-20 max-w-5xl mx-auto">
         <h2 className="text-2xl text-center mb-4 font-bold" style={{ letterSpacing: '-0.3px' }}>{t.features.title}</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-10">
           {t.features.items.map((f: any, i: number) => {

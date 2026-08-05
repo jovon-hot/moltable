@@ -328,13 +328,13 @@ export default function ComparePage() {
                 <tr key={i} className="border-b border-ln-border hover:bg-ln-hover transition-colors">
                   <td className="p-4 text-ln-secondary">{row.feature}</td>
                   <td className="p-4 text-center">
-                    {row.moltable ? <Check size={16} className="inline text-green-400" /> : row.moltable === false ? <X size={16} className="inline text-red-400/60" /> : <Minus size={16} className="inline text-ln-tertiary" />}
+                    {row.moltable ? <Check size={16} style={{ color: '#6366F1' }} /> : row.moltable === false ? <X size={16} style={{ color: '#FB6B4B' }} /> : <Minus size={16} className="text-ln-tertiary" />}
                   </td>
                   <td className="p-4 text-center">
-                    {row.mem0 ? <Check size={16} className="inline text-green-400/80" /> : row.mem0 === false ? <X size={16} className="inline text-red-400/40" /> : <Minus size={16} className="inline text-ln-tertiary" />}
+                    {row.mem0 ? <Check size={16} style={{ color: '#818CF8' }} /> : row.mem0 === false ? <X size={16} style={{ color: '#FB6B4B', opacity: 0.6 }} /> : <Minus size={16} className="text-ln-tertiary" />}
                   </td>
                   <td className="p-4 text-center">
-                    {row.zep ? <Check size={16} className="inline text-green-400/80" /> : row.zep === false ? <X size={16} className="inline text-red-400/40" /> : <Minus size={16} className="inline text-ln-tertiary" />}
+                    {row.zep ? <Check size={16} style={{ color: '#818CF8' }} /> : row.zep === false ? <X size={16} style={{ color: '#FB6B4B', opacity: 0.6 }} /> : <Minus size={16} className="text-ln-tertiary" />}
                   </td>
                 </tr>
               ))}
@@ -415,7 +415,7 @@ export default function ComparePage() {
                 <ul className="space-y-2">
                   {items.map((item: string, i: number) => (
                     <li key={i} className="flex items-start gap-2 text-sm text-ln-secondary">
-                      <Check size={14} className="text-green-400 mt-0.5 flex-shrink-0" />
+                      <Check size={14} className="text-indigo-400 mt-0.5 flex-shrink-0" />
                       {item}
                     </li>
                   ))}
