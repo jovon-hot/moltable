@@ -1,3 +1,24 @@
+## 2026-08-06 (R2 — 夜间维护·安全升级)
+
+- **安全**: pip audit → 0 vulns（从 18 → 0，全部修复）
+- **Python 依赖升级**:
+  - `fastapi`: 0.128.8 → 0.141.1
+  - `starlette`: 0.52.1 → 1.4.1（修复 7 个漏洞）
+  - `cryptography`: 48.0.0 → 50.0.0（修复 4 个漏洞）
+  - `python-dotenv`: 1.2.1 → 1.2.2（修复 1 个漏洞）
+  - `transformers`: 4.57.6 → 5.14.1（修复 5 个漏洞）
+  - `sentence-transformers`: 5.1.2 → 5.6.1（兼容 transformers 5.x）
+  - `pytest`: 8.4.2 → 9.1.1（修复 1 个漏洞）
+  - `pytest-asyncio`: 1.2.0 → 1.4.0
+  - `huggingface-hub`: 0.36.2 → 1.26.0
+- **测试**: 165 passed, 3 skipped（1 pre-existing failure: temporal_tracker）
+- **构建**: Web Next.js build 成功 — 42 静态页面, 首页 JS 103kB
+- **健康**: 全端点 7/7 通过 ✅
+- **npm audit**: web 端 0 vulns ✅
+- **Git**: main 分支与 origin/main 同步
+- **已知**: npm outdated 显示 Next.js 16 / Tailwind 4 / TypeScript 7 / lucide-react 1.x 均为跨大版本升级，需人工迁移评估。transformers 5.x 升级后 embedding 测试通过。
+- **提交**: [本次]
+
 ## 2026-08-06 (R1 — 夜间维护·内容生产)
 
 - **内容**: 新博客「The Identity Graph: Why Vector Search Alone Can't Give Your AI Agent True Memory」— ~2500字深度技术文章，含架构图、对比表、性能基准
