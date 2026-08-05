@@ -6,6 +6,15 @@ import { useLang } from '@/contexts/LanguageContext'
 
 const posts = [
   {
+    slug: 'knowledge-graph-deep-dive',
+    date: '2026-08-06',
+    title: '零依赖知识图谱：如何用 1200 行 Python 让 AI Agent 理解实体关系',
+    titleEn: 'Zero-Dependency Knowledge Graph: How 1200 Lines of Python Let AI Agents Understand Entity Relationships',
+    excerpt:
+      '不需要 Neo4j，不需要 LLM 调用。Moltable 的知识图谱服务用纯正则 + 关键词匹配 + 共现分析，从零构建完整的实体关系图谱。逐层拆解实体识别、关系推断、增量更新和查询 API。',
+    tags: ['Knowledge Graph', '架构', 'Python', '技术深度'],
+  },
+  {
     slug: 'rag-vs-finetuning-vs-identity',
     date: '2026-08-06',
     title: 'RAG vs Fine-Tuning vs Identity Layer：AI 个性化的不可能三角与破局之道',
@@ -265,11 +274,34 @@ export default function BlogPage() {
           </p>
           <form
             className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault()
-              const email = (e.target as HTMLFormElement).querySelector('input')?.value
+              const form = e.target as HTMLFormElement
+              const input = form.querySelector('input') as HTMLInputElement
+              const email = input?.value
+              const btn = form.querySelector('button') as HTMLButtonElement
               if (email) {
-                window.open(`mailto:hi@moltable.ai?subject=${encodeURIComponent(isEn ? 'Newsletter Subscribe' : '订阅博客')}&body=${encodeURIComponent(`Please subscribe ${email} to the Moltable newsletter.`)}`, '_blank')
+                try {
+                  btn.disabled = true
+                  btn.textContent = isEn ? 'Subscribing...' : '订阅中...'
+                  const res = await fetch('/api/newsletter/subscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, source: 'blog' }),
+                  })
+                  const data = await res.json()
+                  if (res.ok) {
+                    btn.textContent = isEn ? 'Subscribed! 🎉' : '已订阅！🎉'
+                    input.value = ''
+                    setTimeout(() => { btn.textContent = isEn ? 'Subscribe' : '订阅'; btn.disabled = false }, 3000)
+                  } else {
+                    btn.textContent = isEn ? 'Error — try again' : '出错 — 请重试'
+                    btn.disabled = false
+                  }
+                } catch {
+                  btn.textContent = isEn ? 'Network error' : '网络错误'
+                  btn.disabled = false
+                }
               }
             }}
           >
@@ -288,7 +320,7 @@ export default function BlogPage() {
             </button>
           </form>
           <p className="text-[11px] text-ln-tertiary mt-4">
-            {isEn ? 'Coming soon: automated newsletter. For now, we\'ll add you manually — we read every email.' : '自动订阅系统即将上线，目前我们会手动添加 — 每封邮件都会读。'}
+            {isEn ? 'No spam, unsubscribe anytime. We send one email per week.' : '不打扰，可随时退订。每周一封邮件。'}
           </p>
         </div>
 

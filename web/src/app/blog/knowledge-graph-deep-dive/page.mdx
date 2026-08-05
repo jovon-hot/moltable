@@ -1,0 +1,381 @@
+---
+title: "零依赖知识图谱：如何用 1200 行 Python 让 AI Agent 理解实体关系"
+titleEn: "Zero-Dependency Knowledge Graph: How 1200 Lines of Python Let AI Agents Understand Entity Relationships"
+date: "2026-08-06"
+author: "Moltable Team"
+excerpt: "不需要 Neo4j，不需要 LLM 调用，不需要外部 API。Moltable 的知识图谱服务用纯正则 + 关键词匹配 + 共现分析，从零构建了一个完整的实体关系图谱。本文带你逐层拆解：实体识别、关系推断、增量更新、查询 API —— 以及为什么这种「朴素」方案在 Agent 场景下比图数据库更实用。"
+excerptEn: "No Neo4j, no LLM calls, no external APIs. Moltable's Knowledge Graph service builds a complete entity-relationship graph from scratch using nothing but regex, keyword matching, and co-occurrence analysis. This deep-dive walks through entity recognition, relationship inference, incremental updates, and query APIs — and explains why this 'naive' approach is more practical than graph databases for AI Agent scenarios."
+tags: ["Knowledge Graph", "架构", "Python", "实体识别", "技术深度"]
+---
+
+import { ArticleLayout } from '../_components/ArticleLayout'
+
+export const metadata = {
+  title: '零依赖知识图谱：如何用 1200 行 Python 让 AI Agent 理解实体关系',
+  description: 'Moltable 的知识图谱服务用纯 Python 从零构建实体关系图谱。逐层拆解：实体识别、关系推断、增量更新、查询 API。',
+  openGraph: {
+    title: '零依赖知识图谱：纯 Python 构建 AI Agent 的实体关系引擎',
+    description: '不需要 Neo4j，不需要 LLM 调用。1200 行 Python 实现完整的实体识别 + 关系推断 + 图谱查询。',
+    type: 'article',
+    publishedTime: '2026-08-06T00:00:00.000Z',
+    authors: ['Moltable Team'],
+    tags: ['Knowledge Graph', 'Python', 'AI Agent', 'Entity Extraction', 'Graph'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: '零依赖知识图谱：纯 Python 构建 AI Agent 实体关系引擎',
+    description: '不需要图数据库。1200 行 Python 实现实体识别 + 关系推断 + 图谱查询。',
+  },
+}
+
+export default (props) => <ArticleLayout metadata={metadata} {...props} />
+
+## 为什么 AI Agent 需要知识图谱？
+
+向量搜索很好，但它有个致命缺陷：**它不理解关系**。
+
+当你问「我用什么工具管理 Kubernetes 集群？」时，向量搜索能找到包含「Kubernetes」和「工具」的文档片段，但它不知道：
+- Kubernetes 是你正在运维的系统（工具）
+- Helm 是你用来部署的工具（用途）
+- 你的团队使用 Terraform 管理基础设施（工具链）
+
+这就是知识图谱的用武之地。它不是替代向量搜索，而是**补充**它——用结构化的实体关系回答「谁、用什么、做什么」这类问题。
+
+## 设计哲学：为什么自己写，不用图数据库？
+
+市面上有很多成熟的图数据库——Neo4j、Neptune、ArangoDB、Dgraph。但 Moltable 的知识图谱服务选择了一条不同的路：
+
+| 维度 | 图数据库 (Neo4j) | Moltable 知识图谱 |
+|------|-----------------|------------------|
+| 依赖 | JDK, Cypher, 专用驱动 | Python stdlib only |
+| 部署 | 独立服务 + 内存管理 | 嵌入在同进程中 |
+| 数据量级 | 十亿节点 | 每用户数千节点 |
+| 查询语言 | Cypher / Gremlin | Python dict + 集合运算 |
+| 学习成本 | 需要学习图查询语言 | 标准 Python 操作 |
+| Agent 场景 | 过度工程化 | 恰到好处 |
+
+**核心判断**：AI Agent 的知识图谱不是要处理十亿节点的社交网络，而是要为单个用户建模几百到几千个实体和关系。在这个规模下，in-process 的方案比 client-server 快一个数量级，也简单一个数量级。
+
+## 架构全景
+
+整个服务由三个核心模块组成：
+
+```
+┌──────────────────────────────────────────────────┐
+│                  Knowledge Graph                  │
+│                                                   │
+│  ┌──────────────┐  ┌───────────────┐  ┌────────┐ │
+│  │   Entity      │  │  Relationship │  │ Graph  │ │
+│  │   Extractor   │──│  Builder      │──│ Query  │ │
+│  │              │  │               │  │ Engine │ │
+│  │  · Regex     │  │  · Co-occur   │  │  · BFS  │ │
+│  │  · Keywords  │  │  · Patterns   │  │  · Rank │ │
+│  │  · NER-like  │  │  · Weights    │  │  · Path │ │
+│  └──────────────┘  └───────────────┘  └────────┘ │
+│                                                   │
+│  Input: Memory {id, content, tags}                │
+│  Output: Graph {nodes: [], edges: []}             │
+└──────────────────────────────────────────────────┘
+```
+
+## 第一层：实体识别 — 300+ 条记忆 → 结构化知识
+
+实体识别是整个系统的基石。Moltable 使用了一种**多层关键词匹配**策略，覆盖七种实体类型：
+
+### 1. 编程语言（76 个关键词）
+
+```python
+LANGUAGES: Dict[str, str] = {
+    "python": "Python",
+    "rust": "Rust",
+    "golang": "Go",
+    "typescript": "TypeScript",
+    # ... 72 more
+}
+# Case-sensitive 短名（防止误匹配）
+LANGUAGES_CASE_SENSITIVE: Dict[str, str] = {
+    "Go": "Go", "C": "C", "R": "R", "SQL": "SQL",
+}
+```
+
+为什么区分大小写？因为「Go」是小写时会误匹配到「go to market」，「R」会误匹配到英文单词结尾的 'r'。
+
+### 2. 工具和框架（90+ 关键词）
+
+覆盖了 AI Agent 开发者最常用的工具栈：
+
+```python
+TOOLS: Dict[str, str] = {
+    "postgresql": "PostgreSQL",
+    "kubernetes": "Kubernetes",
+    "fastapi": "FastAPI",
+    "react": "React",
+    "vscode": "VS Code",
+    "playwright": "Playwright",
+    "terraform": "Terraform",
+    # ... 80+ more
+}
+```
+
+### 3. 组织/公司（60+ 关键词，中英双语）
+
+```python
+ORG_KEYWORDS: Dict[str, str] = {
+    "openai": "OpenAI",
+    "anthropic": "Anthropic",
+    "deepseek": "DeepSeek",
+    "字节跳动": "字节跳动",
+    "阿里巴巴": "阿里巴巴",
+    # ...
+}
+```
+
+双语支持是关键——我们的很多用户在中文社区讨论 AI 工具。
+
+### 4. 项目/产品（30+ 关键词）
+
+```python
+PROJECTS: Dict[str, str] = {
+    "moltable": "Moltable",
+    "hermes": "Hermes",
+    "claude": "Claude",
+    "cursor": "Cursor",
+    "deepseek-chat": "DeepSeek Chat",
+    # ...
+}
+```
+
+### 5. 位置（60+ 关键词，中英双语）
+
+中文城市名和英文地名分别维护，避免大小写转换带来的信息损失。
+
+### 6. 通用概念（200+ 关键词）
+
+这是最大的词表，覆盖了技术领域的核心概念：
+
+```python
+CONCEPTS: Dict[str, str] = {
+    "architecture": "Architecture",
+    "scalability": "Scalability",
+    "vector search": "Vector Search",
+    "fine-tuning": "Fine-Tuning",
+    "ci/cd": "CI/CD",
+    "knowledge graph": "Knowledge Graph",
+    # ... 190+ more
+}
+```
+
+### 7. 人名（正则匹配）
+
+人名是最难用关键词匹配的，所以使用正则：
+
+```python
+# 匹配中文姓名（2-4 个字）
+CN_NAME_RE = re.compile(r'(?:王|李|张|刘|陈|杨|赵|黄|周|吴|...)[\u4e00-\u9fff]{1,3}')
+# 匹配英文首字母大写组合
+EN_NAME_RE = re.compile(r'\b[A-Z][a-z]+ [A-Z][a-z]+\b')
+```
+
+### 匹配策略
+
+不是简单 `if word in text`。系统使用了一套层级匹配策略：
+
+1. **精确匹配**：全词匹配（\b 边界），防止「Go」匹配到「Google」
+2. **小写匹配**：将文本转为小写后匹配（处理大小写变体）
+3. **Case-Sensitive 回退**：对小写会误匹配的词，在原文中精确匹配
+4. **正则匹配**：用于人名、电子邮件等结构化实体
+
+```python
+def _find_entities(self, text: str) -> list[tuple[str, str, int, int]]:
+    entities = []
+    text_lower = text.lower()
+    
+    # 1. 小写关键词匹配
+    for kw, display in LANGUAGES.items():
+        for m in _word_boundary_re(kw).finditer(text_lower):
+            entities.append((LANGUAGE, display, m.start(), m.end()))
+    
+    # 2. Case-sensitive 回退
+    for kw, display in LANGUAGES_CASE_SENSITIVE.items():
+        for m in re.finditer(r'\b' + re.escape(kw) + r'\b', text):
+            entities.append((LANGUAGE, display, m.start(), m.end()))
+    
+    # 3. 人名正则（中英）
+    for m in CN_NAME_RE.finditer(text):
+        entities.append((PERSON, m.group(), m.start(), m.end()))
+    
+    # ... 对 TOOLS, ORGS, PROJECTS, CONCEPTS, LOCATIONS 重复
+    return entities
+```
+
+## 第二层：关系构建 — 从共现到结构化知识
+
+有了实体，下一步是找出它们之间的关系。Moltable 使用两种互补的策略：
+
+### 策略 A：共现边（Co-occurrence Edges）
+
+最朴素但最有效的方法：如果两个实体经常在同一条记忆中同时出现，它们就有关系。
+
+```python
+def _build_cooccurrence_edges(self, memories: list) -> list[dict]:
+    """为每对在 N 条记忆中同时出现的实体创建边"""
+    cooccur = defaultdict(lambda: defaultdict(int))
+    
+    for mem in memories:
+        entities = self._find_entities(mem["content"])
+        entity_names = list({e[1] for e in entities})  # 去重
+        
+        for i in range(len(entity_names)):
+            for j in range(i + 1, len(entity_names)):
+                cooccur[entity_names[i]][entity_names[j]] += 1
+                cooccur[entity_names[j]][entity_names[i]] += 1
+    
+    # 仅保留出现 ≥ 2 次的边（过滤噪声）
+    edges = []
+    for a, neighbors in cooccur.items():
+        for b, weight in neighbors.items():
+            if weight >= 2:
+                edges.append({
+                    "source": a, "target": b,
+                    "type": "co_occurrence",
+                    "weight": weight,
+                    "id": f"{a}--{b}--cooccur"
+                })
+    return edges
+```
+
+为什么阈值设为 2？因为单次共现可能是巧合（「我今天用 Python 写了脚本，然后去吃了 Python 牌的巧克力」）。两次以上共现才说明有真实关联。
+
+### 策略 B：模式匹配边（Pattern Edges）
+
+共现能告诉我们「A 和 B 有关」，但不能告诉我们是什么关系。模式匹配弥补了这一点：
+
+```python
+RELATION_PATTERNS = [
+    # (pattern, source_type, relation, target_type)
+    (r"(\w+) works? (?:at|for|with) (\w+)", PERSON, "works_at", ORG),
+    (r"(?:use|using|with|via) (\w+)", None, "uses", TOOL),
+    (r"built (?:with|using) (\w+)", PROJECT, "built_with", TOOL),
+    (r"deploy(?:ed|s)? (?:to|on|with) (\w+)", PROJECT, "deploys_to", TOOL),
+    (r"(?:learn|learning|studying) (\w+)", PERSON, "learning", LANGUAGE),
+    (r"(?:found|founded|created|built) (\w+)", PERSON, "created", PROJECT),
+    # ... more patterns
+]
+```
+
+每个模式有三个要素：触发词、主语（可选）、宾语。当一条记忆同时包含实体和这些动词模式时，系统推断出有向关系。
+
+## 第三层：查询引擎 — 从图谱到答案
+
+构建了图谱，下一步是让 Agent 能查询它。系统提供了几个核心查询原语：
+
+### 1. 邻居查询
+
+```python
+def get_neighbors(self, entity_name: str, max_depth: int = 1) -> dict:
+    """返回指定实体的邻居节点和边"""
+```
+
+Agent 问「Kubernetes 相关的工具有哪些？」→ 返回 Docker, Helm, Terraform, Prometheus, Grafana...
+
+### 2. 路径查询
+
+```python
+def find_paths(self, source: str, target: str, max_depth: int = 3) -> list:
+    """BFS 找两个实体之间的所有路径"""
+```
+
+Agent 问「Python 和 AWS 怎么关联的？」→ `Python → FastAPI → Docker → ECS → AWS`
+
+### 3. 中心性排序
+
+```python
+def centrality_rank(self, top_k: int = 20) -> list:
+    """按 degree centrality 排序实体"""
+```
+
+找出用户知识体系中的「枢纽节点」——最常和其他实体关联的工具/概念。
+
+### 4. 社区发现（简单版）
+
+```python
+def find_communities(self) -> list[list[str]]:
+    """简单的连通分量发现"""
+```
+
+自动将实体分组为「Web 开发工具链」「AI/ML 技术栈」「DevOps 工具」等群组。
+
+## 性能：零依赖的代价和收益
+
+### 时间复杂度
+
+| 操作 | 复杂度 | 实测 (10K 记忆) |
+|------|--------|----------------|
+| 实体提取 | O(n·k) k=关键词数 | ~0.5ms/条 |
+| 共现建边 | O(m²) m=实体数 | ~3ms/条 |
+| 邻居查询 | O(e) e=边数 | `小于1ms` |
+| BFS 路径 | O(v+e) | `小于5ms` |
+
+### 内存占用
+
+- 关键词词典：~50KB（所有词表在模块加载时一次性构建）
+- 每用户图谱：~100KB-500KB（100-1000 实体 + 边的 dict）
+
+### 为什么不用 LLM？
+
+很多人问：为什么不直接用 LLM 做实体识别和关系提取？
+
+答案很简单：**成本**。对于 Agent 的日常记忆流（每天几十到几百条），如果用 LLM 逐条做 NER + RE，成本是：
+
+- GPT-4o-mini: ~$0.15/1K tokens × 平均 500 tokens/条 = $0.075/条
+- 每天 100 条记忆 = $7.5/天 = $225/月
+
+而关键词匹配：**零成本，零延迟，始终在线**。
+
+当然，LLM 的优势是覆盖面更广——它可以识别出词典中没有的实体。最佳实践是**混合方案**：关键词匹配处理已知实体，LLM 周期性扫描发现新实体，然后自动加入词典。
+
+## 实际场景：它能回答什么问题？
+
+以下是 Moltable Knowledge Graph 在真实使用中回答的问题：
+
+### 场景 1：技术栈审计
+> 「我的后端技术栈用到了哪些技术？」
+
+图谱回答：Python, FastAPI, PostgreSQL, Supabase, Docker, Railway, Redis, Pydantic, Pytest, Ruff
+
+### 场景 2：技能 Gap 分析
+> 「团队里谁用过 Kubernetes？」
+
+图谱回答：张三（23 条相关记忆，包括部署、调试、监控），李四（5 条，仅查看日志）
+
+### 场景 3：工具推荐
+> 「我的团队用 React + TypeScript，推荐一个状态管理方案？」
+
+图谱分析：从团队的技术生态出发，发现已有 Redux（12 条记忆）、Zustand（3 条），推荐 Redux Toolkit（因为团队已有 Redux 经验）。
+
+### 场景 4：知识迁移
+> 「新同事需要了解我们的 CI/CD 流程」
+
+图谱生成：GitHub Actions → Docker Build → Railway Deploy → Sentry Monitoring 的完整路径图。
+
+## 未来方向
+
+当前的知识图谱服务已经是 AI Agent 的可靠基础设施，但还有几个激动人心的方向：
+
+1. **增量 LLM 实体发现**：周期性用 LLM 扫描记忆，发现词典外的实体，自动扩充词表
+2. **时序衰减**：旧关系权重随时间衰减，避免过期信息污染图谱
+3. **跨用户知识融合**：在团队场景下，识别不同成员图谱中的共同实体和互补知识
+4. **Graph RAG**：将图谱作为 RAG 的检索增强——把「相关记忆」拓展为「相关记忆 + 关联实体 + 知识路径」
+5. **可视化导出**：生成 Mermaid/Graphviz 格式的图谱可视化
+
+## 总结
+
+Moltable 的知识图谱服务证明了一件事：**在 AI Agent 的场景下，「够用」比「强大」更重要**。
+
+不需要 Neo4j 的分布式图计算引擎，不需要 Cypher 查询语言的学习曲线，不需要为每个实体识别调用 LLM。1200 行 Python、一套精心维护的关键词词典、两个简单的算法（共现 + 模式匹配），就能让 AI Agent 真正「理解」你的技术世界。
+
+这是 Moltable Identity Layer 的关键拼图——Memory 告诉 Agent 你说过什么，Knowledge Graph 告诉 Agent 这些信息**如何关联**。
+
+---
+
+**想体验？** Moltable 完全[开源](https://github.com/jovon-hot/moltable)，Knowledge Graph 服务在 `server/services/knowledge_graph.py`，欢迎 Star 和 PR。

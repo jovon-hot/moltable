@@ -178,6 +178,7 @@ from routes import (
     knowledge,
     mcp,
     memories,
+    newsletter,
     personas,
     projects,
     provision,
@@ -187,6 +188,7 @@ from routes import (
 
 app.include_router(memories.router)
 app.include_router(knowledge.router)
+app.include_router(newsletter.router)
 app.include_router(provision.router)
 app.include_router(personas.router)
 app.include_router(auth.router)
