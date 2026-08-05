@@ -9,6 +9,7 @@ export const translations = {
       subtitle: '一次注册，所有 AI 都认识你。',
       desc: '加载 Moltable Skill → Hermes / Claude / ChatGPT / Cursor / OpenClaw 全通',
       trust: '无需信用卡 · 随时取消',
+      trust2: '30 秒接入，让你的 AI 从今天开始记住你',
       seeHow: '👇 先看演示',
     },
     features: {
@@ -334,6 +335,7 @@ export const translations = {
       subtitle: 'One identity. Every AI knows you. No repeats.',
       desc: 'Load Moltable Skill → Hermes / Claude / ChatGPT / Cursor / OpenClaw — all work',
       trust: 'No credit card required · Cancel anytime',
+      trust2: 'Set up in 30 seconds. Your AI will finally remember.',
       seeHow: '👇 See it in action',
     },
     features: {
