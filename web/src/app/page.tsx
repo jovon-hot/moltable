@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import NewsletterSignup from '@/components/NewsletterSignup'
+import SocialProof from '@/components/SocialProof'
 import { useEffect } from 'react'
 import { Layers, Zap, Users, Brain, Shield, Code, Check, ArrowRight, GitBranch, Download, Trash2, Mail } from 'lucide-react'
 import { useLang } from '@/contexts/LanguageContext'
@@ -67,6 +68,9 @@ export default function LandingPage() {
         </div>
         <p className="relative mt-4 text-xs" style={{ color: '#6E6B80' }}>{(t.hero as any).trust}</p>
         <p className="relative mt-1 text-xs" style={{ color: '#6366F1' }}>{(t.hero as any).trust2}</p>
+        <div className="relative mt-4">
+          <SocialProof />
+        </div>
         <a href="#pricing" className="relative inline-block mt-6 text-xs transition-all hover:opacity-80" 
           style={{ color: '#4338CA' }}>
           {(t.hero as any).seeHow || 'See pricing →'}

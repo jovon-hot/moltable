@@ -100,7 +100,31 @@ def save_memory(request: Request, body: MemoryCreate, force: bool = Query(False)
         confidence=body.confidence, tags=body.tags,
         persona_id=body.persona_id,
     )
-    return {"saved": True, "id": doc["id"], "source": source}
+
+    # ── Temporal tracking: auto-detect fact changes ─────
+    transitions_detected = 0
+    try:
+        from services.temporal_tracker import TemporalTracker
+        from app_state import supabase as _sb
+        tracker = TemporalTracker(store=get_store(), supabase_client=_sb)
+        # Pass all user memories for context comparison
+        all_mems = get_store().list(user_id, limit=500)
+        changes = tracker.detect_and_record_changes(user_id, doc, all_mems)
+        transitions_detected = len(changes)
+        if changes:
+            import logging
+            logging.getLogger("moltable.memories").info(
+                "Temporal: detected %d fact change(s) for user %s", len(changes), user_id
+            )
+    except Exception:
+        pass  # Temporal tracking is non-blocking
+
+    return {
+        "saved": True,
+        "id": doc["id"],
+        "source": source,
+        "transitions_detected": transitions_detected,
+    }
 
 
 # ── Search ────────────────────────────────────────────

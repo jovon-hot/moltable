@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
+import RelatedPosts from '@/components/RelatedPosts'
 
 export interface ArticleMeta {
   title: string
@@ -86,6 +87,9 @@ export default function ArticleLayout({
           </div>
         )}
         <div className="prose-custom">{children}</div>
+        {meta.tags && meta.slug && (
+          <RelatedPosts currentSlug={meta.slug} currentTags={meta.tags} />
+        )}
       </article>
     </div>
   )

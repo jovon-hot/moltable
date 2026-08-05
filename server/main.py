@@ -183,6 +183,7 @@ from routes import (
     projects,
     provision,
     sessions,
+    temporal,
     v1,
 )
 
@@ -195,6 +196,7 @@ app.include_router(auth.router)
 app.include_router(mcp.router)
 app.include_router(sessions.router)
 app.include_router(billing.router)
+app.include_router(temporal.router)
 app.include_router(v1.router)
 app.include_router(agents.router)
 app.include_router(projects.router)
