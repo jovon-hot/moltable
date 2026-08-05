@@ -174,6 +174,42 @@ export default function BlogPage() {
           </p>
         </div>
 
+        {/* Featured Post */}
+        <Link
+          href="/blog/moltable-vs-mem0-identity-vs-memory"
+          className="block mb-12 p-6 rounded-card bg-ln-panel transition-all duration-200 hover:bg-ln-hover group relative overflow-hidden"
+          style={{ boxShadow: '0 0 0 1px rgba(99,102,241,0.2), 0 4px 24px rgba(67,56,202,0.08)' }}
+        >
+          <div className="absolute top-0 right-0 px-3 py-1 rounded-bl-lg text-[11px] font-semibold"
+            style={{ background: '#4338CA', color: '#fff' }}>
+            {isEn ? 'FEATURED' : '精选'}
+          </div>
+          <div className="flex items-center gap-3 mb-3">
+            <span className="text-xs text-ln-tertiary font-ui">2026-08-05</span>
+            <div className="flex gap-2">
+              {['对比', 'mem0', 'Identity', 'Memory'].map((tag) => (
+                <span key={tag} className="text-[11px] px-2 py-0.5 rounded-pill font-ui"
+                  style={{ background: 'rgba(251,107,75,0.12)', color: '#FB6B4B' }}>
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+          <h2 className="text-xl font-heading tracking-[-0.24px] mb-2 text-ln-text group-hover:text-ln-accent transition-colors">
+            {isEn
+              ? 'Moltable vs mem0: Identity Layer vs Memory Layer — The Essential Difference'
+              : 'Moltable vs mem0：AI Identity Layer 和 Memory Layer 的本质区别'}
+          </h2>
+          <p className="text-sm text-ln-secondary font-body leading-relaxed mb-4">
+            {isEn
+              ? 'Why does your AI Agent still not know you even with memory? A deep dive into the architectural philosophy, data models, and multi-agent collaboration differences between Identity Layer and Memory Layer.'
+              : '为什么你的 AI Agent 有了记忆还是不认识你？本文从架构哲学、数据模型、多 Agent 协作三个维度，深度剖析 Identity Layer 和 Memory Layer 的本质差异，帮你做出正确的技术选型。'}
+          </p>
+          <span className="inline-flex items-center gap-1 text-sm font-medium" style={{ color: '#6366F1' }}>
+            {isEn ? 'Read the comparison →' : '阅读全文 →'}
+          </span>
+        </Link>
+
         {/* Articles */}
         <div className="space-y-8">
           {posts.map((post) => (
