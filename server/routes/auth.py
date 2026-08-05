@@ -386,7 +386,7 @@ def local_register(request: Request, body: RegisterRequest):
 
 
 @router.post("/login")
-@limiter.limit("30/minute")
+@limiter.limit("5/minute")
 def local_login(request: Request, body: LoginRequest):
     """本地登录 — 验证密码，返回用户信息。"""
     email = _sanitize(body.email).strip().lower()

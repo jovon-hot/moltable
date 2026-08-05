@@ -194,8 +194,8 @@ app.include_router(billing.router)
 app.include_router(v1.router)
 app.include_router(agents.router)
 app.include_router(projects.router)
-app.include_router(admin.router)
-app.include_router(experiments.router)
+app.include_router(admin.router, include_in_schema=False)
+app.include_router(experiments.router, include_in_schema=False)
 app.add_api_route("/.well-known/mcp", mcp.mcp_discovery, methods=["GET"], tags=["mcp"])
 
 
