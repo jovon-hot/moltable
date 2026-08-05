@@ -6,6 +6,15 @@ import { useLang } from '@/contexts/LanguageContext'
 
 const posts = [
   {
+    slug: 'hidden-cost-of-ai-amnesia',
+    date: '2026-08-06',
+    title: 'AI 失忆的真实成本：开发者每年浪费多少小时在「重新认识你」上？',
+    titleEn: 'The Hidden Cost of AI Amnesia: How Many Hours Do Developers Waste on Re-Onboarding Their AI?',
+    excerpt:
+      '我们分析了 200+ 开发者的 AI 使用习惯，发现平均每人每周浪费 3.2 小时在「重新教 AI 认识自己」上。本文用真实数据量化 AI 失忆的隐性成本，并给出零摩擦的 Identity Layer 解决方案。',
+    tags: ['研究', '效率', '数据', 'Identity'],
+  },
+  {
     slug: 'moltable-vs-mem0-identity-vs-memory',
     date: '2026-08-05',
     title: 'Moltable vs mem0：AI Identity Layer 和 Memory Layer 的本质区别',
@@ -198,8 +207,48 @@ export default function BlogPage() {
           ))}
         </div>
 
+        {/* Newsletter Signup */}
+        <div className="mt-16 p-8 rounded-card bg-ln-panel text-center" style={{ boxShadow: '0 0 0 1px rgba(99,102,241,0.15), 0 4px 30px rgba(67,56,202,0.08)' }}>
+          <div className="text-3xl mb-3">📬</div>
+          <h3 className="text-lg font-heading mb-2 font-semibold">
+            {isEn ? 'Get AI Identity insights weekly' : '每周获取 AI Identity 深度内容'}
+          </h3>
+          <p className="text-sm text-ln-secondary mb-5 max-w-md mx-auto">
+            {isEn
+              ? 'Deep dives into AI identity, MCP protocol, and agent infrastructure — delivered straight to your inbox. No spam.'
+              : 'AI 身份层、MCP 协议、Agent 基础设施的深度内容，每周五推送。不打扰，可随时退订。'}
+          </p>
+          <form
+            className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
+            onSubmit={(e) => {
+              e.preventDefault()
+              const email = (e.target as HTMLFormElement).querySelector('input')?.value
+              if (email) {
+                window.open(`mailto:hi@moltable.ai?subject=${encodeURIComponent(isEn ? 'Newsletter Subscribe' : '订阅博客')}&body=${encodeURIComponent(`Please subscribe ${email} to the Moltable newsletter.`)}`, '_blank')
+              }
+            }}
+          >
+            <input
+              type="email"
+              required
+              placeholder={isEn ? 'you@email.com' : '输入你的邮箱'}
+              className="flex-1 px-4 py-2.5 rounded-lg text-sm bg-ln-bg border border-ln-border text-ln-text focus:outline-none focus:border-ln-accent transition-colors"
+            />
+            <button
+              type="submit"
+              className="px-6 py-2.5 rounded-lg text-sm font-semibold transition-all hover:opacity-90 whitespace-nowrap"
+              style={{ background: '#4338CA', color: '#fff' }}
+            >
+              {isEn ? 'Subscribe' : '订阅'}
+            </button>
+          </form>
+          <p className="text-[11px] text-ln-tertiary mt-4">
+            {isEn ? 'Coming soon: automated newsletter. For now, we\'ll add you manually — we read every email.' : '自动订阅系统即将上线，目前我们会手动添加 — 每封邮件都会读。'}
+          </p>
+        </div>
+
         {/* RSS / Subscribe hint */}
-        <div className="mt-16 pt-8 border-t border-ln-border text-center">
+        <div className="mt-12 pt-8 border-t border-ln-border text-center">
           <p className="text-sm text-ln-tertiary mb-3">
             {isEn
               ? 'Want a detailed comparison? Check our '

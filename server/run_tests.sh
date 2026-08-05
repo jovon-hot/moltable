@@ -17,6 +17,6 @@ if [[ "${1:-}" == "-x" ]]; then
     shift
 fi
 
-python -m pytest $EXTRA -v --tb=short "$@"
+python3 -m pytest $EXTRA -v --tb=short "$@"
 echo ""
 echo "✅ Test suite finished"
