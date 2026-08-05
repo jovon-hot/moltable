@@ -79,7 +79,7 @@ Claude 调用 moltable 工具...
 
       <pre className="bg-ln-panel rounded-lg p-4 text-xs overflow-x-auto my-4">
 {`# 一条命令接入 Claude Desktop
-npx @moltable/connect claude --api-key molt_k7xq9p2v_xxxxx`}
+npx @moltable/connect claude --api-key molt_xxxxxxxxxxxxxxxxxxxx`}
       </pre>
 
       <p>这条命令自动完成：读取现有配置 → 备份原配置 → 写入 Moltable Server → 验证 API Key → 打印指引。<strong>不需要手动编辑任何 JSON。</strong></p>

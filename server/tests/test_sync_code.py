@@ -112,7 +112,7 @@ class TestSyncConsume:
             "expires_at": "2099-01-01T00:00:00+00:00",
         })
 
-        resp = client.post("/api/auth/sync", json={"sync_code": "molt_sync_k8m2p4x9q7w3e1r5"})
+        resp = client.post("/api/auth/sync", json={"sync_code": "molt_sync_xxxxxxxxxxxxxxxxxxxxxxxx"})
         assert resp.status_code == 200
         body = resp.json()
         assert body["api_key"].startswith("molt_")
@@ -130,7 +130,7 @@ class TestSyncConsume:
         })
         invites = table_mocks("agent_invites")
 
-        client.post("/api/auth/sync", json={"sync_code": "molt_sync_k8m2p4x9q7w3e1r5"})
+        client.post("/api/auth/sync", json={"sync_code": "molt_sync_xxxxxxxxxxxxxxxxxxxxxxxx"})
         update_kwargs = invites.update.call_args[0][0]
         assert update_kwargs["status"] == "used"
         assert "used_at" in update_kwargs

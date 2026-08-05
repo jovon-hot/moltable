@@ -54,7 +54,7 @@ Moltable 的目标就是消除这个断层。本文是一个完整实战指南�
 
 ```bash
 # 你的 API Key 长这样
-molt_k7xq9p2v_w8n3r5t6ym1a4b7c0d2e9f3g5h8
+molt_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 **Free 套餐就够用**——100 条记忆、2 个 Persona、1 个主机发现。日常开发完全覆盖。
