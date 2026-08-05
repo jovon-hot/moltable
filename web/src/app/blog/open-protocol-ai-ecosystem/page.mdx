@@ -1,0 +1,118 @@
+export const meta = {
+  title: "开源协议如何重塑 AI 生态：MCP、A2A 与 Identity 层的三角博弈",
+  date: '2026-08-05',
+
+  tags: [],
+}
+
+import ArticleLayout from '../_components/ArticleLayout'
+
+<ArticleLayout meta={meta}>
+
+
+import Link from 'next/link'
+
+2024 年 11 月，Anthropic 发布了 MCP。2025 年 4 月，Google 发布了 A2A。两个协议，两个公司，两套哲学——但目标一致：让 AI Agent 能连接更大的世界。
+
+到了 2026 年中，这场博弈有了第三个变量：**Identity 层**。它不属于任何大公司，但可能成为连接 MCP 和 A2A 的桥梁。
+
+## MCP：Agent-to-Tool 的标准
+
+MCP（Model Context Protocol）在 2025 年 5 月被 Linux 基金会接纳，从 Anthropic 的"公司项目"变成了"社区标准"。目前 25K+ GitHub Stars，生态中有超过 500 个 MCP Server。
+
+核心设计哲学：
+
+- **极简主义**：只有三个核心概念（Tools、Resources、Prompts）
+- **工具优先**：MCP 的场景是 Agent 调用工具，不是 Agent 之间聊天
+- **JSON-RPC 2.0**：成熟的传输协议，无需重新造轮子
+- **Stdio + SSE**：本地和远程两种传输模式，覆盖所有场景
+
+支持 MCP 的客户端越来越多了：Claude Desktop、Hermes、Cursor、Zed、Continue.dev、Gemini CLI……MCP 正在成为 AI 工具调用的"事实标准"。
+
+## A2A：Agent-to-Agent 的蓝图
+
+Google 的 Agent-to-Agent (A2A) 协议走的是另一条路。它的场景是：多个 AI Agent 之间互相通信、协作、委托任务。比如：
+
+- 你让一个"研究 Agent"去调研竞争对手
+- 研究 Agent 发现需要市场数据 → 委托"数据分析 Agent"
+- 数据分析 Agent 发现需要可视化 → 委托"图表 Agent"
+- 最终结果由研究 Agent 汇总后呈现给你
+
+A2A 的关键设计：
+
+- **Agent Card**：每个 Agent 有一个 JSON 描述文件（能力、端点、认证方式）
+- **Task 模型**：长任务异步执行，支持状态查询和结果回调
+- **多模态**：支持文本、图片、音视频传递
+
+## MCP vs A2A：不是竞争，是互补
+
+很多人把两者对立起来，但实际场景中它们是互补的：
+
+- **MCP**：Agent → 工具。类似 API 调用。
+- **A2A**：Agent → Agent。类似微服务通信。
+
+一个完整的 AI 系统会同时使用两者：用 MCP 调用工具（搜索记忆、查询数据库、发送邮件），用 A2A 协调多个 Agent（分工、委托、汇总）。
+
+## 缺失的一环：Identity 层
+
+但这里有一个问题：当 Agent 通过 MCP 调用工具、通过 A2A 委托其他 Agent 时，**它以什么身份操作**？
+
+如果没有统一的身份层：
+
+- Agent A 通过 MCP 调用搜索工具 → 用的是"匿名用户"的权限
+- Agent B 通过 A2A 接收任务 → 不知道委托人是谁、有什么偏好、有什么限制
+- 两个 Agent 看到同一份数据 → 因为没有 Persona，给出雷同的分析
+
+Identity 层填补了这个空白：
+
+```
+{`┌──────────────────────────────────────────┐
+│              Identity Layer               │
+│   ┌────────┐ ┌──────────┐ ┌───────────┐  │
+│   │Profile │ │Personas  │ │ Memories  │  │
+│   │(我是谁)│ │(我的视角)│ │(我知道什么)│  │
+│   └────────┘ └──────────┘ └───────────┘  │
+│                    │                      │
+│          ┌─────────┴─────────┐            │
+│          ▼                   ▼            │
+│   ┌────────────┐    ┌────────────┐        │
+│   │ MCP Tools  │    │ A2A Agents │        │
+│   │ (调什么工具)│    │ (委托谁)    │        │
+│   └────────────┘    └────────────┘        │
+│          │                   │            │
+│          └─────────┬─────────┘            │
+│                    ▼                      │
+│         一致的行为、一致的权限、一致的记忆   │
+└──────────────────────────────────────────┘`}
+```
+
+## Moltable 的赌注：Identity as Protocol
+
+Moltable 的核心赌注是：**在 MCP + A2A 的生态中，Identity 层会成为第三个基础协议**。理由：
+
+- **MCP 解决了"能做什么"**（Capabilities），但没有解决"以什么身份做"
+- **A2A 解决了"怎么协作"**（Coordination），但没有解决"协作时需要知道什么上下文"
+- **Identity 解决"我是谁"**（Who am I）和"我应该怎么做"（How should I behave）
+
+这三者构成了 AI Agent 的完整三角：
+
+- MCP = Agent 的手（Tools）
+- A2A = Agent 的嘴（Communication）
+- Identity = Agent 的脑（Personality + Memory）
+
+## 未来猜想：MCP + A2A + Identity 的融合
+
+展望 2027 年，我预测会出现以下融合趋势：
+
+- MCP 的 `tools/call` 中会增加 `identity_id` 参数，让工具调用带上身份上下文
+- A2A 的 Agent Card 中会增加 `identity_provider` 字段，指向 Moltable 等身份服务
+- 身份层的 `auto_provision` 会成为 Agent 启动的标准初始化步骤
+- 出现"MCP Identity Server"标准——让身份层以 MCP 协议本身的方式提供
+
+开源协议的竞争不是零和博弈。MCP 不会杀死 A2A，A2A 也不会取代 MCP。真正有价值的问题是：当 Agent 有了手（MCP）和嘴（A2A），谁来给它一个大脑和记忆？
+
+相关阅读：[MCP 协议：为什么它是 AI 的 USB-C](/blog/mcp-ai-usb-c) · [2026 下半年 AI Agent 趋势](/blog/ai-agent-trends-2026h2)
+
+👉 [Moltable — AI Identity Protocol](https://moltable.com)
+
+</ArticleLayout>

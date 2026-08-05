@@ -1,0 +1,207 @@
+export const meta = {
+  title: "MCP 工具开发实战：从零构建一个 AI Agent 记忆缓存层",
+  date: '2026-07-15',
+
+  tags: [],
+}
+
+import ArticleLayout from '../_components/ArticleLayout'
+
+<ArticleLayout meta={meta}>
+
+
+import Link from 'next/link'
+
+MCP（Model Context Protocol）已经成为 AI Agent 连接外部世界的标准协议——25K+ GitHub Stars，已被 Linux 基金会接纳。但大多数开发者只是**使用**现有的 MCP Server，很少有人自己写一个。
+
+这篇文章手把手教你用 Python 构建一个 MCP Server，为给 AI Agent 添加持久记忆能力。从协议理解到生产部署，全程可运行。
+
+## MCP 协议基础
+
+MCP 基于 JSON-RPC 2.0，核心是三个方法：
+
+- `tools/list`：告诉 Agent 有哪些工具可用
+- `tools/call`：Agent 调用具体工具
+- `initialize`：建立连接、协商能力
+
+传输层支持两种模式：**stdio**（标准输入输出，适合本地）和 **SSE**（Server-Sent Events，适合远程）。生产环境推荐 SSE，因为可以部署到云端，多个 Agent 共享同一个 Server。
+
+## 实战：构建记忆缓存 MCP Server
+
+我们的目标是构建一个轻量级的记忆层，Agent 可以通过它：
+
+- `search_memory`：语义搜索用户记忆
+- `save_memory`：保存新记忆（带冲突检测）
+- `auto_provision`：一键加载用户完整上下文
+
+### 项目搭建
+
+```
+{`mkdir memory-mcp && cd memory-mcp
+python -m venv .venv && source .venv/bin/activate
+pip install fastapi uvicorn mcp chromadb openai`}
+```
+
+### 核心代码
+
+```
+{`# server.py
+from mcp.server import Server, NotificationOptions
+from mcp.server.models import InitializationCapabilities
+from mcp.server.sse import SseServerTransport
+from fastapi import FastAPI
+import chromadb, json
+
+app = FastAPI()
+server = Server("memory-mcp")
+
+# 内存中的记忆存储（生产环境换 PostgreSQL + pgvector）
+db = chromadb.Client()
+collection = db.create_collection("memories")
+
+@server.list_tools()
+async def list_tools():
+return [
+{
+"name": "search_memory",
+"description": "语义搜索用户记忆",
+"inputSchema": {
+"type": "object",
+"properties": {
+"query": {"type": "string", "description": "搜索查询"},
+"top_k": {"type": "integer", "default": 5}
+},
+"required": ["query"]
+}
+},
+{
+"name": "save_memory",
+"description": "保存新记忆，自动检测冲突",
+"inputSchema": {
+"type": "object",
+"properties": {
+"content": {"type": "string"},
+"category": {
+"type": "string",
+"enum": ["preference","decision","fact",
+"project","insight","task","relationship"]
+}
+},
+"required": ["content"]
+}
+},
+{
+"name": "auto_provision",
+"description": "一键获取用户完整上下文",
+"inputSchema": {"type": "object", "properties": {}}
+}
+]
+
+@server.call_tool()
+async def call_tool(name: str, arguments: dict):
+if name == "search_memory":
+# 向量搜索
+results = collection.query(
+query_texts=[arguments["query"]],
+n_results=arguments.get("top_k", 5)
+)
+return [{"type": "text", "text": json.dumps(results, ensure_ascii=False)}]
+
+elif name == "save_memory":
+# 先检查冲突（相似度 > 0.9）
+existing = collection.query(
+query_texts=[arguments["content"]],
+n_results=1
+)
+if existing["distances"][0] and existing["distances"][0][0] < 0.1:
+return [{"type": "text",
+"text": "⚠️ 检测到相似记忆，已存在的条目：" +
+existing["documents"][0][0]}]
+# 保存
+collection.add(
+documents=[arguments["content"]],
+metadatas=[{"category": arguments.get("category", "fact")}],
+ids=[f"mem_{len(collection.get()['ids'])}"]
+)
+return [{"type": "text", "text": "✅ 记忆已保存"}]
+
+elif name == "auto_provision":
+# 加载所有记忆和规则
+all_mems = collection.get()
+return [{"type": "text", "text": json.dumps({
+"profile": {"memories": all_mems["documents"]},
+"rules": ["代码审查时使用中文注释"],
+"message": "上下文加载完成"
+}, ensure_ascii=False)}]
+
+# SSE 传输
+sse = SseServerTransport("/messages/")
+
+@app.get("/sse")
+async def handle_sse():
+async with sse.connect_sse() as streams:
+await server.run(streams[0], streams[1],
+server.create_initialization_options())
+
+@app.post("/messages/")
+async def handle_messages(request: Request):
+await sse.handle_post_message(request.scope, request.receive, request._send)
+
+if __name__ == "__main__":
+import uvicorn
+uvicorn.run(app, host="0.0.0.0", port=8000)`}
+```
+
+### 部署到 Railway
+
+创建 `railway.json`：
+
+```
+{`{
+"build": { "builder": "NIXPACKS" },
+"deploy": {
+"startCommand": "python server.py",
+"healthcheckPath": "/health"
+}
+}`}
+```
+
+推送到 GitHub → 在 Railway 中导入 → 自动部署。获取 URL 后在 Hermes/Claude 中配置 MCP 连接即可。
+
+## 测试你的 MCP Server
+
+用 curl 直接测试：
+
+```
+{`# 测试 search_memory
+curl -X POST http://localhost:8000/messages/ \\
+-H "Content-Type: application/json" \\
+-d '{"jsonrpc":"2.0","method":"tools/call",
+"params":{"name":"search_memory",
+"arguments":{"query":"Python日志偏好"}},
+"id":1}'
+
+# 测试 save_memory
+curl -X POST http://localhost:8000/messages/ \\
+-H "Content-Type: application/json" \\
+-d '{"jsonrpc":"2.0","method":"tools/call",
+"params":{"name":"save_memory",
+"arguments":{"content":"用户喜欢用中文注释",
+"category":"preference"}},
+"id":2}'`}
+```
+
+## 进阶优化
+
+- **持久化存储**：将 ChromaDB 替换为 PostgreSQL + pgvector，支持生产级数据持久化
+- **认证**：添加 API Key 验证，防止未授权访问
+- **冲突检测升级**：用更精细的语义相似度阈值 + 人工确认流程
+- **多用户隔离**：按 user_id 分区，一个 Server 服务多个用户
+
+如果你不需要从零构建，Moltable 已经将这些功能打包为开箱即用的 MCP Server——注册即用，无需写一行代码。但对于想深入理解 MCP 协议的开发者来说，自己写一个是很好的学习方式。
+
+相关阅读：[AI 为什么总「失忆」？根因剖析与实操修复指南](/blog/ai-forgetfulness-fix)
+
+👉 [Moltable MCP Server — 开箱即用的记忆层](https://moltable.com)
+
+</ArticleLayout>

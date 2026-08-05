@@ -1,0 +1,135 @@
+export const meta = {
+  title: "换电脑不换记忆：AI 身份同步完全指南",
+  date: '2026-07-25',
+
+  tags: [],
+}
+
+import ArticleLayout from '../_components/ArticleLayout'
+
+<ArticleLayout meta={meta}>
+
+
+import Link from 'next/link'
+
+换新电脑的兴奋通常在 30 分钟内消退。你打开终端、启动 Claude Desktop、输入第一个问题——然后发现，它完全不认识你。
+
+你在旧 Mac 上花了三个月"调教"好的 AI——你的代码风格偏好、项目的命名规范、每周五下午的复盘模板——全部归零。AI 又变成了出厂设置。
+
+这个痛点，2026 年有了系统级的解决方案：**AI 身份同步（Identity Sync）**。
+
+## 传统方案为什么不行
+
+大多数人的"同步"方法是这样的：
+
+- 把 `~/.claude` 或 `~/.hermes` 目录打包拷贝
+- 手动导出 Prompt 模板
+- 在新电脑上重写一遍 .cursorrules
+
+这有三个致命缺陷：
+
+- **不跨平台**：Claude 和 Hermes 的配置格式不同，无法互通
+- **不完整**：你只能同步配置文件，无法同步"AI 在对话中学到的偏好"
+- **不实时**：你在 Mac 上教会 AI 的东西，不会自动出现在 Windows 上
+
+## Moltable 的 Identity Sync 方案
+
+核心思路：把 AI 对"你是谁"的认知，从客户端剥离出来，存储在一个独立的身份层中。任何 MCP 客户端连上这个身份层，都能加载同样的上下文。
+
+### 架构原理
+
+```
+{`┌─────────────────┐    ┌─────────────────┐
+│  Mac + Hermes   │    │  Win + Claude   │
+│  auto_provision │    │  auto_provision │
+│       │         │    │       │         │
+│       ▼         │    │       ▼         │
+│  ┌───────────┐  │    │  ┌───────────┐  │
+│  │ MCP Client│  │    │  │ MCP Client│  │
+│  └─────┬─────┘  │    │  └─────┬─────┘  │
+│        │        │    │        │        │
+└────────┼────────┘    └────────┼────────┘
+│                     │
+▼                     ▼
+┌─────────────────────────────┐
+│     Moltable Identity Layer │
+│  ┌────────┐ ┌────────────┐  │
+│  │Profile │ │ Personas   │  │
+│  ├────────┤ ├────────────┤  │
+│  │Memories│ │Preferences │  │
+│  ├────────┤ ├────────────┤  │
+│  │Projects│ │Rules       │  │
+│  └────────┘ └────────────┘  │
+└─────────────────────────────┘`}
+```
+
+## 实操步骤：十分钟完成跨设备同步
+
+### 1. 注册并获取 API Key
+
+在 Moltable 注册后，你会得到一个 API Key（以 `molt_` 开头）。这个 Key 就是你的数字身份凭证。
+
+### 2. 在旧电脑上保存偏好
+
+在你的日常使用中，当 AI 做对了某件事，显式告诉它保存：
+
+```
+{`"记住我偏好用 pnpm 而不是 npm"
+"记住我的 TypeScript 项目默认 strict: true"
+"记住我每周五下午做周报，模板用 FOST-Standard"`}
+```
+
+Moltable 会自动将这些偏好保存到 7 个分类中，并建立语义索引。
+
+### 3. 在新电脑上配置 MCP 连接
+
+无论你用的是 Hermes、Claude Desktop 还是 Cursor，配置方式都一样：
+
+```
+{`{
+"mcpServers": {
+"moltable": {
+"command": "npx",
+"args": ["-y", "@moltable/mcp-server"],
+"env": {
+"MOLTABLE_API_KEY": "molt_your_key_here"
+}
+}
+}
+}`}
+```
+
+### 4. 首次连接：自动恢复
+
+Agent 启动后会自动调用 `auto_provision`，加载你的完整上下文。你会发现：
+
+- 它在旧电脑上记住的代码风格偏好，新电脑上直接生效
+- 你的 Persona 配置自动同步（工作 Persona 和个人 Persona 各就各位）
+- 项目背景知识无需重新解释
+
+### 5. 验证同步
+
+在新电脑上问 Agent："你知道我的 Python 项目日志级别偏好是什么吗？" 如果它回答正确，说明 Identity Sync 成功。
+
+## 跨平台实战：Mac → Windows → Linux
+
+一个真实工作流：
+
+- **办公室 Mac**：用 Claude Desktop + Moltable，积累代码审查偏好
+- **下班路上**：用手机上的 ChatGPT（通过 MCP 代理连接 Moltable），继续讨论架构
+- **回家 Windows 台式机**：用 Hermes，自动加载白天积累的上下文
+- **服务器 Linux**：跑自动化 Agent，使用同一个 Moltable API Key
+
+四个设备，同一个数字身份。这不再是科幻。
+
+## 高级技巧
+
+- **选择性同步**：使用 Persona 过滤，让工作电脑只加载工作 Persona，家庭电脑只加载个人 Persona
+- **差异备份**：Moltable 支持按时间范围导出记忆，做增量备份
+- **团队共享**：项目 Persona 可以分享给团队，新成员加入后一键加载项目上下文
+
+相关阅读：[你的 10 万条 AI 对话记录：该归谁？该存在哪？](/blog/ai-data-sovereignty)
+
+👉 [Moltable — 你的 AI 身份，跟着你走](https://moltable.com)
+
+</ArticleLayout>

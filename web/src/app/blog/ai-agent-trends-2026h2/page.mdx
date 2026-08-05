@@ -1,0 +1,100 @@
+export const meta = {
+  title: "2026 下半年 AI Agent 趋势：从工具到伙伴，从记忆到身份",
+  date: '2026-08-08',
+
+  tags: [],
+}
+
+import ArticleLayout from '../_components/ArticleLayout'
+
+<ArticleLayout meta={meta}>
+
+
+import Link from 'next/link'
+
+2026 年上半年，AI Agent 领域发生了太多事情：MCP 被 Linux 基金会接纳、Google 发布 A2A 协议、DeepSeek v4 和 Qwen 3 先后发布、mem0 拿了新一轮融资、Moltable 正式上线……
+
+站在 2026 年 8 月回望，有五个趋势已经清晰可见。它们将定义下半年的 AI Agent 发展走向。
+
+## 趋势一：Memory → Identity 的范式转移
+
+2024-2025 年，大家都在做"记忆"——让 AI 记住对话历史。mem0 是这个阶段的代表。但到了 2026 上半年，"记忆"赛道开始显现天花板：
+
+- mem0 的用户增长在 Q1 后放缓
+- "记什么"的问题从技术问题变成了 UX 问题——用户不想手动管理记忆
+- 记忆碎片化严重——不同平台的记忆互相隔离
+
+于是行业开始转向**身份**（Identity）——不是记住某段对话，而是理解"你是谁"。Moltable 是第一个明确打出"Identity layer, not memory layer"旗帜的产品。区别在于：
+
+- **记忆**："用户上次说喜欢 Python 3.12"
+- **身份**："这是一个偏好最新技术栈的 Python 后端开发者，代码风格偏向函数式"
+
+身份是记忆的**抽象和结构化**。2026 下半年，会有更多产品从"记忆"转向"身份"。
+
+## 趋势二：MCP 从可选变必需
+
+2025 年 Q4，只有 Claude Desktop 原生支持 MCP。到了 2026 年 Q2：
+
+- Hermes 全面支持 MCP，把 MCP 工具和 Skill 系统打通
+- Cursor 的 Agent 模式内置 MCP 客户端
+- Zed 编辑器支持 MCP
+- Continue.dev 通过 MCP 连接外部工具
+
+当足够多的 AI 客户端支持 MCP，MCP Server 的生态就会爆发。目前 MCP Server 注册量超过 500 个，预计到年底会超过 2000 个。MCP 正在从"技术极客的选择"变成"AI 开发者的默认技能"。
+
+参考：[MCP 协议：为什么它是 AI 的 USB-C](/blog/mcp-ai-usb-c)
+
+## 趋势三：开源模型追赶闭源
+
+2025 年，开源模型和闭源模型之间的差距是明显的。但 2026 年上半年：
+
+- **DeepSeek v4** 在中文任务上全面超越 GPT-4o
+- **Qwen 3** 的 128K 上下文窗口 + 多语言能力接近 Claude 水平
+- **Llama 4** 在开源基准测试中首次进入前三
+
+这对 Agent 开发者的影响是深远的：以前你可能只接一个 API（OpenAI 或 Anthropic），现在你会根据任务特点选择最合适的模型——成本优化用 DeepSeek，复杂推理用 Claude，本地敏感数据用 Qwen 3 自部署。
+
+多模型策略成为默认选择，进一步推动了第2层的 LLM Gateway（如 LiteLLM）的普及。
+
+## 趋势四：Agent 从通用走向专用
+
+2024 年的 Agent 都是"万能助手"——什么都能做，什么都不精通。2026 年，Agent 开始分工：
+
+- **代码 Agent**（Devin、Claude Code、Cursor Agent）：专注写代码
+- **分析 Agent**（Julius、GraphRAG）：专注数据分析
+- **运营 Agent**（FOST 的各职能 Agent）：专注企业运营
+- **创意 Agent**（Midjourney、Suno）：专注内容生成
+
+专用 Agent 的优势在于：它们可以加载专属的 Persona、领域知识和工具。Moltable 的 Persona 系统天然匹配这个趋势——你可以为代码 Agent 创建一个"代码审查官"Persona，为分析 Agent 创建一个"数据分析师"Persona。
+
+参考：[企业级 AI Persona 管理](/blog/ai-persona-enterprise)
+
+## 趋势五：价格战与免费化
+
+2026 年是 AI 基础设施的"免费化元年"：
+
+- DeepSeek 始终保持极低定价（API 价格仅为 GPT-4 的 2-5%）
+- mem0 推出免费层（功能受限）
+- Moltable 提供 90 天全功能免费试用
+- 各类 MCP Server 几乎全部免费开源
+
+这对开发者是好消息——你可以用极低的成本搭建一个完整的 AI Agent 技术栈。坏消息是：免费意味着你需要更仔细地评估数据安全和隐私。
+
+Moltable 的策略是：免费试用 90 天，之后按使用量付费。核心功能（记忆搜索、身份同步）永远有免费额度。
+
+## 预测：2027 年 AI Agent 的标配
+
+基于以上趋势，我对 2027 年有一个大胆预测：**每个 AI Agent 启动时都会自动加载身份层**。就像操作系统启动时会加载用户配置文件一样，AI Agent 启动时会调用 `auto_provision`，加载：
+
+- 用户的偏好和行为规则
+- 当前 Persona 的 system prompt
+- 相关项目的背景知识
+- 最近的关键决策和洞察
+
+这个模型将取代现在"每次新会话重新解释一切"的模式。Agent 不再是"工具"，而是"伙伴"——它记得你的过去，理解你的现在，帮助你规划未来。
+
+而这一切的基础，不在 LLM 里，不在向量数据库里，在**身份层**里。
+
+👉 [Moltable — 为 2027 年的 AI Agent 准备好你的身份层](https://moltable.com)
+
+</ArticleLayout>

@@ -1,0 +1,170 @@
+export const meta = {
+  title: "换电脑不换脑子：3 分钟恢复完整 AI 开发环境实战指南",
+  date: '2026-08-04',
+
+  tags: [],
+}
+
+import ArticleLayout from '../_components/ArticleLayout'
+
+<ArticleLayout meta={meta}>
+
+
+import Link from 'next/link'
+
+**你换了一台新 Mac。系统迁移很顺利——文件、应用、设置全过来了。你打开 Claude Desktop，准备继续昨天没调完的 bug。**
+
+**Claude 说："Hello! How can I help you today?"**
+
+它不记得你了。
+
+这不是软件 bug，这是 AI Agent 行业最大的体验断层：**每一台新设备，都是一次身份重置。**
+
+Moltable 的目标就是消除这个断层。本文是一个完整实战指南：从安装到恢复，从单机到多 Agent 同步，一步不落。
+
+## 先看效果：3 分钟恢复了什么？
+
+用 Moltable 做完一次同步后，你换到任何新电脑，以下内容全部就位：
+
+恢复项
+具体内容
+无 Moltable 的替代方案
+
+Persona
+代码审查员/战略顾问/写作教练等自定义人格
+手动重写 prompt，每个 Agent 各写一遍
+
+偏好记忆
+"TypeScript、tab 缩进、部署到 Railway"
+每次对话重新陈述
+
+项目上下文
+项目路径、技术栈、关键决策记录
+新会话里一点点"教"
+
+MCP 配置
+所有 MCP Server 的 URL + API Key
+逐个手动配置 JSON
+
+工具偏好
+常用工具列表、搜索习惯
+Agent 随机选择，效率减半
+
+## 第一步：注册并获取 API Key
+
+去 [moltable.ai/register](/register) 注册，30 秒完成。你会得到一个 `molt_` 开头的 API Key。
+
+**Free 套餐就够用**——100 条记忆、2 个 Persona、1 个主机发现。日常开发完全覆盖。
+
+## 第二步：在第一台电脑上"播种"
+
+在你现有的主力机上，用 Claude Desktop 给 Moltable "喂"一遍你的偏好：
+
+```
+{`你：帮我记录我的开发偏好。
+
+Claude 调用 moltable 工具...
+
+记录完成：
+✅ 语言偏好：TypeScript > Python > Go
+✅ 代码风格：Prettier 默认配置、tab 缩进
+✅ 部署目标：Railway（主）、Vercel（前端）
+✅ 项目路径：~/work/my-saas/
+✅ 技术栈：Next.js 14 + Prisma + PostgreSQL + Redis`}
+```
+
+这些记忆会永久存储在 Moltable 的向量数据库中，跨设备、跨 Agent 同步。
+
+## 第三步：在新电脑上一键恢复
+
+换到新 Mac 之后，你只需要一行命令：
+
+```
+{`# 一条命令接入 Claude Desktop
+npx @moltable/connect claude --api-key molt_k7xq9p2v_xxxxx`}
+```
+
+这条命令自动完成：读取现有配置 → 备份原配置 → 写入 Moltable Server → 验证 API Key → 打印指引。**不需要手动编辑任何 JSON。**
+
+同样适配其他 Agent：
+
+```
+{`npx @moltable/connect cursor --api-key
+npx @moltable/connect hermes --api-key `}
+```
+
+## 第四步：验证恢复效果
+
+接入后，打开 Claude Desktop，试试这些对话：
+
+```
+{`你：我现在是什么技术栈？
+
+Claude（通过 Moltable）：
+根据你的偏好记录：
+- 语言：TypeScript（主要）、Python、Go
+- 框架：Next.js 14 + Prisma
+- 数据库：PostgreSQL（Supabase）
+- 部署：Railway + Vercel`}
+```
+
+## 原理：Moltable 的身份三层架构
+
+为什么 3 分钟能恢复这么多东西？因为 Moltable 不存对话，存的是**结构化身份数据**：
+
+### Identity Layer（你是谁）
+
+email、设备指纹、API Key 绑定
+
+### Persona Layer（你怎么想）
+
+角色特征、回答风格、模型偏好
+
+### Memory Layer（你知道什么）
+
+偏好、项目上下文、工具配置
+
+换设备时，Agent 通过 MCP 协议调用 `auto_provision` 工具，一次性拉取三层数据。这就是"3 分钟"的来源——不是魔法，是协议设计。
+
+## 进阶：跨 Agent 同步
+
+Moltable 的真正威力在于**一次配置，所有 Agent 共享**。
+
+场景：你用 Claude 做架构设计、Cursor 写代码、Codex 做 code review。
+
+**有 Moltable**：Claude 建议 Redis Streams 架构 → 写入记忆 → Cursor 自动读取并生成代码 → Codex 按架构规范审查。**三个 Agent，一个大脑。**
+
+## 常见问题
+
+### Q: 我的 API Key 安全吗？
+
+Moltable 使用 PBKDF2-HMAC-SHA256 加盐哈希（10 万次迭代）保护 API Key，敏感配置加密后落盘，所有传输使用 TLS 加密。
+
+### Q: 能自托管吗？
+
+能。Moltable 是 MIT 开源协议。Clone 仓库 → pip install → python main.py，3 条命令跑起来。
+
+### Q: 免费版够用吗？
+
+对于个人开发者，Free 套餐（100 条记忆、2 个 Persona）足够日常开发。跨项目、团队协作需要 Pro（¥19/月，10,000 条记忆）。
+
+## 即刻开始
+
+换电脑是必然的。让 AI 失忆，不是必然的。
+
+```
+{`# 30 秒注册
+open https://moltable.ai/register
+
+# 60 秒接入 Claude Desktop
+npx @moltable/connect claude --api-key
+
+# 3 分钟恢复全部 AI 环境
+# 然后继续写代码，就像什么都没发生一样。`}
+```
+
+👉 [免费注册 Moltable — 让你的 AI 永远认识你](/register)
+
+GitHub: [jovon-hot/moltable](https://github.com/jovon-hot/moltable) · MIT License
+
+</ArticleLayout>
