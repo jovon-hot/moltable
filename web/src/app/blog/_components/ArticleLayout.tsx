@@ -6,6 +6,40 @@ export interface ArticleMeta {
   date: string
   description?: string
   tags?: string[]
+  slug?: string
+  authorName?: string
+}
+
+function BlogJsonLd({ meta }: { meta: ArticleMeta }) {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: meta.title,
+    description: meta.description || '',
+    datePublished: meta.date,
+    author: {
+      '@type': 'Organization',
+      name: meta.authorName || 'Moltable Team',
+      url: 'https://moltable.ai',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Moltable',
+      url: 'https://moltable.ai',
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': meta.slug ? `https://moltable.ai/blog/${meta.slug}` : 'https://moltable.ai/blog',
+    },
+    keywords: meta.tags?.join(', ') || '',
+  }
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  )
 }
 
 export default function ArticleLayout({
@@ -17,6 +51,7 @@ export default function ArticleLayout({
 }) {
   return (
     <div className="min-h-screen" style={{ background: '#0D0D14', color: '#F5F4F8' }}>
+      <BlogJsonLd meta={meta} />
       <article className="max-w-2xl mx-auto px-6 pt-24 pb-20">
         <Link
           href="/blog"

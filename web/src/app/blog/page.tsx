@@ -3,6 +3,7 @@
 import { Rss } from 'lucide-react'
 import Link from 'next/link'
 import { useLang } from '@/contexts/LanguageContext'
+import NewsletterSignup from '@/components/NewsletterSignup'
 
 const posts = [
   {
@@ -262,66 +263,8 @@ export default function BlogPage() {
         </div>
 
         {/* Newsletter Signup */}
-        <div className="mt-16 p-8 rounded-card bg-ln-panel text-center" style={{ boxShadow: '0 0 0 1px rgba(99,102,241,0.15), 0 4px 30px rgba(67,56,202,0.08)' }}>
-          <div className="text-3xl mb-3">📬</div>
-          <h3 className="text-lg font-heading mb-2 font-semibold">
-            {isEn ? 'Get AI Identity insights weekly' : '每周获取 AI Identity 深度内容'}
-          </h3>
-          <p className="text-sm text-ln-secondary mb-5 max-w-md mx-auto">
-            {isEn
-              ? 'Deep dives into AI identity, MCP protocol, and agent infrastructure — delivered straight to your inbox. No spam.'
-              : 'AI 身份层、MCP 协议、Agent 基础设施的深度内容，每周五推送。不打扰，可随时退订。'}
-          </p>
-          <form
-            className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
-            onSubmit={async (e) => {
-              e.preventDefault()
-              const form = e.target as HTMLFormElement
-              const input = form.querySelector('input') as HTMLInputElement
-              const email = input?.value
-              const btn = form.querySelector('button') as HTMLButtonElement
-              if (email) {
-                try {
-                  btn.disabled = true
-                  btn.textContent = isEn ? 'Subscribing...' : '订阅中...'
-                  const res = await fetch('/api/newsletter/subscribe', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, source: 'blog' }),
-                  })
-                  const data = await res.json()
-                  if (res.ok) {
-                    btn.textContent = isEn ? 'Subscribed! 🎉' : '已订阅！🎉'
-                    input.value = ''
-                    setTimeout(() => { btn.textContent = isEn ? 'Subscribe' : '订阅'; btn.disabled = false }, 3000)
-                  } else {
-                    btn.textContent = isEn ? 'Error — try again' : '出错 — 请重试'
-                    btn.disabled = false
-                  }
-                } catch {
-                  btn.textContent = isEn ? 'Network error' : '网络错误'
-                  btn.disabled = false
-                }
-              }
-            }}
-          >
-            <input
-              type="email"
-              required
-              placeholder={isEn ? 'you@email.com' : '输入你的邮箱'}
-              className="flex-1 px-4 py-2.5 rounded-lg text-sm bg-ln-bg border border-ln-border text-ln-text focus:outline-none focus:border-ln-accent transition-colors"
-            />
-            <button
-              type="submit"
-              className="px-6 py-2.5 rounded-lg text-sm font-semibold transition-all hover:opacity-90 whitespace-nowrap"
-              style={{ background: '#4338CA', color: '#fff' }}
-            >
-              {isEn ? 'Subscribe' : '订阅'}
-            </button>
-          </form>
-          <p className="text-[11px] text-ln-tertiary mt-4">
-            {isEn ? 'No spam, unsubscribe anytime. We send one email per week.' : '不打扰，可随时退订。每周一封邮件。'}
-          </p>
+        <div className="mt-16">
+          <NewsletterSignup variant="card" />
         </div>
 
         {/* RSS / Subscribe hint */}

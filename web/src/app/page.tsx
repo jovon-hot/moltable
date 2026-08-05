@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import NewsletterSignup from '@/components/NewsletterSignup'
 import { useEffect } from 'react'
 import { Layers, Zap, Users, Brain, Shield, Code, Check, ArrowRight, GitBranch, Download, Trash2, Mail } from 'lucide-react'
 import { useLang } from '@/contexts/LanguageContext'
@@ -285,6 +286,15 @@ export default function LandingPage() {
             )
           })}
         </div>
+      </section>
+
+      <div className="max-w-5xl mx-auto px-6">
+        <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, #4338CA, #FB6B4B, #4338CA, transparent)', opacity: 0.4 }} />
+      </div>
+
+      {/* ── Newsletter ── */}
+      <section className="px-6 py-20 max-w-lg mx-auto">
+        <NewsletterSignup variant="card" />
       </section>
 
       {/* Footer spacer */}
