@@ -1,4 +1,8 @@
 const path = require('path')
+const withMDX = require('@next/mdx')({
+  extension: /\.mdx?$/,
+  options: { remarkPlugins: [], rehypePlugins: [] },
+})
 
 const cspHeader = [
   "default-src 'self'",
@@ -16,6 +20,7 @@ const cspHeader = [
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
+  pageExtensions: ['ts', 'tsx', 'md', 'mdx'],
   webpack: (config) => {
     config.resolve.alias['@'] = path.resolve(__dirname, 'src')
     return config
@@ -40,4 +45,4 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig
+module.exports = withMDX(nextConfig)

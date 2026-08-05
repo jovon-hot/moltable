@@ -75,7 +75,7 @@ Claude 调用 moltable 工具...
 
       <pre className="bg-ln-panel rounded-lg p-4 text-xs overflow-x-auto my-4">
 {`# 一条命令接入 Claude Desktop
-npx @moltable/connect claude --api-key molt_xxxxxxxxxxxxxxxxxxxx
+npx @moltable/connect claude --api-key molt_k7xq9p2v_xxxxx
 
 # 同样适配其他 Agent
 npx @moltable/connect cursor --api-key <your-key>
