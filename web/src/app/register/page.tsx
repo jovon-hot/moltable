@@ -23,8 +23,9 @@ function RegisterForm() {
     try {
       const data = await localRegister(email, password)
       if (data.key) {
-        // 🪄 魔法时刻：直接跳到接入页
-        const params = new URLSearchParams({ key: data.key, new: 'true' })
+        // Store key in sessionStorage (not URL) — avoid browser history/log leaks
+        sessionStorage.setItem('moltable_new_key', data.key)
+        const params = new URLSearchParams({ new: 'true' })
         if (planParam === 'pro') params.set('plan', 'pro')
         window.location.href = `/connect?${params.toString()}`
       } else {

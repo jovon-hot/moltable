@@ -57,13 +57,17 @@ export default function OnboardingPage() {
     }
   }, [])
 
-  // Pre-fill key from URL param
+  // Pre-fill key from sessionStorage (safe) or URL param (backward compat)
   useEffect(() => {
+    const sessionKey = typeof window !== 'undefined' ? sessionStorage.getItem('moltable_new_key') : null
     const keyFromUrl = searchParams.get('key')
-    if (keyFromUrl) {
-      setApiKey(keyFromUrl)
-      validateKeyStatic(keyFromUrl)
-      activateTrialIfPro(keyFromUrl)
+    const key = sessionKey || keyFromUrl
+    if (key) {
+      setApiKey(key)
+      validateKeyStatic(key)
+      activateTrialIfPro(key)
+      // Clean up after read — one-time use
+      if (sessionKey) sessionStorage.removeItem('moltable_new_key')
     }
   }, [searchParams, validateKeyStatic])
 
