@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0D0D14"/>
+      <stop offset="100%" style="stop-color:#14141E"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#4338CA"/>
+      <stop offset="50%" style="stop-color:#6366F1"/>
+      <stop offset="100%" style="stop-color:#FB6B4B"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="40%" r="50%">
+      <stop offset="0%" style="stop-color:rgba(99,102,241,0.15)"/>
+      <stop offset="100%" style="stop-color:transparent"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+
+  <!-- Accent bar -->
+  <rect x="0" y="0" width="1200" height="3" fill="url(#accent)"/>
+
+  <!-- Logo area -->
+  <g transform="translate(600,180)">
+    <!-- M logo icon -->
+    <svg x="-30" y="-40" width="60" height="60" viewBox="0 0 808 808">
+      <g transform="translate(404,404)">
+        <path d="M-220 -160 C-180 -80 -40 -10 0 30 C40 -10 180 -80 220 -160" fill="none" stroke="#4338CA" stroke-width="18" stroke-linecap="round"/>
+        <path d="M-220 -160 C-180 -240 -40 -310 0 -270 C40 -310 180 -240 220 -160" fill="none" stroke="#6366F1" stroke-width="18" stroke-linecap="round"/>
+        <circle cx="-380" cy="-160" r="60" fill="#4338CA"/>
+        <circle cx="0" cy="30" r="45" fill="#FB6B4B"/>
+        <circle cx="380" cy="-160" r="60" fill="#4338CA"/>
+      </g>
+    </svg>
+  </g>
+
+  <!-- Brand name -->
+  <text x="600" y="260" text-anchor="middle" font-family="Geist,-apple-system,sans-serif" font-size="64" font-weight="800" fill="#F5F4F8" letter-spacing="-1.5">
+    Moltable<tspan fill="#FB6B4B">.ai</tspan>
+  </text>
+
+  <!-- Tagline -->
+  <text x="600" y="310" text-anchor="middle" font-family="Geist,-apple-system,sans-serif" font-size="22" fill="#A8A5B8">
+    AI Identity Sync — One Registration, Every AI Knows You
+  </text>
+
+  <!-- Bottom label -->
+  <text x="600" y="370" text-anchor="middle" font-family="Geist,-apple-system,sans-serif" font-size="14" fill="#85829E">
+    iCloud for AI Agents · MCP Native · 3-Minute Recovery
+  </text>
+
+  <!-- Bottom accent -->
+  <rect x="350" y="400" width="500" height="1" fill="url(#accent)" opacity="0.4"/>
+</svg>
