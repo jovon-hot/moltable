@@ -1,34 +1,13 @@
----
-title: "零依赖知识图谱：如何用 1200 行 Python 让 AI Agent 理解实体关系"
-titleEn: "Zero-Dependency Knowledge Graph: How 1200 Lines of Python Let AI Agents Understand Entity Relationships"
-date: "2026-08-06"
-author: "Moltable Team"
-excerpt: "不需要 Neo4j，不需要 LLM 调用，不需要外部 API。Moltable 的知识图谱服务用纯正则 + 关键词匹配 + 共现分析，从零构建了一个完整的实体关系图谱。本文带你逐层拆解：实体识别、关系推断、增量更新、查询 API —— 以及为什么这种「朴素」方案在 Agent 场景下比图数据库更实用。"
-excerptEn: "No Neo4j, no LLM calls, no external APIs. Moltable's Knowledge Graph service builds a complete entity-relationship graph from scratch using nothing but regex, keyword matching, and co-occurrence analysis. This deep-dive walks through entity recognition, relationship inference, incremental updates, and query APIs — and explains why this 'naive' approach is more practical than graph databases for AI Agent scenarios."
-tags: ["Knowledge Graph", "架构", "Python", "实体识别", "技术深度"]
----
-
-import { ArticleLayout } from '../_components/ArticleLayout'
-
-export const metadata = {
+export const meta = {
   title: '零依赖知识图谱：如何用 1200 行 Python 让 AI Agent 理解实体关系',
-  description: 'Moltable 的知识图谱服务用纯 Python 从零构建实体关系图谱。逐层拆解：实体识别、关系推断、增量更新、查询 API。',
-  openGraph: {
-    title: '零依赖知识图谱：纯 Python 构建 AI Agent 的实体关系引擎',
-    description: '不需要 Neo4j，不需要 LLM 调用。1200 行 Python 实现完整的实体识别 + 关系推断 + 图谱查询。',
-    type: 'article',
-    publishedTime: '2026-08-06T00:00:00.000Z',
-    authors: ['Moltable Team'],
-    tags: ['Knowledge Graph', 'Python', 'AI Agent', 'Entity Extraction', 'Graph'],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: '零依赖知识图谱：纯 Python 构建 AI Agent 实体关系引擎',
-    description: '不需要图数据库。1200 行 Python 实现实体识别 + 关系推断 + 图谱查询。',
-  },
+  date: '2026-08-06',
+  description: '不需要 Neo4j，不需要 LLM 调用，不需要外部 API。Moltable 的知识图谱服务用纯正则 + 关键词匹配 + 共现分析，从零构建了一个完整的实体关系图谱。',
+  tags: ['Knowledge Graph', '架构', 'Python', '实体识别', '技术深度'],
 }
 
-export default (props) => <ArticleLayout metadata={metadata} {...props} />
+import ArticleLayout from '../_components/ArticleLayout'
+
+<ArticleLayout meta={meta}>
 
 ## 为什么 AI Agent 需要知识图谱？
 
@@ -379,3 +358,5 @@ Moltable 的知识图谱服务证明了一件事：**在 AI Agent 的场景下�
 ---
 
 **想体验？** Moltable 完全[开源](https://github.com/jovon-hot/moltable)，Knowledge Graph 服务在 `server/services/knowledge_graph.py`，欢迎 Star 和 PR。
+
+</ArticleLayout>
