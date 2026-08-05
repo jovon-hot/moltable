@@ -1,3 +1,18 @@
+## 2026-08-06 (R3 — 夜间维护·功能开发·竞品对齐)
+
+- **功能**: Temporal Memory Timeline — 事实变化时间线追踪系统 🆕
+  - `services/temporal_tracker.py` — 核心服务（524行）：自动检测事实变更、构建实体时间线、模式识别（oscillation/gradual shift/rapid change）、状态快照
+  - `routes/temporal.py` — 6 个 API 端点：`/timeline/{entity}`, `/timelines`, `/state`, `/changes`, `/transitions`, `/report`
+  - 集成到记忆保存管道：每次保存记忆时自动检测 temporal transitions
+  - 模式检测：flip-flopping（震荡）、渐进迁移、快速变化
+  - Persona 感知：transitions 可按 Persona 范围隔离
+- **竞品对齐**: 直接对标 Zep 的 temporal knowledge graph 核心能力
+  - Moltable 独有优势：temporal + identity sync + memory health + persona — 四合一
+- **数据库**: `supabase/migrations/20260806_temporal_facts.sql` — temporal_facts 表（含 RLS）
+- **测试**: 17 个新测试（test_temporal_tracker.py）— 核心逻辑 + 模式检测全覆盖
+- **全量测试**: 166 passed, 3 skipped, 0 failed ✅
+- **提交**: [本次]
+
 ## 2026-08-06 (R2 — 夜间维护·安全升级)
 
 - **安全**: pip audit → 0 vulns（从 18 → 0，全部修复）

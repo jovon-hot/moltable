@@ -512,13 +512,13 @@ class TemporalTracker:
 
     def _is_same_topic(self, content_a: str, content_b: str) -> bool:
         """Check if two texts are about the same topic (simple word overlap)."""
-        words_a = set(content_a.lower().split()) - {
+        stopwords = {
             "the", "a", "an", "is", "are", "was", "were", "i", "my",
             "me", "you", "your", "to", "of", "in", "for", "on", "and",
             "的", "是", "了", "我", "在", "有", "和", "就", "不", "人",
             "都", "一", "一个", "上", "也", "很", "到", "说", "要",
         }
-        words_b = set(content_b.lower().split()) - words_a
-        # Check if there's significant overlap
+        words_a = set(content_a.lower().split()) - stopwords
+        words_b = set(content_b.lower().split()) - stopwords
         overlap = words_a & words_b
         return len(overlap) >= 3
