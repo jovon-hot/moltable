@@ -58,17 +58,17 @@ export const translations = {
     },
     pricing: {
       title: '定价',
-      subtitle: 'Stripe 接入前限时免费。注册即享 Pro 全部功能。',
+      subtitle: '90 天免费试用 · 无需信用卡 · 随时取消',
       monthly: '限时体验',
       yearly: '后续收费',
       savePercent: '',
       redirecting: '激活中...',
       free: { name: 'Free', price: '¥0', desc: '基础功能 · 始终免费', cta: '免费注册' },
       pro: {
-        name: 'Pro · 限时免费', priceMonthly: '¥0/月', priceYearly: '', priceYearlyMonthly: '',
-        desc: 'Stripe 接入前免费体验全部 Pro 功能。早鸟用户后续付费有专属折扣。',
+        name: 'Pro', priceMonthly: '¥19/月', priceYearly: '', priceYearlyMonthly: '',
+        desc: '90 天免费试用。此后 ¥19/月 或 ¥149/年。早鸟用户享专属折扣。',
         descShort: '全功能体验 · 90 天免费',
-        cta: '🔥 免费激活', ctaYearly: '', badge: '限时免费',
+        cta: '🔥 免费试用 90 天', ctaYearly: '', badge: '90天免费',
       },
       team: {
         name: 'Team', price: '联系咨询',

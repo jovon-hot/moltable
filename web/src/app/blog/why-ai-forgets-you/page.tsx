@@ -152,7 +152,7 @@ npx @moltable/connect claude --api-key <your-key>
 # 从此，你的 AI 不再失忆。`}
       </pre>
       <p>👉 <Link href="/register" className="text-ln-accent hover:underline">免费注册 Moltable — 一次配置，所有 Agent 共享</Link></p>
-      <p>开源、MIT 协议、端到端加密。你的身份数据，永远属于你自己。</p>
+      <p>开源、MIT 协议、TLS 加密传输。你的身份数据，永远属于你自己。</p>
       <p className="text-xs text-ln-tertiary mt-6">
         GitHub: <a href="https://github.com/jovon-hot/moltable" className="text-ln-accent hover:underline">jovon-hot/moltable</a> · MIT License
       </p>

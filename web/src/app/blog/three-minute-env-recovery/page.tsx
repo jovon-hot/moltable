@@ -131,7 +131,7 @@ Claude（通过 Moltable）：
 
       <h2>常见问题</h2>
       <h3>Q: 我的 API Key 安全吗？</h3>
-      <p>Moltable 使用端到端加密。API Key 存储用 PBKDF2-HMAC-SHA256 加盐哈希（10 万次迭代），敏感配置加密后落盘。</p>
+      <p>Moltable 使用 PBKDF2-HMAC-SHA256 加盐哈希（10 万次迭代）保护 API Key，敏感配置加密后落盘，所有传输使用 TLS 加密。</p>
 
       <h3>Q: 能自托管吗？</h3>
       <p>能。Moltable 是 MIT 开源协议。Clone 仓库 → pip install → python main.py，3 条命令跑起来。</p>
