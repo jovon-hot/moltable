@@ -6,14 +6,14 @@ export default function PrivacyPage() {
   const { lang } = useLang()
 
   return (
-    <div className="min-h-screen px-6 py-24 max-w-3xl mx-auto" style={{ background: '#08090a', color: '#f7f8f8' }}>
+    <div className="min-h-screen px-6 py-24 max-w-3xl mx-auto" style={{ background: '#111111', color: '#ffffff' }}>
       <h1 className="text-2xl mb-8" style={{ fontWeight: 590 }}>
         {lang === 'zh' ? '隐私政策' : 'Privacy Policy'}
       </h1>
 
-      <div className="space-y-6 text-sm leading-relaxed" style={{ color: '#b0b5bd' }}>
+      <div className="space-y-6 text-sm leading-relaxed" style={{ color: '#cccccc' }}>
         <section>
-          <h2 className="text-base mb-3" style={{ color: '#f7f8f8', fontWeight: 590 }}>
+          <h2 className="text-base mb-3" style={{ color: '#ffffff', fontWeight: 590 }}>
             {lang === 'zh' ? '1. 数据收集' : '1. Data Collection'}
           </h2>
           <p>{lang === 'zh'
@@ -23,7 +23,7 @@ export default function PrivacyPage() {
         </section>
 
         <section>
-          <h2 className="text-base mb-3" style={{ color: '#f7f8f8', fontWeight: 590 }}>
+          <h2 className="text-base mb-3" style={{ color: '#ffffff', fontWeight: 590 }}>
             {lang === 'zh' ? '2. 数据存储与加密' : '2. Data Storage & Encryption'}
           </h2>
           <p>{lang === 'zh'
@@ -33,7 +33,7 @@ export default function PrivacyPage() {
         </section>
 
         <section>
-          <h2 className="text-base mb-3" style={{ color: '#f7f8f8', fontWeight: 590 }}>
+          <h2 className="text-base mb-3" style={{ color: '#ffffff', fontWeight: 590 }}>
             {lang === 'zh' ? '3. 数据共享' : '3. Data Sharing'}
           </h2>
           <p>{lang === 'zh'
@@ -43,7 +43,7 @@ export default function PrivacyPage() {
         </section>
 
         <section>
-          <h2 className="text-base mb-3" style={{ color: '#f7f8f8', fontWeight: 590 }}>
+          <h2 className="text-base mb-3" style={{ color: '#ffffff', fontWeight: 590 }}>
             {lang === 'zh' ? '4. 您的权利' : '4. Your Rights'}
           </h2>
           <p>{lang === 'zh'
@@ -53,7 +53,7 @@ export default function PrivacyPage() {
         </section>
 
         <section>
-          <h2 className="text-base mb-3" style={{ color: '#f7f8f8', fontWeight: 590 }}>
+          <h2 className="text-base mb-3" style={{ color: '#ffffff', fontWeight: 590 }}>
             {lang === 'zh' ? '5. AI 训练' : '5. AI Training'}
           </h2>
           <p>{lang === 'zh'
@@ -63,7 +63,7 @@ export default function PrivacyPage() {
         </section>
 
         <section>
-          <h2 className="text-base mb-3" style={{ color: '#f7f8f8', fontWeight: 590 }}>
+          <h2 className="text-base mb-3" style={{ color: '#ffffff', fontWeight: 590 }}>
             {lang === 'zh' ? '6. 联系我们' : '6. Contact Us'}
           </h2>
           <p>{lang === 'zh'

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>Moltable VI System v2</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Geist,-apple-system,'SF Pro Display',sans-serif;background:#111;color:#e0e0e0;line-height:1.7}
+.container{max-width:1040px;margin:0 auto;padding:48px 24px}
+h1{font-size:40px;font-weight:700;color:#fff;margin-bottom:4px;letter-spacing:-1px}
+h2{font-size:24px;font-weight:600;color:#00e040;margin:56px 0 20px;padding-bottom:10px;border-bottom:1px solid #222}
+h3{font-size:15px;font-weight:600;color:#bbb;margin:24px 0 10px}
+.subtitle{color:#777;font-size:14px;margin-bottom:40px}
+.card{background:#16161a;border-radius:16px;padding:28px;margin:20px 0;border:1px solid #222}
+code{background:#222;padding:2px 8px;border-radius:4px;font-size:13px;color:#00e040;font-family:'SF Mono',monospace}
+table{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0}
+th{background:#1a1a1e;color:#888;padding:10px 14px;text-align:left;font-weight:500;text-transform:uppercase;font-size:11px;letter-spacing:.5px}
+td{padding:10px 14px;border-bottom:1px solid #1a1a1e;color:#ccc}
+.tag{display:inline-block;padding:2px 10px;border-radius:4px;font-size:10px;text-transform:uppercase;font-weight:600;letter-spacing:.5px}
+.tag-good{background:#003311;color:#00e040}
+.tag-bad{background:#330011;color:#e04040}
+
+/* Colors */
+.colors{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin:16px 0}
+.swatch{border-radius:12px;overflow:hidden;background:#111}
+.swatch-preview{height:72px;position:relative}
+.swatch-preview::after{content:'';position:absolute;inset:0;border-radius:12px;border:1px solid rgba(255,255,255,.06)}
+.swatch-info{padding:12px}
+.swatch-name{font-size:13px;font-weight:600;color:#fff}
+.swatch-hex,.swatch-rgb,.swatch-cmyk{font-size:11px;color:#777;margin-top:2px}
+.gradients{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.grad{height:64px;border-radius:10px}
+
+/* Logo cards */
+.logos{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.logo-card{padding:36px 24px;text-align:center;border-radius:12px;border:1px solid #222;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:170px}
+.logo-card.dark{background:#0d0d10}
+.logo-card.light{background:#f2f2f5}
+.logo-card.grad{background:linear-gradient(135deg,#00e040,#00c8e0)}
+.logo-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#555}
+.logo-card.light .logo-label{color:#999}
+.logo-card.grad .logo-label{color:rgba(255,255,255,.5)}
+
+/* Rules grid */
+.rules{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.rule{padding:18px;border-radius:10px;text-align:center;font-size:12px}
+.rule.good{background:#0a1a0a;border:1px solid #1a3a1a}
+.rule.bad{background:#1a0a0a;border:1px solid #3a1a1a}
+.rule-label{font-size:11px;font-weight:600;margin-bottom:6px}
+.rule.good .rule-label{color:#00e040}
+.rule.bad .rule-label{color:#e04040}
+
+/* Type scale */
+.type-row{display:flex;align-items:baseline;gap:16px;padding:10px 0;border-bottom:1px solid #1a1a1e}
+.type-label{font-size:11px;color:#555;min-width:60px;text-transform:uppercase;letter-spacing:.5px}
+.type-sample{color:#fff;line-height:1.4}
+
+/* Spacing */
+.spaces{display:grid;grid-template-columns:repeat(8,1fr);gap:8px}
+.space-item{text-align:center}
+.space-box{margin:0 auto 8px;background:#00e040;border-radius:2px}
+.space-value{font-size:12px;color:#fff;font-weight:600}
+.space-name{font-size:10px;color:#555;text-transform:uppercase;margin-top:2px}
+
+/* Assets table */
+.assets-table td:first-child{color:#fff;font-weight:500}
+
+/* Footer */
+.footer{margin-top:48px;padding:24px 0;border-top:1px solid #1a1a1e;color:#555;font-size:12px}
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- ═══ HERO ═══ -->
+<h1>Moltable</h1>
+<p class="subtitle">Visual Identity System v2.1 · 2026-08 · 「镜」生成</p>
+
+<!-- ═══ 01 · BRAND ═══ -->
+<h2>01 · 品牌核心</h2>
+<div class="card">
+<table>
+<tr><th>名称</th><td>Moltable</td></tr>
+<tr><th>标语</th><td>AI Identity Sync — Give every AI agent a shared memory of you</td></tr>
+<tr><th>域名</th><td><code>moltable.ai</code></td></tr>
+<tr><th>品牌性格</th><td>技术感 · 柔和 · 多层次 · 涌现</td></tr>
+<tr><th>设计理念</th><td>重叠的 M 形代表多个 AI Agent 通过共享身份层交汇。柔和的色彩融合象征数据在 Agent 之间流动。暗色基底暗示深度与技术感。</td></tr>
+</table>
+</div>
+
+<!-- ═══ 02 · LOGO ═══ -->
+<h2>02 · Logo</h2>
+<div class="card">
+  <h3>Logo 原图分析</h3>
+  <table>
+    <tr><th>画布</th><td>1254×1254</td></tr>
+    <tr><th>底色</th><td>深黑 (#111) — 占画面 78.4%</td></tr>
+    <tr><th>主体</th><td>重叠 M 字形 · 居中 · 峰值在画面中部 30-60%</td></tr>
+    <tr><th>效果</th><td>柔和版 — 多层描边叠加 + 渐变融合 + 微发光</td></tr>
+  </table>
+
+  <h3>Logo 变体</h3>
+  <div class="logos">
+    <div class="logo-card dark">
+      <svg viewBox="0 0 64 64" width="56" height="56">
+        <rect width="64" height="64" rx="12" fill="#111"/>
+        <ellipse cx="32" cy="36" rx="22" ry="16" fill="#00e040" opacity="0.06"/>
+        <path d="M10 52 L10 18 L24 36 L32 14 L40 36 L54 18 L54 52" fill="none" stroke="#e040e0" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.65"/>
+        <path d="M10 52 L10 18 L24 36 L32 14 L40 36 L54 18 L54 52" fill="none" stroke="#00e040" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+        <path d="M13 52 L13 20 L25 37 L32 16 L39 37 L51 20 L51 52" fill="none" stroke="#fff" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" opacity="0.45"/>
+        <circle cx="24" cy="36" r="2" fill="#ffc0ff" opacity="0.3"/>
+        <circle cx="40" cy="36" r="2" fill="#c0ffc0" opacity="0.3"/>
+      </svg>
+      <div class="logo-label">Icon · 标准</div>
+    </div>
+    <div class="logo-card dark">
+      <div style="display:flex;align-items:center;gap:14px">
+        <svg viewBox="0 0 64 64" width="38" height="38">
+          <rect width="64" height="64" rx="12" fill="#111"/>
+          <path d="M10 52 L10 18 L24 36 L32 14 L40 36 L54 18 L54 52" fill="none" stroke="#e040e0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.65"/>
+          <path d="M10 52 L10 18 L24 36 L32 14 L40 36 L54 18 L54 52" fill="none" stroke="#00e040" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+        </svg>
+        <span style="font-size:26px;font-weight:700;color:#fff;letter-spacing:-.5px">Moltable</span>
+      </div>
+      <div class="logo-label">横版 · 标准</div>
+    </div>
+    <div class="logo-card light">
+      <div style="display:flex;align-items:center;gap:14px">
+        <svg viewBox="0 0 64 64" width="38" height="38">
+          <rect width="64" height="64" rx="12" fill="#eaeaea"/>
+          <path d="M10 52 L10 18 L24 36 L32 14 L40 36 L54 18 L54 52" fill="none" stroke="#c040c0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+          <path d="M10 52 L10 18 L24 36 L32 14 L40 36 L54 18 L54 52" fill="none" stroke="#00c030" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+        </svg>
+        <span style="font-size:26px;font-weight:700;color:#111;letter-spacing:-.5px">Moltable</span>
+      </div>
+      <div class="logo-label">横版 · 浅色背景</div>
+    </div>
+    <div class="logo-card grad">
+      <div style="display:flex;align-items:center;gap:14px">
+        <svg viewBox="0 0 64 64" width="38" height="38">
+          <rect width="64" height="64" rx="12" fill="rgba(0,0,0,.15)"/>
+          <path d="M10 52 L10 18 L24 36 L32 14 L40 36 L54 18 L54 52" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+        </svg>
+        <span style="font-size:26px;font-weight:700;color:#fff;letter-spacing:-.5px">Moltable</span>
+      </div>
+      <div class="logo-label">横版 · 品牌渐变背景</div>
+    </div>
+  </div>
+
+  <h3>安全间距与最小尺寸</h3>
+  <table>
+    <tr><th>规则</th><th>数值</th></tr>
+    <tr><td>安全间距</td><td>图标 M 高度 × 1（四周等距）</td></tr>
+    <tr><td>图标最小尺寸</td><td>24px（数字）· 12mm（印刷）</td></tr>
+    <tr><td>横版最小宽度</td><td>120px（数字）· 30mm（印刷）</td></tr>
+  </table>
+</div>
+
+<!-- ═══ 03 · COLOR ═══ -->
+<h2>03 · 色彩系统</h2>
+<div class="card">
+  <h3>主色</h3>
+  <div class="colors">
+    <div class="swatch"><div class="swatch-preview" style="background:#00e040"></div><div class="swatch-info"><div class="swatch-name">Moltable Green</div><div class="swatch-hex">#00E040</div><div class="swatch-rgb">rgb(0,224,64)</div><div class="swatch-cmyk">C75 M0 Y90 K0</div></div></div>
+    <div class="swatch"><div class="swatch-preview" style="background:#e040e0"></div><div class="swatch-info"><div class="swatch-name">Moltable Magenta</div><div class="swatch-hex">#E040E0</div><div class="swatch-rgb">rgb(224,64,224)</div><div class="swatch-cmyk">C30 M75 Y0 K0</div></div></div>
+    <div class="swatch"><div class="swatch-preview" style="background:#ffffff"></div><div class="swatch-info"><div class="swatch-name">White</div><div class="swatch-hex">#FFFFFF</div><div class="swatch-rgb">rgb(255,255,255)</div></div></div>
+    <div class="swatch"><div class="swatch-preview" style="background:#111111"></div><div class="swatch-info"><div class="swatch-name">Deep Black</div><div class="swatch-hex">#111111</div><div class="swatch-rgb">rgb(17,17,17)</div></div></div>
+  </div>
+
+  <h3>辅助色</h3>
+  <div class="colors">
+    <div class="swatch"><div class="swatch-preview" style="background:#00c8e0"></div><div class="swatch-info"><div class="swatch-name">Cyan Accent</div><div class="swatch-hex">#00C8E0</div></div></div>
+    <div class="swatch"><div class="swatch-preview" style="background:#ff80c0"></div><div class="swatch-info"><div class="swatch-name">Pink Highlight</div><div class="swatch-hex">#FF80C0</div></div></div>
+    <div class="swatch"><div class="swatch-preview" style="background:#16161a"></div><div class="swatch-info"><div class="swatch-name">Card Surface</div><div class="swatch-hex">#16161A</div></div></div>
+    <div class="swatch"><div class="swatch-preview" style="background:#222222"></div><div class="swatch-info"><div class="swatch-name">Border</div><div class="swatch-hex">#222222</div></div></div>
+    <div class="swatch"><div class="swatch-preview" style="background:#888888"></div><div class="swatch-info"><div class="swatch-name">Muted</div><div class="swatch-hex">#888888</div></div></div>
+  </div>
+
+  <h3>渐变预设</h3>
+  <div class="gradients">
+    <div class="grad" style="background:linear-gradient(135deg,#00e040,#00c8e0)"></div>
+    <div class="grad" style="background:linear-gradient(135deg,#e040e0,#00c8e0)"></div>
+    <div class="grad" style="background:linear-gradient(135deg,#111,#16161a)"></div>
+  </div>
+  <p style="color:#555;font-size:11px;margin-top:8px">Green→Cyan · Magenta→Cyan · Dark→Surface</p>
+</div>
+
+<!-- ═══ 04 · TYPOGRAPHY ═══ -->
+<h2>04 · 字体</h2>
+<div class="card">
+  <h3>Geist（主字体）</h3>
+  <p style="color:#888;font-size:13px;margin-bottom:16px">Vercel 出品 · 几何无衬线 · 免费开源</p>
+
+  <div class="type-row"><span class="type-label">H1</span><span class="type-sample" style="font-size:36px;font-weight:700">Moltable AI Identity</span></div>
+  <div class="type-row"><span class="type-label">H2</span><span class="type-sample" style="font-size:24px;font-weight:600">Connect Your Agents in 30 Seconds</span></div>
+  <div class="type-row"><span class="type-label">H3</span><span class="type-sample" style="font-size:18px;font-weight:600">Shared Memory · Personas · Skills</span></div>
+  <div class="type-row"><span class="type-label">Body</span><span class="type-sample" style="font-size:15px;color:#ccc">Moltable gives every AI agent a shared identity — your preferences, memories, and personas follow you across every platform. No more re-introducing yourself.</span></div>
+  <div class="type-row"><span class="type-label">Code</span><span class="type-sample" style="font-size:13px;font-family:'SF Mono',monospace"><code style="background:transparent;color:#00e040">molt_sk_xxxxxxxxxxxxxxxxxxxx</code></span></div>
+  <div class="type-row"><span class="type-label">Small</span><span class="type-sample" style="font-size:11px;color:#777">© 2026 Moltable · All rights reserved</span></div>
+
+  <h3>字体栈</h3>
+  <table>
+    <tr><th>用途</th><th>Font Stack</th></tr>
+    <tr><td>UI / 标题</td><td><code>Geist, -apple-system, 'SF Pro Display', sans-serif</code></td></tr>
+    <tr><td>正文</td><td><code>Geist, -apple-system, 'SF Pro Text', sans-serif</code></td></tr>
+    <tr><td>代码</td><td><code>Geist Mono, 'SF Mono', 'Fira Code', monospace</code></td></tr>
+  </table>
+</div>
+
+<!-- ═══ 05 · SPACING ═══ -->
+<h2>05 · 间距网格</h2>
+<div class="card">
+  <div class="spaces">
+    <div class="space-item"><div class="space-box" style="width:4px;height:4px;border-radius:50%"></div><div class="space-value">4</div><div class="space-name">XS</div></div>
+    <div class="space-item"><div class="space-box" style="width:8px;height:8px"></div><div class="space-value">8</div><div class="space-name">SM</div></div>
+    <div class="space-item"><div class="space-box" style="width:16px;height:16px"></div><div class="space-value">16</div><div class="space-name">MD</div></div>
+    <div class="space-item"><div class="space-box" style="width:24px;height:24px"></div><div class="space-value">24</div><div class="space-name">LG</div></div>
+    <div class="space-item"><div class="space-box" style="width:32px;height:32px"></div><div class="space-value">32</div><div class="space-name">XL</div></div>
+    <div class="space-item"><div class="space-box" style="width:48px;height:48px"></div><div class="space-value">48</div><div class="space-name">2XL</div></div>
+    <div class="space-item"><div class="space-box" style="width:64px;height:64px"></div><div class="space-value">64</div><div class="space-name">3XL</div></div>
+    <div class="space-item"><div class="space-box" style="width:96px;height:96px"></div><div class="space-value">96</div><div class="space-name">4XL</div></div>
+  </div>
+  <p style="color:#555;font-size:11px;margin-top:16px">4px 基准网格 · 所有间距为 4 的倍数</p>
+</div>
+
+<!-- ═══ 06 · USAGE ═══ -->
+<h2>06 · 使用规范</h2>
+<div class="card">
+  <div class="rules">
+    <div class="rule good"><div class="rule-label">✓ 正确</div>首次出现时使用图标+文字组合</div>
+    <div class="rule bad"><div class="rule-label">✗ 错误</div>拉伸、旋转或变形 Logo</div>
+    <div class="rule good"><div class="rule-label">✓ 正确</div>保持安全间距（M 高度等距）</div>
+    <div class="rule bad"><div class="rule-label">✗ 错误</div>修改色板以外的颜色</div>
+    <div class="rule good"><div class="rule-label">✓ 正确</div>深色背景使用标准色 Logo</div>
+    <div class="rule bad"><div class="rule-label">✗ 错误</div>添加投影、描边或特效</div>
+    <div class="rule good"><div class="rule-label">✓ 正确</div>小尺寸仅使用图标</div>
+    <div class="rule bad"><div class="rule-label">✗ 错误</div>在杂色背景上直接放置</div>
+  </div>
+</div>
+
+<!-- ═══ 07 · APPLICATIONS ═══ -->
+<h2>07 · 应用场景</h2>
+<div class="card">
+  <h3>网站 Header</h3>
+  <div style="background:#111;border-radius:10px;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;border:1px solid #222">
+    <div style="display:flex;align-items:center;gap:10px">
+      <svg viewBox="0 0 64 64" width="28" height="28"><rect width="64" height="64" rx="12" fill="#111"/><path d="M10 52 L10 18 L24 36 L32 14 L40 36 L54 18 L54 52" fill="none" stroke="#00e040" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/></svg>
+      <span style="font-weight:700;color:#fff;font-size:18px">Moltable</span>
+    </div>
+    <div style="display:flex;gap:24px;font-size:13px;color:#888">
+      <span style="color:#fff">Docs</span><span>Pricing</span><span>Blog</span><span>Connect</span>
+    </div>
+  </div>
+
+  <h3>Favicon</h3>
+  <div style="display:flex;gap:16px;align-items:center">
+    <div style="width:32px;height:32px;border-radius:8px;background:#111;display:flex;align-items:center;justify-content:center">
+      <svg viewBox="0 0 64 64" width="22" height="22"><rect width="64" height="64" rx="12" fill="#111"/><path d="M10 52 L10 18 L24 36 L32 14 L40 36 L54 18 L54 52" fill="none" stroke="#00e040" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div style="width:16px;height:16px;border-radius:4px;background:#111;display:flex;align-items:center;justify-content:center">
+      <svg viewBox="0 0 64 64" width="11" height="11"><rect width="64" height="64" rx="12" fill="#111"/><path d="M10 52 L10 18 L24 36 L32 14 L40 36 L54 18 L54 52" fill="none" stroke="#00e040" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+  </div>
+
+  <h3>OG 分享图</h3>
+  <div style="max-width:600px;background:linear-gradient(135deg,#0d0d10,#16161a);border-radius:12px;padding:48px;text-align:center;border:1px solid #222">
+    <svg viewBox="0 0 64 64" width="48" height="48" style="margin-bottom:20px"><rect width="64" height="64" rx="12" fill="#111"/><path d="M10 52 L10 18 L24 36 L32 14 L40 36 L54 18 L54 52" fill="none" stroke="#00e040" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div style="font-size:34px;font-weight:700;color:#fff;margin-bottom:8px">Moltable</div>
+    <div style="font-size:15px;color:#888">Give every AI agent a shared memory of you</div>
+    <div style="font-size:12px;color:#555;margin-top:12px">moltable.ai</div>
+  </div>
+</div>
+
+<!-- ═══ 08 · DECORATIVE FRAMES ═══ -->
+<h2>08 · 装饰画框</h2>
+<div class="card">
+  <h3>画框变体</h3>
+  <p style="color:#888;font-size:13px;margin-bottom:16px">几何边框 + 双圆角装饰 · 808×808 · SVG/PNG · 用于 OG 图、分享卡、证书、品牌装饰</p>
+  
+  <div class="logos">
+    <div class="logo-card dark" style="position:relative;overflow:hidden">
+      <img src="/vi/moltable-frame-green.svg" alt="Green Frame" style="width:100px;height:100px;opacity:0.8"/>
+      <div class="logo-label">Frame · Green 15%</div>
+    </div>
+    <div class="logo-card dark">
+      <img src="/vi/moltable-frame-magenta.svg" alt="Magenta Frame" style="width:100px;height:100px;opacity:0.8"/>
+      <div class="logo-label">Frame · Magenta 15%</div>
+    </div>
+    <div class="logo-card dark">
+      <img src="/vi/moltable-frame-2-green.svg" alt="Frame 2 Green" style="width:100px;height:100px;opacity:0.8"/>
+      <div class="logo-label">Frame 2 · Green 15%</div>
+    </div>
+    <div class="logo-card dark">
+      <img src="/vi/moltable-frame-green-solid.svg" alt="Frame Solid" style="width:100px;height:100px;opacity:0.8"/>
+      <div class="logo-label">Frame · Green Solid</div>
+    </div>
+  </div>
+
+  <h3>用法</h3>
+  <table>
+    <tr><th>场景</th><th>画框</th><th>颜色</th></tr>
+    <tr><td>OG 分享图背景</td><td>moltable-frame-green.svg</td><td>#00e040 · 15%</td></tr>
+    <tr><td>分享卡片装饰</td><td>moltable-frame-2-green.svg</td><td>#00e040 · 15%</td></tr>
+    <tr><td>品牌证书/徽章</td><td>moltable-frame-green-solid.svg</td><td>#00e040 · 100%</td></tr>
+    <tr><td>强调/CTA 区域</td><td>moltable-frame-magenta.svg</td><td>#e040e0 · 15%</td></tr>
+  </table>
+</div>
+
+<!-- ═══ 09 · EXPORT ═══ -->
+<h2>09 · 导出清单</h2>
+<div class="card assets-table">
+  <table>
+    <tr><th>资源</th><th>格式</th><th>尺寸</th><th>用途</th></tr>
+    <tr><td>图标</td><td>SVG / PNG</td><td>24 → 1024</td><td>Favicon · App Icon · 通用</td></tr>
+    <tr><td>横版 Logo</td><td>SVG / PNG</td><td>min 120px wide</td><td>Header · Navbar · Footer</td></tr>
+    <tr><td>横版浅色</td><td>SVG / PNG</td><td>min 120px wide</td><td>浅色背景页面</td></tr>
+    <tr><td>品牌渐变背景</td><td>SVG / PNG</td><td>min 120px wide</td><td>Hero · Banner · 落地页</td></tr>
+    <tr><td>OG 分享图</td><td>PNG</td><td>1200×630</td><td>社交分享</td></tr>
+    <tr><td>Favicon 套装</td><td>ICO / PNG</td><td>16/32/180</td><td>浏览器标签</td></tr>
+  </table>
+</div>
+
+<!-- ═══ 10 · CSS VARIABLES ═══ -->
+<h2>10 · 代码集成</h2>
+<div class="card">
+  <h3>CSS 变量</h3>
+  <pre style="background:#0d0d10;border-radius:8px;padding:20px;overflow-x:auto;font-size:13px;font-family:'SF Mono',monospace;color:#ccc;line-height:1.6">:root {
+  /* Brand */
+  --mol-green:    #00E040;
+  --mol-magenta:  #E040E0;
+  --mol-cyan:     #00C8E0;
+
+  /* Surface */
+  --mol-black:    #111111;
+  --mol-card:     #16161A;
+  --mol-border:   #222222;
+
+  /* Text */
+  --mol-white:    #FFFFFF;
+  --mol-muted:    #888888;
+
+  /* Gradients */
+  --mol-grad-primary:  linear-gradient(135deg, var(--mol-green), var(--mol-cyan));
+  --mol-grad-accent:   linear-gradient(135deg, var(--mol-magenta), var(--mol-cyan));
+
+  /* Typography */
+  --mol-font:       'Geist', -apple-system, 'SF Pro Display', sans-serif;
+  --mol-font-mono:  'Geist Mono', 'SF Mono', monospace;
+
+  /* Spacing (4px grid) */
+  --mol-space-1: 4px;
+  --mol-space-2: 8px;
+  --mol-space-4: 16px;
+  --mol-space-6: 24px;
+  --mol-space-8: 32px;
+  --mol-space-12: 48px;
+  --mol-space-16: 64px;
+}</pre>
+</div>
+
+<div class="footer">
+  Moltable Visual Identity System v2.1 · Generated by 「镜」 · 2026-08-05
+</div>
+
+</div>
+</body>
+</html>

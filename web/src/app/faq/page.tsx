@@ -53,12 +53,12 @@ export default function FAQPage() {
   return (
     <div
       className="min-h-screen px-6 py-24 max-w-3xl mx-auto"
-      style={{ background: '#08090a', color: '#f7f8f8' }}
+      style={{ background: '#111111', color: '#ffffff' }}
     >
       <h1 className="text-2xl mb-4" style={{ fontWeight: 590 }}>
         常见问题
       </h1>
-      <p className="text-sm mb-10" style={{ color: '#8a8f98' }}>
+      <p className="text-sm mb-10" style={{ color: '#888888' }}>
         关于 Moltable 的常见问题。如果找不到答案，请访问 /docs 或发邮件至 hi@moltable.ai。
       </p>
 
@@ -67,15 +67,15 @@ export default function FAQPage() {
           <div
             key={i}
             className="p-5 rounded-lg"
-            style={{ background: '#0f1011' }}
+            style={{ background: '#16161a' }}
           >
             <h2
               className="text-base mb-2"
-              style={{ fontWeight: 590, color: '#7170ff' }}
+              style={{ fontWeight: 590, color: '#00e040' }}
             >
               {faq.q}
             </h2>
-            <p className="text-sm leading-relaxed" style={{ color: '#b0b5bd' }}>
+            <p className="text-sm leading-relaxed" style={{ color: '#cccccc' }}>
               {faq.a}
             </p>
           </div>

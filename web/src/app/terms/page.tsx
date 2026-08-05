@@ -6,14 +6,14 @@ export default function TermsPage() {
   const { lang } = useLang()
 
   return (
-    <div className="min-h-screen px-6 py-24 max-w-3xl mx-auto" style={{ background: '#08090a', color: '#f7f8f8' }}>
+    <div className="min-h-screen px-6 py-24 max-w-3xl mx-auto" style={{ background: '#111111', color: '#ffffff' }}>
       <h1 className="text-2xl mb-8" style={{ fontWeight: 590 }}>
         {lang === 'zh' ? '服务条款' : 'Terms of Service'}
       </h1>
 
-      <div className="space-y-6 text-sm leading-relaxed" style={{ color: '#b0b5bd' }}>
+      <div className="space-y-6 text-sm leading-relaxed" style={{ color: '#cccccc' }}>
         <section>
-          <h2 className="text-base mb-3" style={{ color: '#f7f8f8', fontWeight: 590 }}>
+          <h2 className="text-base mb-3" style={{ color: '#ffffff', fontWeight: 590 }}>
             {lang === 'zh' ? '1. 服务描述' : '1. Service Description'}
           </h2>
           <p>{lang === 'zh'
@@ -23,7 +23,7 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-base mb-3" style={{ color: '#f7f8f8', fontWeight: 590 }}>
+          <h2 className="text-base mb-3" style={{ color: '#ffffff', fontWeight: 590 }}>
             {lang === 'zh' ? '2. 账户责任' : '2. Account Responsibility'}
           </h2>
           <p>{lang === 'zh'
@@ -33,7 +33,7 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-base mb-3" style={{ color: '#f7f8f8', fontWeight: 590 }}>
+          <h2 className="text-base mb-3" style={{ color: '#ffffff', fontWeight: 590 }}>
             {lang === 'zh' ? '3. 使用限制' : '3. Usage Limits'}
           </h2>
           <p>{lang === 'zh'
@@ -43,7 +43,7 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-base mb-3" style={{ color: '#f7f8f8', fontWeight: 590 }}>
+          <h2 className="text-base mb-3" style={{ color: '#ffffff', fontWeight: 590 }}>
             {lang === 'zh' ? '4. 退款政策' : '4. Refund Policy'}
           </h2>
           <p>{lang === 'zh'
@@ -53,7 +53,7 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-base mb-3" style={{ color: '#f7f8f8', fontWeight: 590 }}>
+          <h2 className="text-base mb-3" style={{ color: '#ffffff', fontWeight: 590 }}>
             {lang === 'zh' ? '5. 知识产权' : '5. Intellectual Property'}
           </h2>
           <p>{lang === 'zh'
@@ -63,7 +63,7 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-base mb-3" style={{ color: '#f7f8f8', fontWeight: 590 }}>
+          <h2 className="text-base mb-3" style={{ color: '#ffffff', fontWeight: 590 }}>
             {lang === 'zh' ? '6. 免责声明' : '6. Disclaimer'}
           </h2>
           <p>{lang === 'zh'

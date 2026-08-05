@@ -24,13 +24,13 @@ export function useToast() {
 let toastId = 0
 
 const iconMap: Record<ToastType, React.ReactNode> = {
-  success: <CheckCircle size={16} style={{ color: '#7170ff' }} />,
+  success: <CheckCircle size={16} style={{ color: '#00e040' }} />,
   error: <AlertCircle size={16} style={{ color: '#f87171' }} />,
   info: <Info size={16} style={{ color: '#d0d6e0' }} />,
 }
 
 const borderColorMap: Record<ToastType, string> = {
-  success: '#7170ff',
+  success: '#00e040',
   error: '#f87171',
   info: '#d0d6e0',
 }
@@ -68,13 +68,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center mt-0.5">
               {iconMap[t.type]}
             </span>
-            <p className="text-sm flex-1" style={{ color: '#f7f8f8' }}>{t.message}</p>
+            <p className="text-sm flex-1" style={{ color: '#ffffff' }}>{t.message}</p>
             <button
               onClick={() => removeToast(t.id)}
               className="flex-shrink-0 transition-colors"
-              style={{ color: '#8a8f98' }}
-              onMouseEnter={e => e.currentTarget.style.color = '#f7f8f8'}
-              onMouseLeave={e => e.currentTarget.style.color = '#8a8f98'}
+              style={{ color: '#888888' }}
+              onMouseEnter={e => e.currentTarget.style.color = '#ffffff'}
+              onMouseLeave={e => e.currentTarget.style.color = '#888888'}
             >
               <X size={14} />
             </button>

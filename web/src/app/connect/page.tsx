@@ -227,19 +227,19 @@ Content-Type: application/json`
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#08090a', color: '#f7f8f8' }}>
+    <div className="min-h-screen" style={{ background: '#111111', color: '#ffffff' }}>
       {/* Hero */}
       <div className="max-w-4xl mx-auto px-6 pt-24 pb-16">
         {/* 🪄 Magic moment banner for new users */}
         {isNewUser && (
-          <div className="mb-10 p-5 rounded-xl animate-in" style={{ background: 'linear-gradient(135deg, rgba(113,112,255,0.15), rgba(113,112,255,0.04))', boxShadow: '0 0 0 1px rgba(113,112,255,0.2)' }}>
+          <div className="mb-10 p-5 rounded-xl animate-in" style={{ background: 'linear-gradient(135deg, rgba(0,224,64,0.15), rgba(0,224,64,0.04))', boxShadow: '0 0 0 1px rgba(0,224,64,0.2)' }}>
             <div className="flex items-start gap-3">
-              <Sparkles size={22} style={{ color: '#7170ff', marginTop: 2 }} />
+              <Sparkles size={22} style={{ color: '#00e040', marginTop: 2 }} />
               <div>
-                <h2 className="text-lg mb-1" style={{ fontWeight: 600, color: '#f7f8f8' }}>
+                <h2 className="text-lg mb-1" style={{ fontWeight: 600, color: '#ffffff' }}>
                   {lang === 'zh' ? '🎉 注册成功！你的 AI 即将认识你' : '🎉 Registered! Your AI Is About to Know You'}
                 </h2>
-                <p className="text-sm mb-0" style={{ color: '#8a8f98', lineHeight: 1.6 }}>
+                <p className="text-sm mb-0" style={{ color: '#888888', lineHeight: 1.6 }}>
                   {lang === 'zh'
                     ? '下方是你的专属 API Key，已自动填入。复制配置 → 粘贴到 AI 工具 → 你的 AI 就能获取你的偏好和记忆。全程 30 秒。'
                     : 'Your API key is filled in below. Copy the config → paste into your AI tool → your AI will know your preferences and memories. Takes 30 seconds.'}
@@ -269,7 +269,7 @@ Content-Type: application/json`
         <h1 className="text-3xl sm:text-4xl mb-4" style={{ fontWeight: 590, letterSpacing: '-0.5px' }}>
           {lang === 'zh' ? '30 秒接入 Moltable' : 'Connect in 30 Seconds'}
         </h1>
-        <p className="text-base mb-12 max-w-xl" style={{ color: '#8a8f98', lineHeight: 1.7 }}>
+        <p className="text-base mb-12 max-w-xl" style={{ color: '#888888', lineHeight: 1.7 }}>
           {lang === 'zh'
             ? '你的 AI 助手会通过 MCP 协议自动获取你的身份、偏好和记忆。不必每换个 AI 就重新介绍自己。'
             : 'Your AI assistants get your identity, preferences, and memories via MCP. Stop re-introducing yourself to every new AI.'
@@ -277,8 +277,8 @@ Content-Type: application/json`
         </p>
 
         {/* API Key Input */}
-        <div className="mb-8 p-5 rounded-xl" style={{ background: '#0f1011', boxShadow: '0 0 0 1px rgba(255,255,255,0.06)' }}>
-          <label className="text-xs mb-2 block" style={{ color: '#8a8f98', fontWeight: 500 }}>
+        <div className="mb-8 p-5 rounded-xl" style={{ background: '#16161a', boxShadow: '0 0 0 1px rgba(255,255,255,0.06)' }}>
+          <label className="text-xs mb-2 block" style={{ color: '#888888', fontWeight: 500 }}>
             {lang === 'zh' ? '你的 Moltable API Key' : 'Your Moltable API Key'}
           </label>
           <div className="flex gap-3">
@@ -288,14 +288,14 @@ Content-Type: application/json`
               onChange={e => handleApiKeyChange(e.target.value)}
               placeholder="molt_xxxxxxxxxxxx"
               className="flex-1 px-4 py-2.5 rounded-lg text-sm font-mono outline-none transition-all"
-              style={{ background: '#08090a', color: '#7170ff', boxShadow: '0 0 0 1px rgba(255,255,255,0.08)' }}
-              onFocus={e => e.target.style.boxShadow = '0 0 0 1px #7170ff'}
+              style={{ background: '#111111', color: '#00e040', boxShadow: '0 0 0 1px rgba(255,255,255,0.08)' }}
+              onFocus={e => e.target.style.boxShadow = '0 0 0 1px #00e040'}
               onBlur={e => e.target.style.boxShadow = '0 0 0 1px rgba(255,255,255,0.08)'}
             />
             <a
               href="/register"
               className="px-5 py-2.5 rounded-lg text-sm whitespace-nowrap transition-all hover:opacity-90"
-              style={{ background: '#7170ff', color: '#fff', fontWeight: 510, textDecoration: 'none' }}
+              style={{ background: '#00e040', color: '#fff', fontWeight: 510, textDecoration: 'none' }}
             >
               {lang === 'zh' ? '免费注册' : 'Sign Up'}
             </a>
@@ -305,8 +305,8 @@ Content-Type: application/json`
             <div className="mt-3 flex items-center gap-2 text-sm">
               {keyStatus.state === 'checking' && (
                 <>
-                  <Loader2 size={14} className="animate-spin" style={{ color: '#8a8f98' }} />
-                  <span style={{ color: '#8a8f98' }}>{lang === 'zh' ? '验证中…' : 'Verifying…'}</span>
+                  <Loader2 size={14} className="animate-spin" style={{ color: '#888888' }} />
+                  <span style={{ color: '#888888' }}>{lang === 'zh' ? '验证中…' : 'Verifying…'}</span>
                 </>
               )}
               {keyStatus.state === 'valid' && (
@@ -316,7 +316,7 @@ Content-Type: application/json`
                     {keyStatus.user.name || keyStatus.user.email || (lang === 'zh' ? 'API Key 有效' : 'Valid API Key')}
                   </span>
                   {keyStatus.user.name && keyStatus.user.email && (
-                    <span style={{ color: '#8a8f98' }}> · {keyStatus.user.email}</span>
+                    <span style={{ color: '#888888' }}> · {keyStatus.user.email}</span>
                   )}
                 </>
               )}
@@ -355,8 +355,8 @@ Content-Type: application/json`
               onClick={() => setPlatform(p)}
               className="px-4 py-2 rounded-lg text-sm whitespace-nowrap transition-all"
               style={{
-                background: platform === p ? '#7170ff' : '#0f1011',
-                color: platform === p ? '#fff' : '#8a8f98',
+                background: platform === p ? '#00e040' : '#16161a',
+                color: platform === p ? '#fff' : '#888888',
                 fontWeight: platform === p ? 510 : 400
               }}
             >
@@ -368,36 +368,36 @@ Content-Type: application/json`
         {/* Steps */}
         <div className="space-y-6">
           {commands[platform].steps.map((step, i) => (
-            <div key={i} className="rounded-xl p-5" style={{ background: '#0f1011', boxShadow: '0 0 0 1px rgba(255,255,255,0.06)' }}>
-              <h3 className="text-sm mb-3" style={{ fontWeight: 590, color: '#f7f8f8' }}>{step.title}</h3>
+            <div key={i} className="rounded-xl p-5" style={{ background: '#16161a', boxShadow: '0 0 0 1px rgba(255,255,255,0.06)' }}>
+              <h3 className="text-sm mb-3" style={{ fontWeight: 590, color: '#ffffff' }}>{step.title}</h3>
               {step.code && (
                 <div className="relative group">
-                  <pre className="p-4 rounded-lg text-sm font-mono overflow-x-auto" style={{ background: '#08090a', color: '#b0b5bd', lineHeight: 1.6 }}>
+                  <pre className="p-4 rounded-lg text-sm font-mono overflow-x-auto" style={{ background: '#111111', color: '#cccccc', lineHeight: 1.6 }}>
                     {step.code}
                   </pre>
                   <button
                     onClick={() => handleCopy(step.code!, `step-${i}`)}
                     className="absolute top-3 right-3 p-1.5 rounded-md transition-all"
-                    style={{ background: 'rgba(255,255,255,0.06)', color: copied === `step-${i}` ? '#7170ff' : '#8a8f98' }}
+                    style={{ background: 'rgba(255,255,255,0.06)', color: copied === `step-${i}` ? '#00e040' : '#888888' }}
                   >
                     {copied === `step-${i}` ? <Check size={14} /> : <Copy size={14} />}
                   </button>
                 </div>
               )}
               {step.desc && (
-                <p className="text-sm mt-2" style={{ color: '#8a8f98' }}>{step.desc}</p>
+                <p className="text-sm mt-2" style={{ color: '#888888' }}>{step.desc}</p>
               )}
             </div>
           ))}
         </div>
 
         {/* One-liner for registered users */}
-        <div className="mt-12 p-5 rounded-xl" style={{ background: 'linear-gradient(135deg, rgba(113,112,255,0.08), rgba(113,112,255,0.02))' }}>
+        <div className="mt-12 p-5 rounded-xl" style={{ background: 'linear-gradient(135deg, rgba(0,224,64,0.08), rgba(0,224,64,0.02))' }}>
           <h3 className="text-sm mb-3" style={{ fontWeight: 590 }}>
             ⚡ {lang === 'zh' ? '一行命令接入 Hermes（已注册用户）' : 'One-liner for Hermes (existing users)'}
           </h3>
           <div className="relative group">
-            <pre className="p-4 rounded-lg text-sm font-mono overflow-x-auto" style={{ background: '#08090a', color: '#7170ff', lineHeight: 1.6 }}>
+            <pre className="p-4 rounded-lg text-sm font-mono overflow-x-auto" style={{ background: '#111111', color: '#00e040', lineHeight: 1.6 }}>
               {apiKey
                 ? `curl -sL moltable.ai/connect.sh | bash -s -- ${apiKey}`
                 : 'curl -sL moltable.ai/connect.sh | bash -s -- <你的API-KEY>'}
@@ -405,7 +405,7 @@ Content-Type: application/json`
             <button
               onClick={() => handleCopy(`curl -sL moltable.ai/connect.sh | bash -s -- ${apiKey || '<你的API-KEY>'}`, 'oneline')}
               className="absolute top-3 right-3 p-1.5 rounded-md transition-all"
-              style={{ background: 'rgba(255,255,255,0.06)', color: copied === 'oneline' ? '#7170ff' : '#8a8f98' }}
+              style={{ background: 'rgba(255,255,255,0.06)', color: copied === 'oneline' ? '#00e040' : '#888888' }}
             >
               {copied === 'oneline' ? <Check size={14} /> : <Copy size={14} />}
             </button>
@@ -420,7 +420,7 @@ Content-Type: application/json`
           <a
             href="/register"
             className="inline-flex items-center gap-2 px-8 py-3 rounded-lg text-base transition-all hover:opacity-90"
-            style={{ background: '#7170ff', color: '#fff', fontWeight: 510, textDecoration: 'none' }}
+            style={{ background: '#00e040', color: '#fff', fontWeight: 510, textDecoration: 'none' }}
           >
             {lang === 'zh' ? '免费开始' : 'Get Started Free'} <ArrowRight size={18} />
           </a>

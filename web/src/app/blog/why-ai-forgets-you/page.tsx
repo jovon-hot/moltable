@@ -97,7 +97,7 @@ npx @moltable/connect hermes --api-key <your-key>`}
       <h2>有 Moltable 之前 vs 之后</h2>
       <table className="w-full text-xs my-6 border-collapse">
         <thead>
-          <tr style={{ background: 'rgba(113,112,255,0.12)' }}>
+          <tr style={{ background: 'rgba(0,224,64,0.12)' }}>
             <th className="p-3 text-left font-medium">场景</th>
             <th className="p-3 text-left font-medium">没有 Moltable</th>
             <th className="p-3 text-left font-medium">有 Moltable</th>

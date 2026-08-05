@@ -3,26 +3,46 @@
 @tailwind utilities;
 
 :root {
-  --color-bg: #08090a;
-  --color-surface: #0f1011;
-  --color-raised: #191a1b;
-  --color-text: #f7f8f8;
-  --color-secondary: #d0d6e0;
-  --color-tertiary: #8a8f98;
-  --color-accent: #7170ff;
-  --color-accent-hover: #828fff;
+  /* Surface - Moltable Deep */
+  --color-bg: #111111;
+  --color-surface: #16161a;
+  --color-raised: #1a1a1e;
+  
+  /* Text */
+  --color-text: #ffffff;
+  --color-secondary: #cccccc;
+  --color-tertiary: #888888;
+  --color-quaternary: #555555;
+
+  /* Accent - Moltable Green */
+  --color-accent: #00e040;
+  --color-accent-hover: #00c030;
+  --color-accent-glow: rgba(0, 224, 64, 0.12);
+
+  /* Borders */
   --color-border: rgba(255, 255, 255, 0.08);
   --color-border-subtle: rgba(255, 255, 255, 0.05);
+
+  /* Interactive */
   --color-btn-bg: rgba(255, 255, 255, 0.04);
-  --radius-btn: 6px;
-  --radius-card: 8px;
-  --radius-panel: 12px;
+  --color-hover: rgba(255, 255, 255, 0.06);
+
+  /* Radii */
+  --radius-btn: 8px;
+  --radius-card: 10px;
+  --radius-panel: 14px;
+
+  /* Typography */
+  --font-ui: 'Geist', -apple-system, 'SF Pro Display', system-ui, sans-serif;
+  --font-body: 'Geist', -apple-system, 'SF Pro Text', system-ui, sans-serif;
+  --font-heading: 'Geist', -apple-system, 'SF Pro Display', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', 'SF Mono', 'Fira Code', monospace;
 }
 
 body {
-  background: #08090a;
-  color: #f7f8f8;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: #111111;
+  color: #ffffff;
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -43,6 +63,11 @@ body {
   to { opacity: 1; }
 }
 
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(0, 224, 64, 0.08); }
+  50% { box-shadow: 0 0 40px rgba(0, 224, 64, 0.18); }
+}
+
 .animate-in {
   animation: fade-in 0.2s ease-out;
 }
@@ -51,10 +76,14 @@ body {
   animation: slide-in-from-right 0.3s ease-out;
 }
 
+.glow-pulse {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
 @layer base {
   *:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px #7170ff, 0 0 0 4px #08090a;
+    box-shadow: 0 0 0 2px #00e040, 0 0 0 4px #111111;
     border-radius: 2px;
   }
 }

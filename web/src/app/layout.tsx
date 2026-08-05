@@ -7,19 +7,19 @@ import PublicShell from '@/components/PublicShell'
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.moltable.ai'),
   title: {
-    default: 'Moltable — AI 身份同步：一次注册，所有 AI 都认识你',
-    template: '%s | Moltable — AI Identity Sync',
+    default: 'Moltable — AI Identity Sync: One Registration, Every AI Knows You',
+    template: '%s | Moltable',
   },
   description:
-    '跨平台 AI 身份同步服务。换电脑 3 分钟恢复完整 AI 环境。支持 Hermes、Claude、ChatGPT、Cursor。90 天免费试用。',
+    'Cross-platform AI identity sync. Restore your full AI environment in 3 minutes. Supports Hermes, Claude, ChatGPT, Cursor. 90-day free trial.',
   keywords: [
-    'AI身份同步',
-    'AI记忆',
-    '跨平台AI',
-    'Agent环境恢复',
-    'MCP工具',
-    'Persona',
-    'AI Identity',
+    'AI identity',
+    'AI memory',
+    'cross-platform AI',
+    'agent environment',
+    'MCP tools',
+    'persona sync',
+    'AI agent identity',
   ],
   viewport: 'width=device-width, initial-scale=1',
   robots: {
@@ -34,16 +34,16 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: 'Moltable — AI 身份同步：一次注册，所有 AI 都认识你',
+    title: 'Moltable — AI Identity Sync',
     description:
-      '跨平台 AI 身份同步服务。换电脑 3 分钟恢复完整 AI 环境。支持 Hermes、Claude、ChatGPT、Cursor。90 天免费试用。',
+      'Cross-platform AI identity sync. Restore your full AI environment in 3 minutes. Hermes · Claude · ChatGPT · Cursor.',
     url: 'https://www.moltable.ai',
     siteName: 'Moltable',
-    locale: 'zh_CN',
+    locale: 'en_US',
     type: 'website',
     images: [
       {
-        url: '/logo-horizontal.svg',
+        url: '/og-image.png',
         width: 1200,
         height: 630,
         alt: 'Moltable — AI Identity Sync',
@@ -52,10 +52,10 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Moltable — AI 身份同步：一次注册，所有 AI 都认识你',
+    title: 'Moltable — AI Identity Sync',
     description:
-      '跨平台 AI 身份同步服务。换电脑 3 分钟恢复完整 AI 环境。支持 Hermes、Claude、ChatGPT、Cursor。',
-    images: ['/logo-horizontal.svg'],
+      'Cross-platform AI identity sync. Restore your full AI environment in 3 minutes.',
+    images: ['/og-image.png'],
   },
 }
 
@@ -66,10 +66,10 @@ const jsonLd = {
       '@type': 'Organization',
       name: 'Moltable',
       url: 'https://www.moltable.ai',
-      logo: 'https://www.moltable.ai/logo.svg',
+      logo: 'https://www.moltable.ai/logo-icon.svg',
       sameAs: ['https://github.com/moltable'],
       description:
-        '跨平台 AI 身份同步服务。一次注册，所有 AI 都认识你。',
+        'Cross-platform AI identity sync — one registration, every AI agent knows you.',
     },
     {
       '@type': 'SoftwareApplication',
@@ -79,10 +79,10 @@ const jsonLd = {
       offers: {
         '@type': 'Offer',
         price: '0',
-        priceCurrency: 'CNY',
+        priceCurrency: 'USD',
       },
       description:
-        '跨平台 AI 身份同步服务 — 支持 Hermes、Claude、ChatGPT、Cursor 等 MCP 兼容 AI Agent。',
+        'Cross-platform AI identity sync — supports Hermes, Claude, ChatGPT, Cursor and MCP-compatible AI agents.',
       url: 'https://www.moltable.ai',
     },
   ],
@@ -90,7 +90,7 @@ const jsonLd = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="zh">
+    <html lang="en">
       <head>
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -103,7 +103,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        {/* Umami Analytics — privacy-first, self-hostable web analytics */}
+        {/* Umami Analytics */}
         <script
           defer
           src="https://umami.moltable.ai/script.js"

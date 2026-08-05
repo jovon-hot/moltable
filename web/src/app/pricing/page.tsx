@@ -39,13 +39,13 @@ export default function PricingPage() {
   ]
 
   return (
-    <div className="min-h-screen" style={{ background: '#08090a', color: '#f7f8f8' }}>
+    <div className="min-h-screen" style={{ background: '#111111', color: '#ffffff' }}>
       <section className="px-6 pt-24 pb-20 max-w-5xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-3xl mb-3" style={{ fontWeight: 590, letterSpacing: '-0.3px' }}>
             {p.title}
           </h1>
-          <p className="text-sm" style={{ color: '#8a8f98' }}>
+          <p className="text-sm" style={{ color: '#888888' }}>
             {p.subtitle}
           </p>
         </div>
@@ -55,15 +55,15 @@ export default function PricingPage() {
             <div key={i}
               className={`p-6 rounded-[8px] flex flex-col relative transition-all duration-200 ${plan.accent ? 'md:-mt-2 md:mb-2' : ''}`}
               style={{
-                background: '#0f1011',
+                background: '#16161a',
                 boxShadow: plan.accent
-                  ? '0 0 0 1px #7170ff, 0 4px 24px rgba(113,112,255,0.15)'
+                  ? '0 0 0 1px #00e040, 0 4px 24px rgba(0,224,64,0.15)'
                   : '0 0 0 1px rgba(255,255,255,0.06)',
               }}
             >
               {plan.badge && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-xs font-medium"
-                  style={{ background: '#7170ff', color: '#fff' }}>
+                  style={{ background: '#00e040', color: '#fff' }}>
                   {plan.badge}
                 </div>
               )}
@@ -71,12 +71,12 @@ export default function PricingPage() {
               <div className="mb-4">
                 <span className="text-3xl" style={{ fontWeight: 590 }}>{plan.price}</span>
               </div>
-              <p className="text-xs mb-5 flex-1 leading-relaxed" style={{ color: '#8a8f98' }}>{plan.desc}</p>
+              <p className="text-xs mb-5 flex-1 leading-relaxed" style={{ color: '#888888' }}>{plan.desc}</p>
 
               <ul className="mb-5 space-y-2">
                 {plan.features.map((f: string, j: number) => (
-                  <li key={j} className="flex items-start gap-2 text-xs" style={{ color: '#b0b5bd' }}>
-                    <Check size={14} style={{ color: '#7170ff', marginTop: 1, flexShrink: 0 }} />
+                  <li key={j} className="flex items-start gap-2 text-xs" style={{ color: '#cccccc' }}>
+                    <Check size={14} style={{ color: '#00e040', marginTop: 1, flexShrink: 0 }} />
                     {f}
                   </li>
                 ))}
@@ -85,8 +85,8 @@ export default function PricingPage() {
               <Link href={plan.href}
                 className="block w-full text-center px-4 py-2.5 rounded-[6px] text-sm font-medium transition-all duration-150"
                 style={{
-                  background: plan.accent ? '#7170ff' : 'rgba(255,255,255,0.06)',
-                  color: plan.accent ? '#fff' : '#f7f8f8',
+                  background: plan.accent ? '#00e040' : 'rgba(255,255,255,0.06)',
+                  color: plan.accent ? '#fff' : '#ffffff',
                   fontWeight: 510,
                 }}>
                 {plan.cta}

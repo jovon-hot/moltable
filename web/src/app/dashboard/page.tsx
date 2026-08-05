@@ -95,14 +95,14 @@ export default function DashboardPage() {
   }
 
   const statCards = [
-    { label: ui.statsMemoryCount, value: stats.total_memories, icon: Brain, href: '/dashboard/memories', color: '#7170ff' },
+    { label: ui.statsMemoryCount, value: stats.total_memories, icon: Brain, href: '/dashboard/memories', color: '#00e040' },
     { label: ui.statsPersonaCount, value: stats.total_personas, icon: User, href: '/dashboard/personas', color: '#4ade80' },
     { label: ui.statsProjectCount, value: stats.total_projects, icon: Layers, href: '/dashboard', color: '#60a5fa' },
   ]
 
   const planCard = {
     icon: plan.plan === 'free' ? Clock : plan.plan === 'trialing' ? Sparkles : Zap,
-    color: plan.plan === 'free' ? '#8a8f98' : '#7170ff',
+    color: plan.plan === 'free' ? '#888888' : '#00e040',
   }
 
   const getPlanLabel = (): string => {
