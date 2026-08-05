@@ -35,7 +35,7 @@ export default function DashboardPage() {
     try {
       const [memStats, personas, userInfo] = await Promise.all([
         apiFetch<{ total: number; by_category?: Record<string, number> }>('/api/memories/stats').catch(() => null),
-        apiFetch<any[]>('/api/personas/').catch(() => null),
+        apiFetch<any[]>('/api/personas').catch(() => null),
         apiFetch<{ id: string; email: string; name: string; plan?: string; trial_end?: string; trial_days_left?: number }>('/api/auth/me').catch(() => null),
       ])
 

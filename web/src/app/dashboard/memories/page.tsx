@@ -63,7 +63,7 @@ export default function MemoriesPage() {
   const fetchMemories = useCallback(async (query?: string, cat?: string, off?: number, append = false) => {
     setLoading(true)
     try {
-      let url = `/api/memories/?limit=${PAGE_SIZE}`
+      let url = `/api/memories?limit=${PAGE_SIZE}`
       if (cat) url += `&category=${cat}`
       if (off) url += `&offset=${off}`
       if (query) {

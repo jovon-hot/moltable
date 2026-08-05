@@ -56,7 +56,14 @@ export async function localRegister(email: string, password: string, name?: stri
   })
   if (!res.ok) {
     const data = await res.json().catch(() => ({}))
-    throw new Error((data as any).detail || '注册失败')
+    // FastAPI returns detail as array of objects or string — extract first human-readable message
+    let msg = '注册失败'
+    if (Array.isArray(data.detail) && data.detail.length > 0) {
+      msg = data.detail[0].msg || '注册失败'
+    } else if (typeof data.detail === 'string') {
+      msg = data.detail
+    }
+    throw new Error(msg)
   }
   const data = await res.json()
   if (data.key) setLocalKey(data.key)

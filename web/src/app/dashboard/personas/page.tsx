@@ -33,8 +33,8 @@ export default function PersonasPage() {
 
   const fetchPersonas = async () => {
     setLoading(true)
-    try { const data = await apiFetch<any[]>('/api/personas/'); setPersonas(Array.isArray(data) ? data : []) }
-    catch (err: any) { setIsDemo(true); setPersonas(DEMO_PERSONAS) }
+    try { const data = await apiFetch<any[]>('/api/personas'); setPersonas(Array.isArray(data) ? data : []) }
+    catch (err: any) { setPersonas([]); setIsDemo(false) }
     finally { setLoading(false) }
   }
 

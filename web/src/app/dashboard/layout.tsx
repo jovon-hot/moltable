@@ -22,36 +22,34 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const d = t.dashboard_ui as any
 
   useEffect(() => {
-    if (local) {
-      const localKey = getLocalKey()
-      if (localKey) {
-        setUser({ email: d.localUser, id: 'local' })
+    const localKey = getLocalKey()
+    if (localKey) {
+      // Use Moltable local auth — fetch real user info from /api/auth/me
+      apiFetch<{ id: string; email: string; name: string }>('/api/auth/me').then(info => {
+        if (info && info.email) {
+          setUser({ email: info.email, name: info.name || info.email.split('@')[0], id: info.id })
+        } else {
+          setUser({ email: d.localUser, id: 'local' })
+        }
         setIsDemo(false)
-      } else {
-        setIsDemo(true)
-      }
-      setLoading(false)
+      }).catch(() => {
+        setUser({ email: d.localUser, id: 'local' })
+      }).finally(() => setLoading(false))
       return
     }
-    supabase!.auth.getUser().then(({ data }) => {
-      if (!data.user) {
-        const localKey = getLocalKey()
-        if (localKey) {
-          setUser({ email: d.localUser, id: 'local' })
-          setIsDemo(false)
-        } else {
-          setIsDemo(true)
-        }
+    if (!local && supabase) {
+      supabase.auth.getUser().then(({ data }) => {
+        if (!data.user) { setUser({ email: d.localUser, id: 'local' }); setIsDemo(true); setLoading(false); return }
+        setUser(data.user)
         setLoading(false)
-        return
-      }
-      setUser(data.user)
-      setLoading(false)
-      // Check if user is admin
-      apiFetch<{ plan?: string }>('/api/auth/me').then(info => {
-        if (info?.plan === 'admin') setIsAdmin(true)
-      }).catch(() => {})
-    })
+        apiFetch<{ plan?: string }>('/api/auth/me').then(info => {
+          if (info?.plan === 'admin') setIsAdmin(true)
+        }).catch(() => {})
+      })
+      return
+    }
+    setIsDemo(true)
+    setLoading(false)
   }, [])
 
   const handleSignOut = async () => {

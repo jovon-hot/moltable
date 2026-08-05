@@ -30,7 +30,7 @@ function ShareCard() {
     try {
       const [mem, pers, prov] = await Promise.all([
         apiFetch<{ total: number }>('/api/memories/stats', { headers: { 'X-API-Key': key } }).catch(() => ({ total: 0 })),
-        apiFetch<any[]>('/api/personas/', { headers: { 'X-API-Key': key } }).catch(() => []),
+        apiFetch<any[]>('/api/personas', { headers: { 'X-API-Key': key } }).catch(() => []),
         apiFetch<any>(`/api/agents/auto_provision`, {
           method: 'POST', body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'auto_provision', params: {} }),
           headers: { 'X-API-Key': key }
