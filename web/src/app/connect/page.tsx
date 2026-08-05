@@ -227,14 +227,14 @@ Content-Type: application/json`
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#111111', color: '#ffffff' }}>
+    <div className="min-h-screen" style={{ background: '#0D0D14', color: '#ffffff' }}>
       {/* Hero */}
       <div className="max-w-4xl mx-auto px-6 pt-24 pb-16">
         {/* 🪄 Magic moment banner for new users */}
         {isNewUser && (
-          <div className="mb-10 p-5 rounded-xl animate-in" style={{ background: 'linear-gradient(135deg, rgba(0,224,64,0.15), rgba(0,224,64,0.04))', boxShadow: '0 0 0 1px rgba(0,224,64,0.2)' }}>
+          <div className="mb-10 p-5 rounded-xl animate-in" style={{ background: 'linear-gradient(135deg, rgba(67,56,202,0.15), rgba(67,56,202,0.04))', boxShadow: '0 0 0 1px rgba(67,56,202,0.2)' }}>
             <div className="flex items-start gap-3">
-              <Sparkles size={22} style={{ color: '#00e040', marginTop: 2 }} />
+              <Sparkles size={22} style={{ color: '#4338CA', marginTop: 2 }} />
               <div>
                 <h2 className="text-lg mb-1" style={{ fontWeight: 600, color: '#ffffff' }}>
                   {lang === 'zh' ? '🎉 注册成功！你的 AI 即将认识你' : '🎉 Registered! Your AI Is About to Know You'}
@@ -277,7 +277,7 @@ Content-Type: application/json`
         </p>
 
         {/* API Key Input */}
-        <div className="mb-8 p-5 rounded-xl" style={{ background: '#16161a', boxShadow: '0 0 0 1px rgba(255,255,255,0.06)' }}>
+        <div className="mb-8 p-5 rounded-xl" style={{ background: '#14141E', boxShadow: '0 0 0 1px rgba(255,255,255,0.06)' }}>
           <label className="text-xs mb-2 block" style={{ color: '#888888', fontWeight: 500 }}>
             {lang === 'zh' ? '你的 Moltable API Key' : 'Your Moltable API Key'}
           </label>
@@ -288,14 +288,14 @@ Content-Type: application/json`
               onChange={e => handleApiKeyChange(e.target.value)}
               placeholder="molt_xxxxxxxxxxxx"
               className="flex-1 px-4 py-2.5 rounded-lg text-sm font-mono outline-none transition-all"
-              style={{ background: '#111111', color: '#00e040', boxShadow: '0 0 0 1px rgba(255,255,255,0.08)' }}
-              onFocus={e => e.target.style.boxShadow = '0 0 0 1px #00e040'}
+              style={{ background: '#0D0D14', color: '#4338CA', boxShadow: '0 0 0 1px rgba(255,255,255,0.08)' }}
+              onFocus={e => e.target.style.boxShadow = '0 0 0 1px #4338CA'}
               onBlur={e => e.target.style.boxShadow = '0 0 0 1px rgba(255,255,255,0.08)'}
             />
             <a
               href="/register"
               className="px-5 py-2.5 rounded-lg text-sm whitespace-nowrap transition-all hover:opacity-90"
-              style={{ background: '#00e040', color: '#fff', fontWeight: 510, textDecoration: 'none' }}
+              style={{ background: '#4338CA', color: '#fff', fontWeight: 510, textDecoration: 'none' }}
             >
               {lang === 'zh' ? '免费注册' : 'Sign Up'}
             </a>
@@ -355,7 +355,7 @@ Content-Type: application/json`
               onClick={() => setPlatform(p)}
               className="px-4 py-2 rounded-lg text-sm whitespace-nowrap transition-all"
               style={{
-                background: platform === p ? '#00e040' : '#16161a',
+                background: platform === p ? '#4338CA' : '#14141E',
                 color: platform === p ? '#fff' : '#888888',
                 fontWeight: platform === p ? 510 : 400
               }}
@@ -368,17 +368,17 @@ Content-Type: application/json`
         {/* Steps */}
         <div className="space-y-6">
           {commands[platform].steps.map((step, i) => (
-            <div key={i} className="rounded-xl p-5" style={{ background: '#16161a', boxShadow: '0 0 0 1px rgba(255,255,255,0.06)' }}>
+            <div key={i} className="rounded-xl p-5" style={{ background: '#14141E', boxShadow: '0 0 0 1px rgba(255,255,255,0.06)' }}>
               <h3 className="text-sm mb-3" style={{ fontWeight: 590, color: '#ffffff' }}>{step.title}</h3>
               {step.code && (
                 <div className="relative group">
-                  <pre className="p-4 rounded-lg text-sm font-mono overflow-x-auto" style={{ background: '#111111', color: '#cccccc', lineHeight: 1.6 }}>
+                  <pre className="p-4 rounded-lg text-sm font-mono overflow-x-auto" style={{ background: '#0D0D14', color: '#cccccc', lineHeight: 1.6 }}>
                     {step.code}
                   </pre>
                   <button
                     onClick={() => handleCopy(step.code!, `step-${i}`)}
                     className="absolute top-3 right-3 p-1.5 rounded-md transition-all"
-                    style={{ background: 'rgba(255,255,255,0.06)', color: copied === `step-${i}` ? '#00e040' : '#888888' }}
+                    style={{ background: 'rgba(255,255,255,0.06)', color: copied === `step-${i}` ? '#4338CA' : '#888888' }}
                   >
                     {copied === `step-${i}` ? <Check size={14} /> : <Copy size={14} />}
                   </button>
@@ -392,12 +392,12 @@ Content-Type: application/json`
         </div>
 
         {/* One-liner for registered users */}
-        <div className="mt-12 p-5 rounded-xl" style={{ background: 'linear-gradient(135deg, rgba(0,224,64,0.08), rgba(0,224,64,0.02))' }}>
+        <div className="mt-12 p-5 rounded-xl" style={{ background: 'linear-gradient(135deg, rgba(67,56,202,0.08), rgba(67,56,202,0.02))' }}>
           <h3 className="text-sm mb-3" style={{ fontWeight: 590 }}>
             ⚡ {lang === 'zh' ? '一行命令接入 Hermes（已注册用户）' : 'One-liner for Hermes (existing users)'}
           </h3>
           <div className="relative group">
-            <pre className="p-4 rounded-lg text-sm font-mono overflow-x-auto" style={{ background: '#111111', color: '#00e040', lineHeight: 1.6 }}>
+            <pre className="p-4 rounded-lg text-sm font-mono overflow-x-auto" style={{ background: '#0D0D14', color: '#4338CA', lineHeight: 1.6 }}>
               {apiKey
                 ? `curl -sL moltable.ai/connect.sh | bash -s -- ${apiKey}`
                 : 'curl -sL moltable.ai/connect.sh | bash -s -- <你的API-KEY>'}
@@ -405,7 +405,7 @@ Content-Type: application/json`
             <button
               onClick={() => handleCopy(`curl -sL moltable.ai/connect.sh | bash -s -- ${apiKey || '<你的API-KEY>'}`, 'oneline')}
               className="absolute top-3 right-3 p-1.5 rounded-md transition-all"
-              style={{ background: 'rgba(255,255,255,0.06)', color: copied === 'oneline' ? '#00e040' : '#888888' }}
+              style={{ background: 'rgba(255,255,255,0.06)', color: copied === 'oneline' ? '#4338CA' : '#888888' }}
             >
               {copied === 'oneline' ? <Check size={14} /> : <Copy size={14} />}
             </button>
@@ -420,7 +420,7 @@ Content-Type: application/json`
           <a
             href="/register"
             className="inline-flex items-center gap-2 px-8 py-3 rounded-lg text-base transition-all hover:opacity-90"
-            style={{ background: '#00e040', color: '#fff', fontWeight: 510, textDecoration: 'none' }}
+            style={{ background: '#4338CA', color: '#fff', fontWeight: 510, textDecoration: 'none' }}
           >
             {lang === 'zh' ? '免费开始' : 'Get Started Free'} <ArrowRight size={18} />
           </a>

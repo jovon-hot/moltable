@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     description:
       '2026年3月 arXiv 论文提出多锚点身份理论：五个锚点维持 AI Agent 持续身份。Moltable 三层架构完整实现了这一理论。',
     url: 'https://www.moltable.ai/blog/agent-persistent-identity-research',
-    siteName: 'Moltable',
+    siteName: 'Moltable.ai',
     type: 'article',
     publishedTime: '2026-08-04',
     images: [
@@ -58,7 +58,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             author: { '@type': 'Organization', name: 'Moltable' },
             publisher: {
               '@type': 'Organization',
-              name: 'Moltable',
+              name: 'Moltable.ai',
               logo: { '@type': 'ImageObject', url: 'https://www.moltable.ai/logo.svg' },
             },
             mainEntityOfPage: { '@type': 'WebPage', '@id': 'https://www.moltable.ai/blog/agent-persistent-identity-research' },

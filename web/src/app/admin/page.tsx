@@ -96,7 +96,7 @@ export default function AdminDashboard() {
 
   if (!loggedIn) {
     return (
-      <div className="min-h-screen px-6 py-24 max-w-md mx-auto" style={{ background: '#111111', color: '#ffffff' }}>
+      <div className="min-h-screen px-6 py-24 max-w-md mx-auto" style={{ background: '#0D0D14', color: '#ffffff' }}>
         <h1 className="text-2xl mb-6" style={{ fontWeight: 590 }}>Admin</h1>
         <p className="text-sm mb-4" style={{ color: '#888888' }}>
           Login with your admin account.
@@ -107,7 +107,7 @@ export default function AdminDashboard() {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Email"
           className="w-full px-4 py-2.5 rounded-lg text-sm mb-3"
-          style={{ background: '#16161a', border: '1px solid rgba(255,255,255,0.08)', color: '#ffffff' }}
+          style={{ background: '#14141E', border: '1px solid rgba(255,255,255,0.08)', color: '#ffffff' }}
         />
         <input
           type="password"
@@ -116,13 +116,13 @@ export default function AdminDashboard() {
           onKeyDown={(e) => e.key === 'Enter' && login()}
           placeholder="Password"
           className="w-full px-4 py-2.5 rounded-lg text-sm mb-3"
-          style={{ background: '#16161a', border: '1px solid rgba(255,255,255,0.08)', color: '#ffffff' }}
+          style={{ background: '#14141E', border: '1px solid rgba(255,255,255,0.08)', color: '#ffffff' }}
         />
         <button
           onClick={login}
           disabled={loading || !email || !password}
           className="w-full px-4 py-2.5 rounded-lg text-sm font-medium transition-all"
-          style={{ background: '#00e040', color: '#fff', opacity: loading ? 0.6 : 1 }}
+          style={{ background: '#4338CA', color: '#fff', opacity: loading ? 0.6 : 1 }}
         >
           {loading ? '...' : 'Login'}
         </button>
@@ -140,7 +140,7 @@ export default function AdminDashboard() {
   ]
 
   return (
-    <div className="min-h-screen px-6 py-20 max-w-6xl mx-auto" style={{ background: '#111111', color: '#ffffff' }}>
+    <div className="min-h-screen px-6 py-20 max-w-6xl mx-auto" style={{ background: '#0D0D14', color: '#ffffff' }}>
       <div className="flex items-center justify-between mb-10">
         <div>
           <h1 className="text-2xl mb-1" style={{ fontWeight: 590 }}>Admin Dashboard</h1>
@@ -157,8 +157,8 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
         {cards.map((c, i) => (
-          <div key={i} className="p-5 rounded-lg" style={{ background: '#16161a' }}>
-            <c.icon size={18} style={{ color: '#00e040', marginBottom: 8 }} />
+          <div key={i} className="p-5 rounded-lg" style={{ background: '#14141E' }}>
+            <c.icon size={18} style={{ color: '#4338CA', marginBottom: 8 }} />
             <p className="text-3xl mb-1" style={{ fontWeight: 590 }}>{c.value}</p>
             <p className="text-xs" style={{ color: '#888888' }}>{c.label}</p>
             <p className="text-xs mt-1" style={{ color: '#5a5f68' }}>{c.sub}</p>
@@ -184,7 +184,7 @@ export default function AdminDashboard() {
                   <span
                     className="px-2 py-0.5 rounded-full text-xs"
                     style={{
-                      background: u.plan === 'pro' ? 'rgba(0,224,64,0.15)' : 'rgba(255,255,255,0.06)',
+                      background: u.plan === 'pro' ? 'rgba(67,56,202,0.15)' : 'rgba(255,255,255,0.06)',
                       color: u.plan === 'pro' ? '#9d9cff' : '#888888',
                     }}
                   >

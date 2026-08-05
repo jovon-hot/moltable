@@ -38,7 +38,7 @@ export default function ArticlePage() {
 
       <table className="w-full text-xs my-6 border-collapse">
         <thead>
-          <tr style={{ background: 'rgba(0,224,64,0.12)' }}>
+          <tr style={{ background: 'rgba(67,56,202,0.12)' }}>
             <th className="p-3 text-left font-medium">论文锚点</th>
             <th className="p-3 text-left font-medium">Moltable 实现</th>
             <th className="p-3 text-left font-medium">对应工具</th>

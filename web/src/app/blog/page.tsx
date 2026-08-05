@@ -180,7 +180,7 @@ export default function BlogPage() {
                     <span
                       key={tag}
                       className="text-[11px] px-2 py-0.5 rounded-pill font-ui"
-                      style={{ background: 'rgba(0,224,64,0.12)', color: '#00c030' }}
+                      style={{ background: 'rgba(67,56,202,0.12)', color: '#3730A3' }}
                     >
                       {tag}
                     </span>

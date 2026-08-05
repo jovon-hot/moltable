@@ -15,7 +15,7 @@ const comparisonData = {
     overview: {
       title: '平台概览',
       moltable: {
-        name: 'Moltable',
+        name: 'Moltable.ai',
         positioning: 'AI Identity Layer — 跨平台身份同步',
         founded: '2026',
         license: 'MIT',
@@ -138,7 +138,7 @@ const comparisonData = {
     overview: {
       title: 'Platform Overview',
       moltable: {
-        name: 'Moltable',
+        name: 'Moltable.ai',
         positioning: 'AI Identity Layer — Cross-platform identity sync',
         founded: '2026',
         license: 'MIT',
@@ -262,8 +262,8 @@ export default function ComparePage() {
       {/* Hero */}
       <section className="max-w-4xl mx-auto px-6 pt-28 pb-12 text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs mb-6"
-          style={{ background: 'rgba(0,224,64,0.1)', color: '#9d9cff' }}>
-          <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#00e040' }} />
+          style={{ background: 'rgba(67,56,202,0.1)', color: '#9d9cff' }}>
+          <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#4338CA' }} />
           {lang === 'en' ? 'Comprehensive Comparison' : '全面对比'}
         </div>
         <h1 className="text-3xl md:text-4xl font-heading tracking-[-0.4px] mb-4 font-bold">
@@ -287,12 +287,12 @@ export default function ComparePage() {
               <div key={key} className="p-6 rounded-card bg-ln-panel relative"
                 style={{
                   boxShadow: isMoltable
-                    ? '0 0 0 1px #00e040, 0 4px 24px rgba(0,224,64,0.12)'
+                    ? '0 0 0 1px #4338CA, 0 4px 24px rgba(67,56,202,0.12)'
                     : '0 0 0 1px rgba(255,255,255,0.06)',
                 }}>
                 {isMoltable && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-xs font-medium"
-                    style={{ background: '#00e040', color: '#fff' }}>
+                    style={{ background: '#4338CA', color: '#fff' }}>
                     {lang === 'en' ? 'RECOMMENDED' : '推荐'}
                   </div>
                 )}
@@ -351,7 +351,7 @@ export default function ComparePage() {
             const isMoltable = key === 'moltable'
             return (
               <div key={key} className="p-6 rounded-card bg-ln-panel"
-                style={{ boxShadow: isMoltable ? '0 0 0 1px #00e040' : '0 0 0 1px rgba(255,255,255,0.06)' }}>
+                style={{ boxShadow: isMoltable ? '0 0 0 1px #4338CA' : '0 0 0 1px rgba(255,255,255,0.06)' }}>
                 <h3 className="text-base font-heading mb-3 font-semibold" style={isMoltable ? { color: '#9d9cff' } : {}}>
                   {d.overview[key].name}
                 </h3>
@@ -408,7 +408,7 @@ export default function ComparePage() {
             const items = d.strengths[key]
             return (
               <div key={key} className="p-6 rounded-card bg-ln-panel"
-                style={{ boxShadow: isMoltable ? '0 0 0 1px #00e040' : '0 0 0 1px rgba(255,255,255,0.06)' }}>
+                style={{ boxShadow: isMoltable ? '0 0 0 1px #4338CA' : '0 0 0 1px rgba(255,255,255,0.06)' }}>
                 <h3 className="text-base font-heading mb-4 font-semibold" style={isMoltable ? { color: '#9d9cff' } : {}}>
                   {d.overview[key].name}
                 </h3>
@@ -435,7 +435,7 @@ export default function ComparePage() {
             const items = d.usecases[key]
             return (
               <div key={key} className="p-6 rounded-card bg-ln-panel"
-                style={{ boxShadow: isMoltable ? '0 0 0 1px #00e040' : '0 0 0 1px rgba(255,255,255,0.06)' }}>
+                style={{ boxShadow: isMoltable ? '0 0 0 1px #4338CA' : '0 0 0 1px rgba(255,255,255,0.06)' }}>
                 <h3 className="text-base font-heading mb-4 font-semibold" style={isMoltable ? { color: '#9d9cff' } : {}}>
                   {d.overview[key].name}
                 </h3>
@@ -456,12 +456,12 @@ export default function ComparePage() {
       {/* Verdict */}
       <section className="max-w-3xl mx-auto px-6 pb-12">
         <h2 className="text-xl font-heading mb-6 text-center font-semibold">{d.verdict.title}</h2>
-        <div className="p-6 rounded-card bg-ln-panel" style={{ boxShadow: '0 0 0 1px rgba(0,224,64,0.3)' }}>
+        <div className="p-6 rounded-card bg-ln-panel" style={{ boxShadow: '0 0 0 1px rgba(67,56,202,0.3)' }}>
           <ul className="space-y-3">
             {d.verdict.lines.map((line, i) => (
               <li key={i} className="flex items-start gap-3 text-sm text-ln-secondary">
                 <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0 mt-0.5 font-bold"
-                  style={{ background: 'rgba(0,224,64,0.15)', color: '#00e040' }}>{i + 1}</span>
+                  style={{ background: 'rgba(67,56,202,0.15)', color: '#4338CA' }}>{i + 1}</span>
                 {line}
               </li>
             ))}
@@ -473,7 +473,7 @@ export default function ComparePage() {
       <section className="max-w-3xl mx-auto px-6 pb-16 text-center">
         <Link href="/register"
           className="inline-flex items-center gap-2 px-8 py-3 rounded-lg text-base font-medium transition-all hover:opacity-90"
-          style={{ background: '#00e040', color: '#fff' }}>
+          style={{ background: '#4338CA', color: '#fff' }}>
           {d.cta} <ArrowRight size={18} />
         </Link>
         <p className="text-xs text-ln-tertiary mt-4">{d.footer}</p>

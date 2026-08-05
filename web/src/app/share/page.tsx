@@ -60,18 +60,18 @@ function ShareCard() {
 
     // Background
     const bg = ctx.createLinearGradient(0, 0, 1200, 630)
-    bg.addColorStop(0, '#111111')
-    bg.addColorStop(1, '#16161a')
+    bg.addColorStop(0, '#0D0D14')
+    bg.addColorStop(1, '#14141E')
     ctx.fillStyle = bg
     ctx.fillRect(0, 0, 1200, 630)
 
     // Green accent border
-    ctx.strokeStyle = '#00e040'
+    ctx.strokeStyle = '#4338CA'
     ctx.lineWidth = 3
     ctx.strokeRect(20, 20, 1160, 590)
 
     // Logo area
-    ctx.fillStyle = '#00e040'
+    ctx.fillStyle = '#4338CA'
     ctx.font = 'bold 48px Geist, system-ui, sans-serif'
     ctx.fillText('Moltable', 80, 120)
 
@@ -99,9 +99,9 @@ function ShareCard() {
       const y = startY
 
       // Box
-      ctx.fillStyle = 'rgba(0,224,64,0.08)'
+      ctx.fillStyle = 'rgba(67,56,202,0.08)'
       ctx.fillRect(x, y, boxW, boxH)
-      ctx.strokeStyle = 'rgba(0,224,64,0.2)'
+      ctx.strokeStyle = 'rgba(67,56,202,0.2)'
       ctx.lineWidth = 1
       ctx.strokeRect(x, y, boxW, boxH)
 
@@ -148,14 +148,14 @@ function ShareCard() {
 
   if (!key) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#111111', color: '#ffffff' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0D0D14', color: '#ffffff' }}>
         <p style={{ color: '#888888' }}>{lang === 'zh' ? '需要 API Key 才能生成分享卡片' : 'API Key required to generate share card'}</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#111111', color: '#ffffff' }}>
+    <div className="min-h-screen" style={{ background: '#0D0D14', color: '#ffffff' }}>
       <div className="max-w-2xl mx-auto px-6 pt-20 pb-24">
         <h1 className="text-2xl mb-2" style={{ fontWeight: 590 }}>
           {lang === 'zh' ? '🔥 分享你的 Moltable' : '🔥 Share Your Moltable'}
@@ -172,7 +172,7 @@ function ShareCard() {
         ) : (
           <>
             {/* Share preview card */}
-            <div className="mb-8 p-6 rounded-xl" style={{ background: '#16161a', boxShadow: '0 0 0 1px rgba(255,255,255,0.06)' }}>
+            <div className="mb-8 p-6 rounded-xl" style={{ background: '#14141E', boxShadow: '0 0 0 1px rgba(255,255,255,0.06)' }}>
               <div className="grid grid-cols-4 gap-4 mb-6">
                 {[
                   { label: lang === 'zh' ? '记忆' : 'Memories', value: stats.memories },
@@ -180,14 +180,14 @@ function ShareCard() {
                   { label: lang === 'zh' ? 'Agent' : 'Agents', value: stats.agents },
                   { label: lang === 'zh' ? '项目' : 'Projects', value: stats.projects },
                 ].map((s, i) => (
-                  <div key={i} className="text-center p-3 rounded-lg" style={{ background: 'rgba(0,224,64,0.06)' }}>
-                    <div className="text-lg mb-1" style={{ fontWeight: 590, color: '#00e040' }}>{s.value}</div>
+                  <div key={i} className="text-center p-3 rounded-lg" style={{ background: 'rgba(67,56,202,0.06)' }}>
+                    <div className="text-lg mb-1" style={{ fontWeight: 590, color: '#4338CA' }}>{s.value}</div>
                     <div className="text-xs" style={{ color: '#888888' }}>{s.label}</div>
                   </div>
                 ))}
               </div>
 
-              <div className="p-4 rounded-lg text-sm font-mono" style={{ background: '#111111', color: '#cccccc', lineHeight: 1.6 }}>
+              <div className="p-4 rounded-lg text-sm font-mono" style={{ background: '#0D0D14', color: '#cccccc', lineHeight: 1.6 }}>
                 {shareText.split('\n').map((line, i) => (
                   <div key={i}>{line}</div>
                 ))}
@@ -198,7 +198,7 @@ function ShareCard() {
             <div className="flex flex-wrap gap-3">
               <button onClick={handleCopy}
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm transition-all"
-                style={{ background: copied ? '#34d399' : '#00e040', color: '#fff', fontWeight: 510 }}>
+                style={{ background: copied ? '#34d399' : '#4338CA', color: '#fff', fontWeight: 510 }}>
                 {copied ? <Check size={16} /> : <Copy size={16} />}
                 {copied ? (lang === 'zh' ? '已复制' : 'Copied') : (lang === 'zh' ? '复制文案' : 'Copy Text')}
               </button>
@@ -222,7 +222,7 @@ function ShareCard() {
                 <img ref={imgRef} src={imageUrl} alt="Share card" className="w-full rounded-lg" style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.5)' }} />
                 <button onClick={handleDownload}
                   className="mt-4 w-full py-2.5 rounded-lg text-sm transition-all"
-                  style={{ background: '#00e040', color: '#fff', fontWeight: 510 }}>
+                  style={{ background: '#4338CA', color: '#fff', fontWeight: 510 }}>
                   <Download size={16} className="inline mr-2" />
                   {lang === 'zh' ? '下载图片' : 'Download Image'}
                 </button>

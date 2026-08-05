@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     description:
       '换一台新 Mac，AI 全部失忆了？本文手把手教你用 Moltable 在 3 分钟内恢复完整 AI 工作环境。含 Claude、Cursor、Codex 多 Agent 同步方案。',
     url: 'https://www.moltable.ai/blog/three-minute-env-recovery',
-    siteName: 'Moltable',
+    siteName: 'Moltable.ai',
     type: 'article',
     publishedTime: '2026-08-04',
     images: [
@@ -58,7 +58,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             author: { '@type': 'Organization', name: 'Moltable' },
             publisher: {
               '@type': 'Organization',
-              name: 'Moltable',
+              name: 'Moltable.ai',
               logo: { '@type': 'ImageObject', url: 'https://www.moltable.ai/logo.svg' },
             },
             mainEntityOfPage: { '@type': 'WebPage', '@id': 'https://www.moltable.ai/blog/three-minute-env-recovery' },

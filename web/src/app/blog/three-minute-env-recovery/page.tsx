@@ -17,7 +17,7 @@ export default function ArticlePage() {
 
       <table className="w-full text-xs my-6 border-collapse">
         <thead>
-          <tr style={{ background: 'rgba(0,224,64,0.12)' }}>
+          <tr style={{ background: 'rgba(67,56,202,0.12)' }}>
             <th className="p-3 text-left font-medium">恢复项</th>
             <th className="p-3 text-left font-medium">具体内容</th>
             <th className="p-3 text-left font-medium">无 Moltable 的替代方案</th>

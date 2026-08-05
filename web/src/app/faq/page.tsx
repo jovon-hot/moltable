@@ -53,7 +53,7 @@ export default function FAQPage() {
   return (
     <div
       className="min-h-screen px-6 py-24 max-w-3xl mx-auto"
-      style={{ background: '#111111', color: '#ffffff' }}
+      style={{ background: '#0D0D14', color: '#ffffff' }}
     >
       <h1 className="text-2xl mb-4" style={{ fontWeight: 590 }}>
         常见问题
@@ -67,11 +67,11 @@ export default function FAQPage() {
           <div
             key={i}
             className="p-5 rounded-lg"
-            style={{ background: '#16161a' }}
+            style={{ background: '#14141E' }}
           >
             <h2
               className="text-base mb-2"
-              style={{ fontWeight: 590, color: '#00e040' }}
+              style={{ fontWeight: 590, color: '#4338CA' }}
             >
               {faq.q}
             </h2>

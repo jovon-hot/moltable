@@ -24,13 +24,13 @@ export function useToast() {
 let toastId = 0
 
 const iconMap: Record<ToastType, React.ReactNode> = {
-  success: <CheckCircle size={16} style={{ color: '#00e040' }} />,
+  success: <CheckCircle size={16} style={{ color: '#4338CA' }} />,
   error: <AlertCircle size={16} style={{ color: '#f87171' }} />,
   info: <Info size={16} style={{ color: '#d0d6e0' }} />,
 }
 
 const borderColorMap: Record<ToastType, string> = {
-  success: '#00e040',
+  success: '#4338CA',
   error: '#f87171',
   info: '#d0d6e0',
 }

@@ -7,8 +7,8 @@ import PublicShell from '@/components/PublicShell'
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.moltable.ai'),
   title: {
-    default: 'Moltable — AI Identity Sync: One Registration, Every AI Knows You',
-    template: '%s | Moltable',
+    default: 'Moltable.ai — AI Identity Sync: One Registration, Every AI Knows You',
+    template: '%s | Moltable.ai',
   },
   description:
     'Cross-platform AI identity sync. Restore your full AI environment in 3 minutes. Supports Hermes, Claude, ChatGPT, Cursor. 90-day free trial.',
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     description:
       'Cross-platform AI identity sync. Restore your full AI environment in 3 minutes. Hermes · Claude · ChatGPT · Cursor.',
     url: 'https://www.moltable.ai',
-    siteName: 'Moltable',
+    siteName: 'Moltable.ai',
     locale: 'en_US',
     type: 'website',
     images: [
@@ -64,7 +64,7 @@ const jsonLd = {
   '@graph': [
     {
       '@type': 'Organization',
-      name: 'Moltable',
+      name: 'Moltable.ai',
       url: 'https://www.moltable.ai',
       logo: 'https://www.moltable.ai/logo-icon.svg',
       sameAs: ['https://github.com/moltable'],
@@ -73,7 +73,7 @@ const jsonLd = {
     },
     {
       '@type': 'SoftwareApplication',
-      name: 'Moltable',
+      name: 'Moltable.ai',
       applicationCategory: 'AIApplication',
       operatingSystem: 'Web',
       offers: {

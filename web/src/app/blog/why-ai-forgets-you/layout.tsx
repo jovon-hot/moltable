@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     description:
       '你的 AI 每天像第一次见你？本文剖析 AI「失忆」的五个根因，并给出 Moltable 的三层身份架构解决方案——一次配置，所有 Agent 共享。',
     url: 'https://www.moltable.ai/blog/why-ai-forgets-you',
-    siteName: 'Moltable',
+    siteName: 'Moltable.ai',
     type: 'article',
     publishedTime: '2026-08-05',
     images: [
@@ -60,7 +60,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             author: { '@type': 'Organization', name: 'Moltable' },
             publisher: {
               '@type': 'Organization',
-              name: 'Moltable',
+              name: 'Moltable.ai',
               logo: { '@type': 'ImageObject', url: 'https://www.moltable.ai/logo.svg' },
             },
             mainEntityOfPage: { '@type': 'WebPage', '@id': 'https://www.moltable.ai/blog/why-ai-forgets-you' },

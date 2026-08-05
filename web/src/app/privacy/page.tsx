@@ -6,7 +6,7 @@ export default function PrivacyPage() {
   const { lang } = useLang()
 
   return (
-    <div className="min-h-screen px-6 py-24 max-w-3xl mx-auto" style={{ background: '#111111', color: '#ffffff' }}>
+    <div className="min-h-screen px-6 py-24 max-w-3xl mx-auto" style={{ background: '#0D0D14', color: '#ffffff' }}>
       <h1 className="text-2xl mb-8" style={{ fontWeight: 590 }}>
         {lang === 'zh' ? '隐私政策' : 'Privacy Policy'}
       </h1>

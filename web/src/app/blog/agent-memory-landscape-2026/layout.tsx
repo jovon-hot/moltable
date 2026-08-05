@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     description:
       '2026年主流AI Agent记忆系统横向对比。mem0、Zep、Moltable 功能/架构/定价全维度分析。',
     url: 'https://www.moltable.ai/blog/agent-memory-landscape-2026',
-    siteName: 'Moltable',
+    siteName: 'Moltable.ai',
     type: 'article',
     publishedTime: '2026-07-10',
     images: [
@@ -57,7 +57,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             author: { '@type': 'Organization', name: 'Moltable' },
             publisher: {
               '@type': 'Organization',
-              name: 'Moltable',
+              name: 'Moltable.ai',
               logo: { '@type': 'ImageObject', url: 'https://www.moltable.ai/logo.svg' },
             },
             mainEntityOfPage: { '@type': 'WebPage', '@id': 'https://www.moltable.ai/blog/agent-memory-landscape-2026' },

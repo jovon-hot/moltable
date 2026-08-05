@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     description:
       '从架构、功能、定价、生态、开源五个维度全面对比三大平台。含详细功能对比表、架构分析、定价对比和选型建议。',
     url: 'https://www.moltable.ai/compare',
-    siteName: 'Moltable',
+    siteName: 'Moltable.ai',
     locale: 'zh_CN',
     type: 'article',
     images: [

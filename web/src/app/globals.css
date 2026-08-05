@@ -3,33 +3,38 @@
 @tailwind utilities;
 
 :root {
-  /* Surface - Moltable Deep */
-  --color-bg: #111111;
-  --color-surface: #16161a;
-  --color-raised: #1a1a1e;
-  
-  /* Text */
-  --color-text: #ffffff;
-  --color-secondary: #cccccc;
-  --color-tertiary: #888888;
-  --color-quaternary: #555555;
+  /* Moltable Indigo + Coral */
+  --color-bg: #0D0D14;
+  --color-surface: #14141E;
+  --color-raised: #1A1A26;
 
-  /* Accent - Moltable Green */
-  --color-accent: #00e040;
-  --color-accent-hover: #00c030;
-  --color-accent-glow: rgba(0, 224, 64, 0.12);
+  /* Text */
+  --color-text: #F5F4F8;
+  --color-secondary: #A8A5B8;
+  --color-tertiary: #85829E;
+
+  /* Accent — Indigo */
+  --color-accent: #4338CA;
+  --color-accent-hover: #3730A3;
+  --color-accent-glow: rgba(99,102,241,0.12);
+
+  /* Accent — Coral (warm emphasis) */
+  --color-warm: #FB6B4B;
+  --color-warm-hover: #E85A3A;
+  --color-warm-glow: rgba(251,107,75,0.1);
 
   /* Borders */
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-border-subtle: rgba(255, 255, 255, 0.05);
+  --color-border: rgba(255,255,255,0.08);
+  --color-border-subtle: rgba(255,255,255,0.05);
+  --color-border-glow: rgba(99,102,241,0.15);
 
   /* Interactive */
-  --color-btn-bg: rgba(255, 255, 255, 0.04);
-  --color-hover: rgba(255, 255, 255, 0.06);
+  --color-btn-bg: rgba(255,255,255,0.04);
+  --color-hover: rgba(255,255,255,0.06);
 
   /* Radii */
   --radius-btn: 8px;
-  --radius-card: 10px;
+  --radius-card: 12px;
   --radius-panel: 14px;
 
   /* Typography */
@@ -40,22 +45,16 @@
 }
 
 body {
-  background: #111111;
-  color: #ffffff;
+  background: #0D0D14;
+  color: #F5F4F8;
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 @keyframes slide-in-from-right {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
 }
 
 @keyframes fade-in {
@@ -64,8 +63,8 @@ body {
 }
 
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 20px rgba(0, 224, 64, 0.08); }
-  50% { box-shadow: 0 0 40px rgba(0, 224, 64, 0.18); }
+  0%, 100% { box-shadow: 0 0 20px rgba(99,102,241,0.06); }
+  50% { box-shadow: 0 0 50px rgba(99,102,241,0.12); }
 }
 
 .animate-in {
@@ -77,13 +76,13 @@ body {
 }
 
 .glow-pulse {
-  animation: glow-pulse 3s ease-in-out infinite;
+  animation: glow-pulse 4s ease-in-out infinite;
 }
 
 @layer base {
   *:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px #00e040, 0 0 0 4px #111111;
+    box-shadow: 0 0 0 2px #4338CA, 0 0 0 4px #0D0D14;
     border-radius: 2px;
   }
 }

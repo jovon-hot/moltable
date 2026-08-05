@@ -10,7 +10,7 @@ interface ApiKey { id: string; name: string; key_prefix: string; created_at: str
 interface UsageStats { memories: { used: number; limit: number }; personas: { used: number; limit: number }; agents: { used: number; limit: number }; identities: { used: number; limit: number }; api_keys: { used: number; limit: number } }
 interface UserProfile { id: string; email: string; name: string; plan: string; plan_name: string; created_at: string; usage?: { plan: string; plan_name: string; usage: UsageStats } }
 
-const PLAN_COLORS: Record<string, string> = { free: '#888888', pro: '#00e040', team: '#22c55e' }
+const PLAN_COLORS: Record<string, string> = { free: '#888888', pro: '#4338CA', team: '#22c55e' }
 
 export default function SettingsPage() {
   const { toast } = useToast()
@@ -87,7 +87,7 @@ export default function SettingsPage() {
   }
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-[60vh]"><Loader2 className="w-6 h-6 animate-spin" style={{ color: '#00e040' }} /></div>
+    return <div className="flex items-center justify-center min-h-[60vh]"><Loader2 className="w-6 h-6 animate-spin" style={{ color: '#4338CA' }} /></div>
   }
 
   const usage: UsageStats = user?.usage?.usage || { memories: { used: 0, limit: 100 }, personas: { used: 0, limit: 2 }, agents: { used: 0, limit: 1 }, identities: { used: 1, limit: 1 }, api_keys: { used: 0, limit: 10 } }
@@ -107,7 +107,7 @@ export default function SettingsPage() {
         ].map(tab => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id as any)}
             className="pb-3 text-sm font-medium transition-all border-b-2"
-            style={{ color: activeTab === tab.id ? '#ffffff' : '#888888', borderColor: activeTab === tab.id ? '#00e040' : 'transparent', fontWeight: activeTab === tab.id ? 590 : 400 }}>
+            style={{ color: activeTab === tab.id ? '#ffffff' : '#888888', borderColor: activeTab === tab.id ? '#4338CA' : 'transparent', fontWeight: activeTab === tab.id ? 590 : 400 }}>
             {tab.label}
           </button>
         ))}
@@ -115,7 +115,7 @@ export default function SettingsPage() {
 
       {activeTab === 'profile' && (
         <>
-          <div className="p-5 rounded-[8px] mb-6" style={{ background: '#16161a', boxShadow: '0 0 0 1px rgba(255,255,255,0.06)' }}>
+          <div className="p-5 rounded-[8px] mb-6" style={{ background: '#14141E', boxShadow: '0 0 0 1px rgba(255,255,255,0.06)' }}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: `${planColor}20` }}>
@@ -129,7 +129,7 @@ export default function SettingsPage() {
               {isFree && (
                 <button onClick={handleUpgrade} disabled={upgrading}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-[6px] text-xs font-medium transition-all hover:opacity-90"
-                  style={{ background: '#00e040', color: '#fff', fontWeight: 510 }}>
+                  style={{ background: '#4338CA', color: '#fff', fontWeight: 510 }}>
                   <ArrowUp size={14} /> {upgrading ? d.upgrading : d.upgradePro}
                 </button>
               )}
@@ -143,20 +143,20 @@ export default function SettingsPage() {
           </div>
 
           {isFree && (
-            <div className="p-5 rounded-[8px] mb-6" style={{ background: 'rgba(0,224,64,0.04)', boxShadow: '0 0 0 1px rgba(0,224,64,0.15)' }}>
-              <h3 className="text-sm mb-3" style={{ fontWeight: 590, color: '#00e040' }}>{d.proUnlock}</h3>
+            <div className="p-5 rounded-[8px] mb-6" style={{ background: 'rgba(67,56,202,0.04)', boxShadow: '0 0 0 1px rgba(67,56,202,0.15)' }}>
+              <h3 className="text-sm mb-3" style={{ fontWeight: 590, color: '#4338CA' }}>{d.proUnlock}</h3>
               <div className="grid grid-cols-2 gap-2 text-xs" style={{ color: '#cccccc' }}>
-                {proFeatures.map((f: string, i: number) => (<div key={i} className="flex items-center gap-2"><Check size={12} style={{ color: '#00e040' }} />{f}</div>))}
+                {proFeatures.map((f: string, i: number) => (<div key={i} className="flex items-center gap-2"><Check size={12} style={{ color: '#4338CA' }} />{f}</div>))}
               </div>
               <button onClick={handleUpgrade} disabled={upgrading}
                 className="w-full mt-4 py-2 rounded-[6px] text-sm font-medium transition-all hover:opacity-90"
-                style={{ background: '#00e040', color: '#fff', fontWeight: 510 }}>
+                style={{ background: '#4338CA', color: '#fff', fontWeight: 510 }}>
                 {upgrading ? d.upgrading : d.y149year}
               </button>
             </div>
           )}
 
-          <div className="p-5 rounded-[8px]" style={{ background: '#16161a', boxShadow: '0 0 0 1px rgba(255,255,255,0.06)' }}>
+          <div className="p-5 rounded-[8px]" style={{ background: '#14141E', boxShadow: '0 0 0 1px rgba(255,255,255,0.06)' }}>
             <h3 className="text-sm mb-4" style={{ fontWeight: 590, color: '#ffffff' }}>{d.basicInfo}</h3>
             <div className="space-y-3 text-sm">
               <div className="flex justify-between"><span style={{ color: '#888888' }}>{d.email}</span><span style={{ color: '#ffffff' }}>{user?.email || '—'}</span></div>
@@ -173,7 +173,7 @@ export default function SettingsPage() {
             <h2 className="text-sm" style={{ fontWeight: 590, color: '#ffffff' }}>API {lang === 'zh' ? '密钥' : 'Keys'}</h2>
             <button onClick={handleCreateKey} disabled={creating || isDemo}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] text-xs font-medium transition-all hover:opacity-90 disabled:opacity-50"
-              style={{ background: '#00e040', color: '#fff', fontWeight: 510 }}>
+              style={{ background: '#4338CA', color: '#fff', fontWeight: 510 }}>
               <Plus size={14} /> {d.createKey}
             </button>
           </div>
@@ -193,7 +193,7 @@ export default function SettingsPage() {
           ) : (
             <div className="space-y-2">
               {apiKeys.map(key => (
-                <div key={key.id} className="flex items-center justify-between p-3 rounded-[6px]" style={{ background: '#16161a', boxShadow: '0 0 0 1px rgba(255,255,255,0.06)' }}>
+                <div key={key.id} className="flex items-center justify-between p-3 rounded-[6px]" style={{ background: '#14141E', boxShadow: '0 0 0 1px rgba(255,255,255,0.06)' }}>
                   <div>
                     <p className="text-sm" style={{ fontWeight: 510, color: '#ffffff' }}>{key.name}</p>
                     <p className="text-xs mt-0.5" style={{ color: '#888888', fontFamily: 'monospace' }}>{key.key_prefix}*** · {key.created_at?.split('T')[0] || '—'}</p>
@@ -215,7 +215,7 @@ export default function SettingsPage() {
             {d.syncCodeTitle || (lang === 'zh' ? '换电脑 / 换 Agent' : 'Switch Device / Agent')}
           </h2>
 
-          <div className="p-5 rounded-[8px] mb-4" style={{ background: '#16161a', boxShadow: '0 0 0 1px rgba(255,255,255,0.06)' }}>
+          <div className="p-5 rounded-[8px] mb-4" style={{ background: '#14141E', boxShadow: '0 0 0 1px rgba(255,255,255,0.06)' }}>
             <p className="text-xs mb-4" style={{ color: '#888888', lineHeight: 1.6 }}>
               {d.syncCodeDesc || (lang === 'zh'
                 ? '复制这段同步码，发给新 Agent，即可恢复你的全部记忆和 Persona。'
@@ -226,7 +226,7 @@ export default function SettingsPage() {
               <>
                 <div className="flex items-center gap-2 mb-3">
                   <code className="flex-1 text-sm py-2.5 px-4 rounded-[6px]" style={{
-                    background: 'rgba(0,224,64,0.08)', color: '#00e040',
+                    background: 'rgba(67,56,202,0.08)', color: '#4338CA',
                     fontFamily: 'monospace', wordBreak: 'break-all', fontWeight: 510,
                   }}>{syncCode}</code>
                   <button onClick={copySyncCode}
@@ -248,7 +248,7 @@ export default function SettingsPage() {
 
           <button onClick={generateSyncCode} disabled={syncLoading}
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-[6px] text-sm font-medium transition-all hover:opacity-90 disabled:opacity-50"
-            style={{ background: '#00e040', color: '#fff', fontWeight: 510 }}>
+            style={{ background: '#4338CA', color: '#fff', fontWeight: 510 }}>
             {syncLoading ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
             {syncCode ? (d.syncCodeRegenerate || (lang === 'zh' ? '重新生成' : 'Regenerate')) : (d.syncCodeGenerate || (lang === 'zh' ? '生成同步码' : 'Generate Sync Code'))}
           </button>
