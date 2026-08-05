@@ -175,6 +175,7 @@ from routes import (
     auth,
     billing,
     experiments,
+    knowledge,
     mcp,
     memories,
     personas,
@@ -185,6 +186,7 @@ from routes import (
 )
 
 app.include_router(memories.router)
+app.include_router(knowledge.router)
 app.include_router(provision.router)
 app.include_router(personas.router)
 app.include_router(auth.router)
