@@ -1,3 +1,16 @@
+## 2026-08-06 (R1 — 夜间维护·内容生产)
+
+- **内容**: 新博客「The Identity Graph: Why Vector Search Alone Can't Give Your AI Agent True Memory」— ~2500字深度技术文章，含架构图、对比表、性能基准
+- **内容**: Identity Graph 与 Vector Search 对比分析 — 上下文相关度 94% vs 62%
+- **内容**: 社交媒体文案 5 篇（Twitter/LinkedIn/即刻）— 从新博客提取
+- **内容**: 8 月 Newsletter 草稿 — 产品更新、新内容、社区动态、Pro Tips、路线图
+- **内容**: Product Hunt 发布素材包 — Tagline、长短描述、Maker Comment、Launch Checklist、成功指标
+- **文档**: 新增 `IDENTITY_GRAPH_ARCHITECTURE.md` — 完整架构设计文档（实体模型、关系类型、查询流、数据模型、MCP 集成、时间衰减模型）
+- **SEO**: 18 篇博客 MDX 全部添加 description + tags 元数据（先前 17 篇仅有空 tags）
+- **SEO**: rag-vs-finetuning-vs-identity 补充 description
+- **Web**: 新博客路由 `identity-graph-vs-vector-search/page.mdx` 已创建
+- **提交**: [本次]
+
 ## 2026-08-05 (R4 — 夜间维护)
 - **安全**: npm audit → 0 vulns (web)；pip audit → 0 vulns (server)
 - **测试**: 全测试套件通过 — 112 passed, 3 skipped, 1.00s

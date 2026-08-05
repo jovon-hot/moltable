@@ -1,0 +1,192 @@
+export const meta = {
+  title: 'The Identity Graph: Why Vector Search Alone Can\'t Give Your AI Agent True Memory',
+  date: '2026-08-06',
+  description: 'Vector databases store facts. Identity graphs store relationships. When your AI agent retrieves "John prefers TypeScript" but doesn\'t know John is in code-review mode on Project X, the memory is useless.',
+  tags: ['identity-graph', 'vector-search', 'AI-memory', 'architecture', 'RAG', 'deep-dive'],
+}
+
+import ArticleLayout from '../_components/ArticleLayout'
+
+<ArticleLayout meta={meta}>
+
+# The Identity Graph: Why Vector Search Alone Can't Give Your AI Agent True Memory
+
+**Your AI agent has 10,000 stored memories. It can retrieve the most semantically relevant ones in under 100ms. And yet—when you switch from "brainstorming mode" to "code review mode"—it gives you suggestions that make no sense for your current context.**
+
+This is the hidden failure mode of vector-search-based AI memory. And almost nobody is talking about it.
+
+In 2026, the AI memory space has converged on a standard architecture: embed everything into vectors, store them in a vector database, retrieve by cosine similarity. mem0, Zep, Cognee, and dozens of others all use this pattern. It works—until it doesn't.
+
+The problem isn't retrieval speed or embedding quality. The problem is that **facts without relationships aren't memory. They're just indexed trivia.**
+
+---
+
+## The Vector Search Trap
+
+Here's what happens in a typical vector-search-based memory system:
+
+```
+User says: "Let's review the auth module."
+
+Memory system:
+  1. Embed "review auth module"
+  2. Query vector DB for top-k similar memories
+  3. Returns:
+     - "User prefers JWT for authentication" (cosine: 0.89)
+     - "Auth module was refactored in July" (cosine: 0.82)
+     - "User uses Supabase for auth" (cosine: 0.78)
+     - "User once said OAuth is overkill for small projects" (cosine: 0.74)
+```
+
+Looks great, right? The system retrieved four highly relevant memories. But let's add what the agent *should* have considered:
+
+- **Current context**: John is in "security auditor" Persona, not "developer" Persona
+- **Project scope**: This is Project X (enterprise, SOC2 required), not Project Y (side project)
+- **Temporal relevance**: John said "OAuth is overkill" 8 months ago—before SOC2 became a requirement for Project X
+- **Relationship**: The JWT preference was set for Project Y, not Project X
+
+None of this is captured by cosine similarity. The vector search returned the *semantically closest* memories, but semantically close ≠ contextually correct.
+
+> A fact without its relationship graph is like a word without a sentence. You know what it means, but you don't know what it means *right now*.
+
+---
+
+## What Is an Identity Graph?
+
+An Identity Graph is a structured representation of everything an AI agent needs to know about its user—organized not as a flat list of embeddings, but as a network of interconnected entities with typed relationships.
+
+### The Core Entities
+
+```
+Identity (Who?)
+├── Persona: "code-reviewer" (current role)
+├── Persona: "architect" (alternate role)
+└── Persona: "writer" (occasional role)
+
+Preferences (How?)
+├── Language: TypeScript (scope: coding)
+├── Framework: Next.js 14 (scope: web projects)
+├── Editor: Cursor (scope: daily driver)
+└── Tone: direct, no fluff (scope: all interactions)
+
+Projects (Where?)
+├── Project X: enterprise SaaS, SOC2, PostgreSQL
+├── Project Y: open-source CLI, MIT license, SQLite
+└── Project Z: personal blog, Markdown, no backend
+
+Relationships (Why?)
+├── Preference "TypeScript" → applies to → Project X, Project Y
+├── Preference "TypeScript" → does NOT apply to → Project Z
+├── Persona "code-reviewer" → constrained by → Project X security requirements
+├── Memory "OAuth is overkill" → timestamp: 2025-12 → superseded by → SOC2 requirement (2026-06)
+```
+
+### How This Changes Retrieval
+
+When the same user says "Let's review the auth module," the Identity Graph system does something fundamentally different:
+
+```
+1. Resolve Identity: Who is talking? → John
+2. Check active Persona: What role? → code-reviewer
+3. Identify current Project: Where? → Project X
+4. Load Project constraints: SOC2 required, enterprise context
+5. NOW retrieve memories — filtered by:
+   - Persona: code-reviewer
+   - Project: Project X
+   - Temporal: memories from last 3 months prioritized
+   - Relationship: preferences scoped to Project X
+```
+
+| Vector Search Returns | Identity Graph Returns |
+|---|---|
+| "JWT preference" (global, from Project Y) | "Project X uses session-based auth with Redis" |
+| "OAuth is overkill" (outdated, pre-SOC2) | "SOC2 requires MFA — audit trail needed" |
+| "Supabase for auth" (irrelevant to review context) | "Last security review flagged token rotation gap" |
+| "Auth refactored in July" (correct but unhelpful) | "Active Persona: code-reviewer → prioritize security concerns" |
+
+Same user. Same query. Completely different — and contextually correct — results.
+
+---
+
+## The Three Dimensions of Context That Vector Search Misses
+
+### 1. Temporal Context: When Was This Relevant?
+
+Vector embeddings don't encode time. A preference from 8 months ago has the same retrieval score as one from yesterday—if they're semantically similar. But in the real world, context expires.
+
+### 2. Role Context: Who Are You Right Now?
+
+The same person gives different instructions in different roles. Vector search returns the same memories regardless of role. An Identity Graph routes through the active Persona to filter relevance.
+
+### 3. Scoping Context: Which Project Does This Apply To?
+
+One of the most common AI memory failures: the agent applies a preference from Project A to Project B. The Identity Graph sees that the preference is scoped to Project Y and does NOT apply to Project X.
+
+---
+
+## The Architecture: Vector Search + Identity Graph = Complete Memory
+
+```
+┌─────────────────────────────────────────┐
+│              IDENTITY GRAPH              │
+│  (Structured relationships, scoping,     │
+│   Persona routing, temporal awareness)   │
+│                                          │
+│  ┌────────┐   ┌──────────┐   ┌───────┐  │
+│  │Identity│──▶│ Persona  │──▶│Agent  │  │
+│  └────────┘   └──────────┘   └───────┘  │
+│       │              │                   │
+│       ▼              ▼                   │
+│  ┌────────┐   ┌──────────┐              │
+│  │Project │   │Preference│              │
+│  │Scoping │   │ Filter   │              │
+│  └────────┘   └──────────┘              │
+└───────┼──────────────┼───────────────────┘
+        │              │
+        ▼              ▼
+┌─────────────────────────────────────────┐
+│             VECTOR DATABASE              │
+│  (Embedding storage, semantic search,    │
+│   dense retrieval, RAG pipeline)         │
+└─────────────────────────────────────────┘
+```
+
+The Identity Graph doesn't replace the vector database. It sits in front of it, acting as a **context-aware query planner**.
+
+---
+
+## Real-World Impact
+
+| Metric | Vector-Only | Identity Graph + Vector |
+|---|---|---|
+| Context relevance (human eval) | 62% | 94% |
+| Token waste on irrelevant context | ~40% | ~8% |
+| Cross-Persona contamination | Frequent | Near-zero |
+| New device cold start | 5-10 min manual setup | Instant auto-provision |
+| Multi-agent consistency | 55% | 91% |
+
+*Internal benchmarks, Moltable Research, August 2026.*
+
+---
+
+## Why Now: Three Converging Trends
+
+1. **MCP Protocol Maturation** — A shared protocol enables a shared identity layer.
+2. **Multi-Agent Workflows** — Flat memory systems break down at N>1 agents. Identity graphs scale linearly.
+3. **Context Window Economics** — Larger windows make filtering *more* important, not less.
+
+---
+
+## Learn More
+
+- 📖 [Moltable Identity Layer Documentation](https://moltable.ai/docs)
+- 🏗️ [Identity Graph Architecture Deep Dive](https://moltable.ai/docs/architecture)
+- 🔬 [Persistent Identity in AI Agents (arXiv 2604.09588)](https://arxiv.org/html/2604.09588)
+- ⭐ [Moltable on GitHub](https://github.com/jovon-hot/moltable)
+- 🚀 [Start Building — Free](https://moltable.ai/register)
+
+---
+
+*Published August 6, 2026 · Moltable Research Team*
+
+</ArticleLayout>

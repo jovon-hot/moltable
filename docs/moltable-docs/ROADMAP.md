@@ -36,6 +36,14 @@
 
 ## 第二阶段：让记忆更聪明（2周内）
 
+### P2 · Identity Graph（新增核心架构）
+- [x] **Identity Graph 架构设计** — 实体模型、关系类型、查询流、数据模型已完成 (see `IDENTITY_GRAPH_ARCHITECTURE.md`)
+- [ ] **Identity Graph 后端实现** — PostgreSQL relationships 表 + Neo4j 集成（可选）
+- [ ] **Persona 路由引擎** — 根据 active Persona 自动过滤/加权记忆检索
+- [ ] **Project Scoping** — 记忆与偏好按项目作用域过滤
+- [ ] **Temporal Decay** — 记忆时间衰减权重，旧记忆自动降权
+- [ ] **Relationship Inference** — 自动推断 SUPERSEDES / CONTRADICTS 关系
+
 ### P2 · 记忆质量
 - [ ] **自动去重** — 当前 `conflict` 检测需要手动 `force=true`，改为：高相似度记忆自动合并/更新
 - [ ] **记忆衰减** — 旧记忆降低权重，基于最后访问时间和重要度
