@@ -1,3 +1,17 @@
+## 2026-08-07 (R5 — 夜间维护·增长优化·内容生产)
+
+- **增长**: 推荐系统增强 — LinkedIn 分享 + 奖励展示 + 推荐落地页 🆕
+  - 新增 LinkedIn 分享渠道（5 平台全覆盖：Twitter/LinkedIn/WhatsApp/Telegram/Email）
+  - 推荐奖励卡片 — 展示 500 记忆容量/推荐 + Super Connector 徽章 + Pro 试用
+  - 新建 `/signup` 推荐落地页 — 个性化欢迎 + 权益展示 + 社交证明 + CTA
+  - Register 页面处理 `ref` 参数，sessionStorage 存储推荐码
+- **Sitemap**: 新增 `/signup` 路由（priority 0.8）
+- **内容**: Newsletter 2026-08-07 草稿 — 时间记忆/推荐系统/内容生产/Pro Tips
+- **功能**: Smart Memory Merge — 基于相似度的自动合并（update/enrich/normal 三级策略）
+  - 227 行测试覆盖 update/enrich/normal 全流程
+  - 减少重复记忆，提升数据质量
+- **构建**: Next.js 47 静态页面，0 错误 ✅
+- **提交**: [本次] - 2 commits
 ## 2026-08-06 (R4 — 夜间维护·增长引擎·内容生产)
 
 - **增长**: Referral/Invite 推荐系统上线 — 病毒式增长引擎 🆕
