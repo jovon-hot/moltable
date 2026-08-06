@@ -9,7 +9,7 @@ const comparisonData = {
     hero: {
       title: 'AI Agent 记忆与身份平台对比 2026',
       subtitle: 'Moltable vs mem0 vs Zep — 谁才是 Agent 基础设施的最佳选择？',
-      updated: '2026-08-05',
+      updated: '2026-08-06',
     },
     intro: '随着 AI Agent 生态爆发式增长，记忆/身份基础设施赛道也进入了白热化竞争。本文从架构、功能、定价、生态、开源五个维度，对三大主流平台进行全面对比，帮助开发者和团队做出最佳技术选型。',
     overview: {
@@ -48,7 +48,9 @@ const comparisonData = {
         { feature: '语义记忆存储', moltable: true, mem0: true, zep: true },
         { feature: '向量搜索', moltable: true, mem0: true, zep: true },
         { feature: '时间衰减记忆', moltable: true, mem0: true, zep: false },
+        { feature: '时间记忆时间线', moltable: true, mem0: false, zep: true },
         { feature: '记忆去重', moltable: true, mem0: true, zep: false },
+        { feature: '记忆健康评分', moltable: true, mem0: false, zep: false },
         { feature: '图记忆 / 知识图谱', moltable: false, mem0: true, zep: true },
         { feature: 'MCP Server', moltable: true, mem0: true, zep: true },
         { feature: '多 Agent 支持', moltable: true, mem0: true, zep: true },
@@ -79,6 +81,8 @@ const comparisonData = {
         'MCP Native 设计，零配置接入主流 Agent',
         'MIT 开源 + ¥19/月亲民定价',
         '支持 DID 去中心化身份，未来可扩展至 Web3',
+        '时间记忆时间线 — 追踪事实随时间的变化，支持振荡/渐变/突变模式检测',
+        '记忆健康评分 — 四维评分（新鲜度/完整性/去重/矛盾检测）与自动清理',
       ],
       mem0: [
         '62K+ GitHub Stars，最大的 AI Memory OSS 社区',
@@ -126,13 +130,13 @@ const comparisonData = {
       ],
     },
     cta: '免费开始使用 Moltable →',
-    footer: '以上对比基于 2026-08-05 各平台公开信息。功能和定价可能随时更新，请以各平台官网为准。',
+    footer: '以上对比基于 2026-08-06 各平台公开信息。功能和定价可能随时更新，请以各平台官网为准。',
   },
   en: {
     hero: {
       title: 'AI Agent Memory & Identity Platform Comparison 2026',
       subtitle: 'Moltable vs mem0 vs Zep — Which is the best infrastructure for AI Agents?',
-      updated: '2026-08-05',
+      updated: '2026-08-06',
     },
     intro: 'As the AI Agent ecosystem explodes, the memory/identity infrastructure space is heating up. This article provides a comprehensive comparison across architecture, features, pricing, ecosystem, and open-source commitment to help you make the right technology choice.',
     overview: {
@@ -171,7 +175,9 @@ const comparisonData = {
         { feature: 'Semantic Memory Storage', moltable: true, mem0: true, zep: true },
         { feature: 'Vector Search', moltable: true, mem0: true, zep: true },
         { feature: 'Time-Decay Memory', moltable: true, mem0: true, zep: false },
+        { feature: 'Temporal Memory Timeline', moltable: true, mem0: false, zep: true },
         { feature: 'Memory Deduplication', moltable: true, mem0: true, zep: false },
+        { feature: 'Memory Health Scoring', moltable: true, mem0: false, zep: false },
         { feature: 'Graph Memory / Knowledge Graph', moltable: false, mem0: true, zep: true },
         { feature: 'MCP Server', moltable: true, mem0: true, zep: true },
         { feature: 'Multi-Agent Support', moltable: true, mem0: true, zep: true },
@@ -202,6 +208,8 @@ const comparisonData = {
         'MCP Native design, zero-config integration with major Agents',
         'MIT open-source + ¥19/mo affordable pricing',
         'DID-based decentralized identity, future-ready for Web3',
+        'Temporal Memory Timeline — track fact changes over time with oscillation/gradual/rapid change pattern detection',
+        'Memory Health Scoring — four-dimensional scoring (freshness/completeness/duplication/contradiction) with auto-cleanup',
       ],
       mem0: [
         '62K+ GitHub Stars, largest AI Memory OSS community',
@@ -249,7 +257,7 @@ const comparisonData = {
       ],
     },
     cta: 'Start Free with Moltable →',
-    footer: 'Comparison based on publicly available information as of 2026-08-05. Features and pricing may change; check each platform\'s official website.',
+    footer: 'Comparison based on publicly available information as of 2026-08-06. Features and pricing may change; check each platform\'s official website.',
   },
 }
 
