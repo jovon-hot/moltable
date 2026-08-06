@@ -13,3 +13,6 @@ build/
 .DS_Store
 supabase/.temp/
 docs/
+marketing/
+claude-code/
+benchmarks/results/
