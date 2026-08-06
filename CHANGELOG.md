@@ -1,3 +1,19 @@
+## 2026-08-07 (R7 — 夜间维护·增长基建·代码重构)
+
+- **重构**: 提取共享博客数据模块 `web/src/data/blog-posts.ts` — 消除 blog/page.tsx 与 feed.xml/route.ts 之间的元数据重复
+  - 单一数据源: 22 篇博客文章元数据统一管理
+  - 导出 `getSortedPosts()`, `getAllTags()`, `getPostsByTag()` 辅助函数
+- **功能**: 博客标签筛选系统 — 点击标签即过滤文章列表
+  - 标签显示文章计数，支持单击筛选/再次点击取消
+  - 精选文章仅在未筛选时展示
+- **增长**: 新建 `/changelog` 公开产品更新页 — SSR 渲染 CHANGELOG.md
+  - Markdown→HTML 转换保留 emoji 图标
+  - 加入 sitemap (priority 0.8) + 更新 footer 链接
+- **构建**: 50 静态页面, 0 错误, 0 警告 ✅
+- **依赖**: Next.js 15.5.22→15.5.23 (构建时自动补丁)
+- **测试**: 172 passed, 3 skipped ✅
+- **提交**: 1 commit
+
 ## 2026-08-07 (R6 — 夜间维护·构建修复·依赖升级)
 
 - **构建修复**: Next.js 15 viewport 弃用 — Metadata 中 viewport 迁移至独立 Viewport 导出 🔧
