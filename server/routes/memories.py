@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 from app_state import get_store, limiter
 from routes.auth import get_user
 from services.embedding import embed
+from typing import Optional
 
 router = APIRouter(prefix="/api/memories", tags=["memories"])
 
@@ -765,3 +766,77 @@ def memory_health_cleanup(request: Request, user_id: str = Depends(get_user)):
     result = auto_cleanup(user_id, store)
 
     return result
+
+
+# ═══════════════════════════════════════════════════════════
+#  Memory Insights — Automatic Consolidation & Patterns
+# ═══════════════════════════════════════════════════════════
+
+class GenerateInsightsRequest(BaseModel):
+    persona_id: Optional[str] = Field(None, description="Scope to a specific persona")
+    max_insights: int = Field(10, ge=1, le=50, description="Max insights to generate")
+    auto_consolidate: bool = Field(False, description="Auto-consolidate very similar clusters")
+
+
+@router.post("/insights/generate")
+@limiter.limit("10/minute")
+def generate_memory_insights(request: Request,
+                             body: GenerateInsightsRequest = GenerateInsightsRequest(),
+                             user_id: str = Depends(get_user)):
+    """Generate insights by clustering related memories and producing higher-level summaries.
+
+    Non-destructive: source memories are preserved.
+    Uses LLM (DeepSeek) when available, falls back to heuristic.
+
+    Inspired by: mem0 Dream (background consolidation), Zep Observations,
+    Cognee improve() session distillation.
+    """
+    import logging as _logging
+    _insight_logger = _logging.getLogger("moltable.insights")
+
+    from services.memory_insights import generate_insights as _gen_insights
+
+    store = get_store()
+    result = _gen_insights(
+        user_id, store,
+        persona_id=body.persona_id,
+        max_insights=body.max_insights,
+        auto_consolidate=body.auto_consolidate,
+    )
+    return result
+
+
+@router.get("/insights")
+@limiter.limit("30/minute")
+def list_memory_insights(request: Request,
+                         persona_id: Optional[str] = Query(None, description="Filter by persona"),
+                         limit: int = Query(20, ge=1, le=100),
+                         user_id: str = Depends(get_user)):
+    """List all generated insights (category=insight memories).
+
+    Insights are higher-level memory summaries auto-generated from related clusters.
+    """
+    from services.memory_insights import list_insights as _list_insights
+
+    store = get_store()
+    insights = _list_insights(
+        user_id, store,
+        persona_id=persona_id,
+        limit=limit,
+    )
+
+    return {
+        "count": len(insights),
+        "insights": [
+            {
+                "id": m.get("id", ""),
+                "content": m.get("content", "")[:300],
+                "created_at": m.get("created_at", ""),
+                "source": m.get("source", ""),
+                "tags": m.get("tags", []),
+                "persona_id": m.get("persona_id"),
+                "confidence": m.get("confidence", 0),
+            }
+            for m in insights
+        ],
+    }

@@ -1,3 +1,28 @@
+## 2026-08-07 (R8 — 夜间维护·竞品对齐·记忆洞察引擎)
+
+- **功能**: Memory Insight Engine — 自动聚类 + 洞察生成 + 模式发现 🆕
+  - `services/memory_insights.py` — 核心引擎（~450行）：余弦相似度聚类、LLM 洞察生成、关键词模式检测
+  - 三种聚类策略：merge（合并）/ summarize（提炼）/ trend（趋势识别）
+  - 非破坏性：源记忆保留，insight 以 linked memory 形式存储
+  - LLM-first 架构：DeepSeek 可用时优先使用，否则降级为启发式合并
+  - Persona-aware：支持按 Persona 范围生成洞察
+- **API**: `POST /api/memories/insights/generate` — 自动生成记忆洞察
+  - `GET /api/memories/insights` — 列出已生成的洞察
+- **竞品对齐**: 对标 mem0 Dream（后台记忆合并）+ Zep Observations（模式发现）+ Cognee improve()（会话蒸馏）
+  - mem0 Dream: 后台自动合并重复/过时记忆 → Moltable Insight Engine 聚类 + LLM 提炼
+  - Zep Observations: 从图结构发现模式 → Moltable Pattern Detection 关键词分析
+  - Cognee improve(): 会话学习蒸馏 → Moltable 聚类合并 + 链接源记忆
+- **竞品扫描**: 全面扫描 5 大竞品最新动态（2026-08-07）
+  - mem0: v2.0.0 重构（单次 ADD 提取、多信号混合检索、Dream 后台合并、跨会话身份解析）
+  - Zep: Context Lake 旗舰产品、zep-ingest 0.1.0、Observations 模式发现、S&P Global 认可
+  - Cognee: v1.4.1（improve() 会话蒸馏、真值子空间重排序、$7.5M 种子轮）
+  - LangMem: 实质上已冻结（自 2025-10 无发布，LangGraph 1.2 内化记忆功能）
+  - Letta: 重大转型至 Letta Code（全 Agent 操作系统，MemFS git 版本记忆，自修改 Mods）
+- **测试**: 新增 29 个测试（test_memory_insights.py）— 余弦相似度、聚类算法、模式检测、洞察生成、Persona 过滤
+- **全量测试**: 241 passed, 3 skipped, 0 failed ✅
+- **构建**: Web Next.js build 成功 ✅
+- **提交**: [本次]
+
 ## 2026-08-07 (R8.1 — 夜间维护·安全审计·依赖升级·测试修复)
 
 - **安全审计**: npm audit (0 vulns) ✅ + pip-audit (0 vulns) ✅
