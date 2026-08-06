@@ -205,3 +205,15 @@ CREATE TABLE IF NOT EXISTS daily_stats (
     trial_activated INTEGER DEFAULT 0,
     created_at TEXT DEFAULT (datetime('now'))
 );
+
+-- 推荐码（Referral）
+CREATE TABLE IF NOT EXISTS referrals (
+    id TEXT PRIMARY KEY,
+    referrer_id TEXT NOT NULL,
+    code TEXT UNIQUE NOT NULL,
+    referred_email TEXT,
+    status TEXT DEFAULT 'pending',
+    created_at TEXT DEFAULT (datetime('now')),
+    claimed_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_referrals_referrer ON referrals(referrer_id, status);
