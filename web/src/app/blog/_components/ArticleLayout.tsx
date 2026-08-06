@@ -21,16 +21,16 @@ function BlogJsonLd({ meta }: { meta: ArticleMeta }) {
     author: {
       '@type': 'Organization',
       name: meta.authorName || 'Moltable Team',
-      url: 'https://moltable.ai',
+      url: 'https://www.moltable.ai',
     },
     publisher: {
       '@type': 'Organization',
       name: 'Moltable',
-      url: 'https://moltable.ai',
+      url: 'https://www.moltable.ai',
     },
     mainEntityOfPage: {
       '@type': 'WebPage',
-      '@id': meta.slug ? `https://moltable.ai/blog/${meta.slug}` : 'https://moltable.ai/blog',
+      '@id': meta.slug ? `https://www.moltable.ai/blog/${meta.slug}` : 'https://www.moltable.ai/blog',
     },
     keywords: meta.tags?.join(', ') || '',
   }
