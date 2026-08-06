@@ -41,7 +41,7 @@ export default function PublicFooter() {
               </Link>
             </li>
             <li>
-              <Link href="/docs" className="text-sm font-body text-ln-tertiary hover:text-ln-secondary transition-colors duration-150">
+              <Link href="/changelog" className="text-sm font-body text-ln-tertiary hover:text-ln-secondary transition-colors duration-150">
                 {t.footer.changelog}
               </Link>
             </li>
