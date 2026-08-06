@@ -1,3 +1,13 @@
+## 2026-08-07 (R8.1 — 夜间维护·安全审计·依赖升级·测试修复)
+
+- **安全审计**: npm audit (0 vulns) ✅ + pip-audit (0 vulns) ✅
+- **依赖升级 (web)**: @supabase/supabase-js 2.45→2.112, lucide-react 1.0→1.29, @types/react 19.0→19.2, autoprefixer 10.4→10.5
+- **依赖升级 (server)**: uvicorn 0.39.0→0.52.1, pydantic_core 2.46.4→2.48.0
+- **测试修复**: test_contradiction_language_detection — Jaccard mock 相似度不足 (0.40 < 0.60 阈值)，改用固定 0.65 lambda
+- **构建验证**: Next.js build 45 pages ✅, 212 tests passed / 3 skipped ✅
+- **健康检查**: 全端点 200 OK ✅
+- **version 锁文件**: requirements.txt + requirements-railway.txt 同步 uvicorn 0.52.1
+
 ## 2026-08-07 (R8 — 夜间维护·Identity Graph 关系推理引擎)
 
 - **功能**: Relationship Inference 引擎 — 自动检测记忆间关系 🆕
