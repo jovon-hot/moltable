@@ -146,7 +146,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
           <Link href="/dashboard" className="flex items-center gap-2">
-            <img src="/logo.svg" alt="Moltable.ai" className="h-7 w-7" />
+            <img src="/logo-icon.svg" alt="Moltable.ai" className="h-7 w-7" />
             <span className="text-base font-heading tracking-[-0.3px] text-ln-text">Moltable</span>
           </Link>
         </div>

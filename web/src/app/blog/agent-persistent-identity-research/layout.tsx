@@ -59,7 +59,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             publisher: {
               '@type': 'Organization',
               name: 'Moltable.ai',
-              logo: { '@type': 'ImageObject', url: 'https://www.moltable.ai/logo.svg' },
+              logo: { '@type': 'ImageObject', url: 'https://www.moltable.ai/logo-icon.svg' },
             },
             mainEntityOfPage: { '@type': 'WebPage', '@id': 'https://www.moltable.ai/blog/agent-persistent-identity-research' },
             image: 'https://www.moltable.ai/logo-horizontal.svg',
