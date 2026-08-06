@@ -76,7 +76,7 @@ const posts = [
   },
   {
     slug: 'ai-agent-trends-2026h2',
-    date: '2026-08-08',
+    date: '2026-08-06',
     title: '2026 下半年 AI Agent 趋势：从工具到伙伴，从记忆到身份',
     titleEn: 'AI Agent Trends H2 2026: From Tools to Partners, Memory to Identity',
     excerpt: '回顾 2026 上半年 AI Agent 的关键进展，预测下半年的五大趋势——包括 Identity 层的崛起、MCP 普及、开源追赶和价格战。',
@@ -203,8 +203,11 @@ export default function BlogPage() {
         </div>
 
         {/* Featured Post */}
+        {(() => {
+          const featured = posts[0] // First post is featured
+          return (
         <Link
-          href="/blog/moltable-vs-mem0-identity-vs-memory"
+          href={`/blog/${featured.slug}`}
           className="block mb-12 p-6 rounded-card bg-ln-panel transition-all duration-200 hover:bg-ln-hover group relative overflow-hidden"
           style={{ boxShadow: '0 0 0 1px rgba(99,102,241,0.2), 0 4px 24px rgba(67,56,202,0.08)' }}
         >
@@ -213,9 +216,9 @@ export default function BlogPage() {
             {isEn ? 'FEATURED' : '精选'}
           </div>
           <div className="flex items-center gap-3 mb-3">
-            <span className="text-xs text-ln-tertiary font-ui">2026-08-05</span>
+            <span className="text-xs text-ln-tertiary font-ui">{featured.date}</span>
             <div className="flex gap-2">
-              {['对比', 'mem0', 'Identity', 'Memory'].map((tag) => (
+              {featured.tags.map((tag) => (
                 <span key={tag} className="text-[11px] px-2 py-0.5 rounded-pill font-ui"
                   style={{ background: 'rgba(251,107,75,0.12)', color: '#FB6B4B' }}>
                   {tag}
@@ -224,23 +227,20 @@ export default function BlogPage() {
             </div>
           </div>
           <h2 className="text-xl font-heading tracking-[-0.24px] mb-2 text-ln-text group-hover:text-ln-accent transition-colors">
-            {isEn
-              ? 'Moltable vs mem0: Identity Layer vs Memory Layer — The Essential Difference'
-              : 'Moltable vs mem0：AI Identity Layer 和 Memory Layer 的本质区别'}
+            {isEn && featured.titleEn ? featured.titleEn : featured.title}
           </h2>
           <p className="text-sm text-ln-secondary font-body leading-relaxed mb-4">
-            {isEn
-              ? 'Why does your AI Agent still not know you even with memory? A deep dive into the architectural philosophy, data models, and multi-agent collaboration differences between Identity Layer and Memory Layer.'
-              : '为什么你的 AI Agent 有了记忆还是不认识你？本文从架构哲学、数据模型、多 Agent 协作三个维度，深度剖析 Identity Layer 和 Memory Layer 的本质差异，帮你做出正确的技术选型。'}
+            {featured.excerpt}
           </p>
           <span className="inline-flex items-center gap-1 text-sm font-medium" style={{ color: '#6366F1' }}>
             {isEn ? 'Read the comparison →' : '阅读全文 →'}
           </span>
         </Link>
+        )})()}
 
-        {/* Articles */}
+        {/* Articles — skip the featured one */}
         <div className="space-y-8">
-          {posts.map((post) => (
+          {posts.slice(1).map((post) => (
             <Link
               key={post.slug}
               href={`/blog/${post.slug}`}
