@@ -43,6 +43,15 @@ const posts = [
     tags: ['研究', '效率', '数据', 'Identity'],
   },
   {
+    slug: 'moltable-vs-zep-temporal-memory',
+    date: '2026-08-06',
+    title: 'Moltable vs Zep：时序记忆与身份层 —— 谁赢得 Agent 记忆竞赛？',
+    titleEn: 'Moltable vs Zep: Temporal Memory & Identity — Who Wins the Agent Memory Race?',
+    excerpt:
+      'Zep 用企业级时序知识图谱定义了时序记忆赛道，Moltable 用 Temporal Memory Timeline 给出了不同答案——零 LLM 依赖的模式检测、Persona 隔离、四合一身份架构。从能力、架构、定价到适用场景，一文看懂该选谁。',
+    tags: ['对比', 'Zep', '时序记忆', 'Identity'],
+  },
+  {
     slug: 'moltable-vs-mem0-identity-vs-memory',
     date: '2026-08-05',
     title: 'Moltable vs mem0：AI Identity Layer 和 Memory Layer 的本质区别',

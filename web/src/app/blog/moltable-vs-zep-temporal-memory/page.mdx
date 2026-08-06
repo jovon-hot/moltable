@@ -1,0 +1,195 @@
+export const meta = {
+  title: 'Moltable vs Zep: Temporal Memory & Identity — Who Wins the Agent Memory Race?',
+  date: '2026-08-06',
+  description: 'Deep-dive comparison of Moltable vs Zep on temporal memory, identity layers, architecture, and pricing. Moltable pairs temporal tracking with identity sync, memory health, and persona — Zep ships an enterprise temporal knowledge graph. Who wins the agent memory race?',
+  tags: ['comparison', 'zep', 'temporal-memory', 'identity', 'agent-memory'],
+  slug: 'moltable-vs-zep-temporal-memory',
+}
+
+import ArticleLayout from '../_components/ArticleLayout'
+
+<ArticleLayout meta={meta}>
+
+**Every serious agent-memory product now claims "temporal memory" — the ability to remember *how facts change over time*, not just what the facts are today. Zep built its enterprise reputation on the temporal knowledge graph. Moltable just shipped a fact-change timeline engine of its own — and it's not a clone. It's a different bet on where agent memory is heading.**
+
+> **中文摘要**：本文深度对比 Moltable 与 Zep 的时序记忆能力。Zep 用企业级时序知识图谱（$125–375/月）追踪事实演化；Moltable 的 `temporal_tracker.py`（524 行，零 LLM 依赖）自动检测事实变更、构建实体时间线、识别震荡/渐进迁移/快速变化三种模式，并通过 6 个 API 端点开放查询。但真正的分水岭是身份层：Moltable 把 temporal + identity sync + memory health + persona 四合一，而 Zep 只做记忆。下文从能力、架构、定价、适用场景四个维度给出结论。
+
+If you've evaluated agent memory infrastructure in 2026, you've seen the same shortlist: mem0, Cognee, Letta, Zep — and Moltable. The landscape post we published in July covered all five at a high level. This piece goes deeper on the two products that care most about **time**: Zep, the enterprise incumbent whose temporal knowledge graph set the category benchmark, and Moltable, the identity-layer challenger that just answered with the Temporal Memory Timeline feature.
+
+Here's the TL;DR up front: **Zep wins if your definition of "memory" stops at facts-in-a-graph and you have an enterprise compliance budget. Moltable wins if you believe the future of agent memory is identity — that *who* the agent is talking to matters as much as *what* it remembers, and that memory should be self-healing, persona-aware, and portable across every agent you use.**
+
+---
+
+## Why temporal memory became the battleground
+
+A vector database answers "what do I know about this user?" A temporal memory system answers a harder question: **"how did what I know change, and why?"**
+
+Consider a preference memory: `"preferred_language: Python"`. Stored once, it's a fact. But users change. The developer who preferred Python in January, Go in March, and Rust by June isn't just a set of stale snapshots — they're a *trajectory*. Agents that ignore the trajectory make the same mistakes humans make with a bad roommate: they assume today's state is the only state that ever existed.
+
+Both Zep and Moltable recognize this. Their approaches, however, diverge sharply.
+
+---
+
+## Round 1: Temporal memory capabilities
+
+### Zep's temporal knowledge graph
+
+Zep's core insight: memory isn't just embeddings, it's *entities and their relationships over time*. Its temporal knowledge graph stores facts as graph nodes/edges with time-bounded validity — you can query "what did we believe about this entity last quarter?" and watch relationships evolve. It's genuinely good technology, backed by SOC 2 and HIPAA compliance, and it's why regulated industries (healthcare, finance) pay for it.
+
+But there are three gaps:
+
+1. **It's memory-only.** Zep tracks facts inside its graph, full stop. It has no identity layer, no persona scoping, no cross-agent sync.
+2. **It's closed SaaS.** No self-hosting, no MIT license, no way to own the substrate.
+3. **Benchmarks aren't reproducible.** Zep claims SOTA results but has not published reproducible comparison numbers — a meaningful red flag when you're choosing infrastructure.
+
+### Moltable's Temporal Memory Timeline
+
+Shipped on August 6, 2026, Moltable's Temporal Memory Timeline is a direct, deliberate answer to Zep's temporal knowledge graph — built with a fundamentally different philosophy: **heuristics over LLM inference, identity-first data modeling, and zero new dependencies.**
+
+The core service, `services/temporal_tracker.py` (524 lines), does three things:
+
+**1. Automatic change detection — no LLM required.** Every time a memory is saved, the pipeline runs `detect_and_record_changes()` against the existing memory store. It watches for change markers — `"switched to"`, `"now using"`, `"no longer using"`, `"upgraded to"`, `"migrated to"`, and a dozen more — then extracts the affected entity (language, framework, editor, role, project, and Chinese equivalents like 语言/框架/工具/项目), looks up the current known value, and records a `FactTransition` with a confidence score.
+
+```python
+# Simplified from services/temporal_tracker.py
+markers = ["switched to", "changed to", "now using",
+           "no longer using", "upgraded to", "migrated to", ...]
+for marker, change_type in markers:
+    if marker in content.lower():
+        entity = extract_entity(before_context)
+        record_transition(user_id, entity,
+                          old_value=lookup_current(entity),
+                          new_value=after_context)
+```
+
+Because detection is pure string heuristics, there's **zero per-memory LLM cost** — important when you're processing thousands of memories. (It also works offline: the tracker falls back to an in-memory store when Supabase isn't available, which is how the 17 new tests in `test_temporal_tracker.py` run hermetically.)
+
+**2. Pattern recognition.** Zep shows you a graph; Moltable *interprets* it. The tracker classifies each entity's transition history into four patterns:
+
+| Pattern | Detection heuristic | What it tells you |
+|---|---|---|
+| **Oscillation** (震荡) | Flip-flopping between two values, ≥3 changes, near-total alternation | The user is undecided — surface *both* options, don't commit |
+| **Gradual shift** (渐进迁移) | ≥3 changes, last two values equal but different from the first | A real migration in progress — commit to the new value, keep history |
+| **Rapid change** (快速变化) | ≥3 changes with >0.5 changes/day | Something external changed (job, team, tooling) — re-onboard, don't assume |
+| **Abandonment** | Change markers like "no longer using" | A fact died — stop recommending it entirely |
+
+That oscillation detector is worth calling out specifically. An agent that knows a user flip-flopped between two editors three times in a week behaves differently from one that only knows the latest value — it stops nagging and starts offering *comparisons* instead. That's the difference between memory and understanding.
+
+**3. Six query endpoints.** The `routes/temporal.py` router exposes the full timeline capability as a first-class API:
+
+| Endpoint | Method | Purpose |
+|---|---|---|
+| `/api/temporal/timeline/{entity}` | GET | Full fact-change history for one entity, with confidence and persona tags |
+| `/api/temporal/timelines` | GET | All tracked timelines, sorted by volatility (most-changed first) |
+| `/api/temporal/state` | GET | Snapshot of *current* identity state — "who am I right now?" |
+| `/api/temporal/changes` | GET | Recent-changes activity feed (7/30/90-day windows) |
+| `/api/temporal/transitions` | POST | Manually record a transition (explicit preference updates) |
+| `/api/temporal/report` | GET | Aggregate analysis: timelines + detected patterns + recent activity |
+
+The `/state` endpoint is the quiet killer feature: a canonical, queryable "who is this user *today*" that any agent can pull before a conversation — powered entirely by the transition history.
+
+**4. Persona-aware by design.** Every transition carries a `persona_id`. The same user can have different trajectories in their "Developer" persona vs. their "Architect" persona, and transitions are isolated per persona. **Zep has no persona concept at all** — it models one undifferentiated user.
+
+**Verdict — Round 1: Moltable.** Zep's graph is deeper on *relationships between entities*; Moltable is sharper on *change over time*, cheaper to run, persona-scoped, and self-hostable.
+
+---
+
+## Round 2: The identity layer — Moltable's unique advantage
+
+This is the round Zep can't compete in, because **Zep doesn't have an identity layer to compete with.**
+
+The CHANGELOG entry for the temporal feature says it plainly: *"Moltable 独有优势：temporal + identity sync + memory health + persona — 四合一"* — temporal tracking, identity sync, memory health, and persona in **one platform**. Zep ships exactly one of those four (temporal).
+
+### What "identity" means in practice
+
+- **Identity Sync**: Moltable's three-layer architecture — Identity Layer (cross-platform unique ID) → Persona Layer (role management) → Sync Layer (one sync code restores everything). Your temporal memory follows you across Claude, Cursor, Codex, Hermes, OpenCode — not because you copied a database, but because your *identity* is the primary key.
+- **Memory Health**: Moltable's `memory_health.py` scores every memory for staleness (90-day decay), contradiction, duplication (0.85 cosine threshold), and completeness — and auto-archives low-quality memories. Zep's graph accumulates; Moltable's memory *heals*. The temporal tracker and the health scorer work together: contradiction detection feeds the transition pipeline, and staleness scoring tells you which timeline entries are probably obsolete.
+- **Persona**: one identity, many minds. Temporal transitions are scoped per persona, so a user's professional trajectory never pollutes their personal one.
+
+Zep answers the question "how do facts change?" Moltable answers "**how does an identity change — and what stays the same?**" The second question is strictly more useful for building agents that feel like they *know you*.
+
+> **中文摘要**：身份层是 Moltable 与 Zep 的根本分野。Zep 是纯记忆产品——追踪事实，但不知道"谁"的事实。Moltable 把时序追踪建立在身份之上：跨 Agent 身份同步、Persona 隔离、记忆健康评分四合一。你的时间线跟着人走，而不是跟着数据库走。
+
+---
+
+## Round 3: Architecture
+
+### Zep
+- **Model**: closed SaaS, managed graph database + temporal layer, enterprise compliance (SOC 2, HIPAA)
+- **Storage**: knowledge graph with time-bounded edges
+- **Extraction**: LLM-based fact extraction from conversation
+- **Access**: SDKs; MCP support historically enterprise-only
+- **Deployment**: vendor-hosted only
+- **License**: proprietary
+
+### Moltable
+- **Model**: open source (MIT) + hosted cloud; self-hostable with `pip install` + `python main.py`
+- **Storage**: Supabase `temporal_facts` table (with row-level security) for transitions, pgvector for semantic search — zero new dependencies
+- **Extraction**: heuristic change detection (no LLM calls) + entity keyword matching (English *and* Chinese)
+- **Access**: native MCP protocol — any MCP client connects in one line: `npx @moltable/connect claude --api-key <key>`
+- **Deployment**: cloud or your own infra; identity data always yours
+- **License**: MIT
+
+The architectural philosophy difference is stark. Zep is a **fortress**: everything inside, enterprise-grade, expensive. Moltable is a **protocol**: open, portable, connected via MCP to whatever agents you already use. Both are defensible; they serve different buyers.
+
+| Dimension | Zep | Moltable |
+|---|---|---|
+| Temporal model | Knowledge graph, time-bounded edges | Fact-transition timelines + pattern detection |
+| Change detection | LLM extraction | Zero-LLM heuristics (markers + entity matching) |
+| Patterns (oscillation/shift/rapid) | ❌ Not exposed | ✅ 4 patterns, API-queryable |
+| Persona scoping | ❌ | ✅ per-transition `persona_id` |
+| Identity sync / cross-agent | ❌ | ✅ Identity → Persona → Sync layers |
+| Memory health scoring | ❌ | ✅ staleness + contradiction + dedup |
+| API surface | SDK + enterprise endpoints | 6 REST endpoints + MCP |
+| Self-host | ❌ | ✅ MIT, `python main.py` |
+| Chinese support | Limited | First-class (entity keywords 语言/框架/工具/项目…) |
+| Compliance | SOC 2, HIPAA | RLS on every table; self-host option |
+| Pricing | $125–375/mo | Free 90 days · Pro ¥19/mo |
+
+---
+
+## Round 4: Pricing
+
+**Zep**: starts at **$125/month** and scales to **$375/month** for enterprise. SOC 2 and HIPAA compliance are baked into that price — you're paying for the compliance machinery as much as the memory. For an individual developer or a bootstrapped startup, that's a non-starter.
+
+**Moltable**: **Free for 90 days** — 100 memory cards, 2 personas, 3 agent platforms, semantic search, sync-code recovery. **Pro at ¥19/month (~$3)** — 10,000 memories, unlimited personas, unlimited agents. Self-hosting is free forever (MIT).
+
+For context: mem0's Pro tier is $249/month. Zep is $125–375/month. Moltable Pro costs less than a cup of coffee per month and includes temporal memory, identity sync, memory health, and personas. The pricing reflects a strategic bet: **memory should be commodity infrastructure, not a luxury line item.**
+
+---
+
+## Round 5: Use case recommendations
+
+**Choose Zep when:**
+- You're a regulated enterprise (healthcare, finance) that *needs* SOC 2/HIPAA attestation out of the box
+- You have a dedicated platform team and a six-figure infrastructure budget
+- Your memory workload is dominated by entity-relationship queries across large corpora
+- You're fine being locked into a vendor's graph format
+
+**Choose Moltable when:**
+- You run multiple agents (Claude + Cursor + Codex + Hermes) and want **one identity** across all of them
+- You care about *how preferences change* — oscillation, gradual shifts, rapid churn — not just what they are
+- You want memory that self-heals (staleness, contradiction, dedup) instead of accumulating rot
+- You want personas: the same user, different trajectories, isolated timelines
+- You want to own your data — MIT license, self-host, RLS-protected tables
+- You're a developer, startup, or mid-market team that refuses to pay $125+/mo for memory
+
+**The honest truth**: if you're building agent infrastructure for a Fortune 500 hospital system, Zep's compliance story is real and valuable. If you're building agents for *people* — developers, creators, teams — the identity-first approach wins, because people have identities, not just fact graphs.
+
+---
+
+## The bottom line
+
+Zep defined the temporal-memory category. Moltable just redefined what temporal memory is *for*. Zep tracks how facts change inside a graph; Moltable tracks how **identities** change — and pairs that timeline with identity sync, persona isolation, and memory health, at a price point and license that make it infrastructure rather than a luxury.
+
+The agent memory race isn't about who stores more facts. It's about who remembers **you** — all of you, across every agent, across every change. On that definition, the race has a clear leader.
+
+---
+
+**Ready to give your agents a memory that follows your identity — not the other way around?**
+
+- [免费注册 Moltable](https://moltable.ai/register) — 90 days free, no credit card required.
+- [View the source](https://github.com/moltable) — MIT licensed, self-hostable, built in Beijing.
+- [Read our other comparisons](https://www.moltable.ai/blog) — Moltable vs mem0, and the full 2026 memory-landscape roundup.
+
+</ArticleLayout>
