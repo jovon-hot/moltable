@@ -1,8 +1,13 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { LanguageProvider } from '@/contexts/LanguageContext'
 import { ToastProvider } from '@/contexts/ToastContext'
 import PublicShell from '@/components/PublicShell'
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+}
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.moltable.ai'),
@@ -21,7 +26,6 @@ export const metadata: Metadata = {
     'persona sync',
     'AI agent identity',
   ],
-  viewport: 'width=device-width, initial-scale=1',
   robots: {
     index: true,
     follow: true,
