@@ -214,7 +214,7 @@ Moltable 选择从 Identity 层切入，不是因为 Memory 不重要，而是�
 
 - 🚀 [注册 Moltable（30 秒）](https://moltable.ai/register)
 - 📖 [查看文档](https://moltable.ai/docs)
-- ⭐ [GitHub: jovon-hot/moltable](https://github.com/jovon-hot/moltable)
+- ⭐ [GitHub: Moltable](https://github.com/Moltable)
 - 🔗 [mem0 官网](https://mem0.ai)
 
 ---

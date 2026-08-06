@@ -132,7 +132,7 @@ Moltable is open source (MIT license). Unlike proprietary memory systems that lo
 - **Self-hostable.** Run your own identity server if you want complete control.
 - **Community-driven.** MCP tools, personas, and integrations contributed by the community.
 
-[View on GitHub →](https://github.com/jovon-hot/moltable)
+[View on GitHub →](https://github.com/Moltable)
 
 ---
 

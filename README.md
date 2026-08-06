@@ -92,7 +92,7 @@ Hermes · Claude Code · Cursor · Any MCP-compatible client
 ## 自托管 · Self-Host
 
 ```bash
-git clone https://github.com/jovon-hot/moltable.git
+git clone https://github.com/Moltable.git
 cd moltable/server
 pip install -r requirements.txt
 python main.py

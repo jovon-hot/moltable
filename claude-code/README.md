@@ -262,7 +262,7 @@ Moltable exposes **14 MCP tools**. Key ones / 核心工具：
 ## Links / 链接
 
 - **Register / 注册**: <https://moltable.ai/register>
-- **GitHub / 源码**: <https://github.com/jovon-hot/moltable>
+- **GitHub / 源码**: <https://github.com/Moltable>
 - **MCP Endpoint**: `https://api.moltable.ai/mcp`
 - **Docs**: see `MOLTABLE.md` in this folder for the agent-facing usage guide
 

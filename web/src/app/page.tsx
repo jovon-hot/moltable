@@ -262,7 +262,7 @@ export default function LandingPage() {
         </div>
         <p className="text-sm text-center mt-10" style={{ color: '#85829E' }}>{t.about.opensource}</p>
         <div className="text-center mt-4">
-          <Link href="https://github.com/jovon-hot/moltable"
+          <Link href="https://github.com/Moltable"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all hover:bg-white/5"
             style={{ background: 'rgba(255,255,255,0.04)', color: '#A8A5B8', border: '1px solid rgba(255,255,255,0.08)' }}>
             <GitBranch size={14} /> {t.about.github}

@@ -282,9 +282,9 @@ Identity Graphs are the answer. They transform memory retrieval from a similarit
 ## Learn More
 
 - 📖 [Moltable Identity Layer Documentation](https://moltable.ai/docs)
-- 🏗️ [Identity Graph Architecture Deep Dive](https://moltable.ai/docs/architecture)
+- 🏗️ [Identity Graph Architecture Deep Dive](https://www.moltable.ai/docs)
 - 🔬 [Persistent Identity in AI Agents (arXiv 2604.09588)](https://arxiv.org/html/2604.09588)
-- ⭐ [Moltable on GitHub](https://github.com/jovon-hot/moltable)
+- ⭐ [Moltable on GitHub](https://github.com/Moltable)
 - 🚀 [Start Building — Free](https://moltable.ai/register)
 
 ---

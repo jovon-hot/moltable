@@ -177,4 +177,4 @@ Codex（加载团队规范 Persona）：
 ---
 
 *案例研究 · Moltable Team · 2026 年 8 月*
-*了解更多：[moltable.ai](https://www.moltable.ai) · [GitHub](https://github.com/jovon-hot/moltable)*
+*了解更多：[moltable.ai](https://www.moltable.ai) · [GitHub](https://github.com/Moltable)*

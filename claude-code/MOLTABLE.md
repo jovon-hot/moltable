@@ -103,4 +103,4 @@ You:  1. discover_host()   → detects environment (tools, paths, frameworks)
 | Switch role | `set_active_persona` |
 | Detect project environment | `discover_host` |
 
-**Registration**: https://moltable.ai/register · **Docs**: https://github.com/jovon-hot/moltable · **Endpoint**: https://api.moltable.ai/mcp
+**Registration**: https://moltable.ai/register · **Docs**: https://github.com/Moltable · **Endpoint**: https://api.moltable.ai/mcp

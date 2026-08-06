@@ -95,7 +95,7 @@ Your Identity, Personas, preferences, and MCP configs are all restored automatic
 
 - [Website](https://moltable.ai)
 - [Documentation](https://moltable.ai/docs)
-- [GitHub](https://github.com/jovon-hot/moltable)
+- [GitHub](https://github.com/Moltable)
 - [Register (Free)](https://moltable.ai/register)
 
 ---

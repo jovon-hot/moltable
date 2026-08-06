@@ -218,7 +218,7 @@ npx @moltable/connect claude --api-key <your-key>
 # 然后继续写代码，就像什么都没发生一样。
 ```
 
-→ [GitHub: jovon-hot/moltable](https://github.com/jovon-hot/moltable)
+→ [GitHub: Moltable](https://github.com/Moltable)
 → [产品官网: moltable.ai](https://www.moltable.ai)
 
 ---
