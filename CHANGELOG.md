@@ -12,6 +12,19 @@
   - 减少重复记忆，提升数据质量
 - **构建**: Next.js 47 静态页面，0 错误 ✅
 - **提交**: [本次] - 2 commits
+## 2026-08-07 (R5 — 夜间维护·智能合并引擎)
+
+- **功能**: Smart Auto-Merge — 保存记忆时智能去重与合并 🆕
+  - 三级合并策略：>95% 相似自动更新 / >85% 自动扩充 / <85% 正常保存
+  - 新增 `auto_merge` 参数（默认 true），向后兼容 `force` 参数
+  - `_smart_merge()` 函数：选择最高相似度冲突进行 update 或 enrich
+  - 保存响应新增 `auto_merged` + `action` 字段区分合并类型
+- **竞品对齐**: 对标 mem0 的 agent_custom_instructions（agent 级记忆提取）—
+  Moltable 用 Persona 路由 + 智能合并实现差异化
+- **测试**: 6 个新增测试（test_smart_merge.py）— update/enrich/insert/多冲突场景全覆盖
+- **全量测试**: 172 passed, 3 skipped, 0 failed ✅
+- **提交**: [本次]
+
 ## 2026-08-06 (R4 — 夜间维护·增长引擎·内容生产)
 
 - **增长**: Referral/Invite 推荐系统上线 — 病毒式增长引擎 🆕
