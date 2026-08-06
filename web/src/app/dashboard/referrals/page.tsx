@@ -6,8 +6,9 @@ import { useLang } from '@/contexts/LanguageContext'
 import { apiFetch } from '@/lib/api'
 import {
   Loader2, Copy, Check, Gift, Share2, Users, UserCheck, Clock,
-  Mail, Twitter, Send, MessageCircle, Link2, Linkedin,
+  Mail, Send, MessageCircle, Link2,
 } from 'lucide-react'
+import { TwitterIcon, LinkedInIcon } from '@/components/BrandIcons'
 
 interface ReferralStats {
   referrer_id: string
@@ -97,13 +98,13 @@ export default function ReferralsPage() {
     ? [
         {
           label: 'X / Twitter',
-          icon: Twitter,
+          icon: TwitterIcon,
           href: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
           cls: 'hover:bg-ln-hover',
         },
         {
           label: 'LinkedIn',
-          icon: Linkedin,
+          icon: LinkedInIcon,
           href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,
           cls: 'hover:bg-ln-hover',
         },

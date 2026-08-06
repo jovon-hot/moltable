@@ -4,7 +4,8 @@ import { useEffect, useState, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useLang } from '@/contexts/LanguageContext'
 import { apiFetch } from '@/lib/api'
-import { Copy, Check, Twitter, Download, Loader2 } from 'lucide-react'
+import { Copy, Check, Download, Loader2 } from 'lucide-react'
+import { TwitterIcon } from '@/components/BrandIcons'
 import { Suspense } from 'react'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.moltable.ai'
@@ -205,7 +206,7 @@ function ShareCard() {
               <button onClick={handleTweet}
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm transition-all"
                 style={{ background: 'rgba(255,255,255,0.06)', color: '#ffffff', fontWeight: 510 }}>
-                <Twitter size={16} />
+                <TwitterIcon size={16} />
                 {lang === 'zh' ? '发推文' : 'Tweet'}
               </button>
               <button onClick={() => generateImage()}

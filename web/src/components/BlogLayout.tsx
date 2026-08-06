@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowLeft, Share2, Twitter, Linkedin, Link2, ArrowRight } from 'lucide-react'
+import { ArrowLeft, Share2, Link2, ArrowRight } from 'lucide-react'
+import { TwitterIcon, LinkedInIcon } from './BrandIcons'
 import { useState } from 'react'
 
 function ShareButtons() {
@@ -30,7 +31,7 @@ function ShareButtons() {
         title="Share on X"
         style={{ background: 'rgba(255,255,255,0.03)' }}
       >
-        <Twitter size={14} style={{ color: '#A8A5B8' }} />
+        <TwitterIcon size={14} style={{ color: '#A8A5B8' }} />
       </a>
       <a
         href={linkedinUrl}
@@ -40,7 +41,7 @@ function ShareButtons() {
         title="Share on LinkedIn"
         style={{ background: 'rgba(255,255,255,0.03)' }}
       >
-        <Linkedin size={14} style={{ color: '#A8A5B8' }} />
+        <LinkedInIcon size={14} style={{ color: '#A8A5B8' }} />
       </a>
       <button
         onClick={copyLink}
