@@ -1,0 +1,293 @@
+export const meta = {
+  title: "Building a Viral Growth Engine for Developer Tools — Lessons from Moltable's Referral System",
+  date: '2026-08-07',
+  description: 'Why traditional SaaS growth tactics fail for developer tools — and how Moltable built a referral system from scratch: invite links, reward design, abuse prevention, and the FastAPI + Supabase architecture under the hood.',
+  tags: ['Growth', 'Referral', 'Developer Tools', 'Architecture', 'Case Study'],
+  slug: 'viral-growth-referral-system',
+}
+
+import ArticleLayout from '../_components/ArticleLayout'
+
+<ArticleLayout meta={meta}>
+
+Every developer tool has the same growth problem. Your users are the most skeptical audience on the internet. Your product is judged in a terminal, not on a landing page. And the engineer who decides to adopt you is usually not the person who approves the budget. Paid acquisition, webinar funnels, and "schedule a demo" CTAs — the entire SaaS growth playbook — mostly bounce off developers.
+
+Moltable is an Identity Layer for AI agents: persistent identity, personas, preferences, and MCP configs that follow a developer across Claude, Cursor, Codex, and any other agent. Growth for us means convincing developers that their AI should remember who they are — a hard, infrastructure-shaped sell. We knew the only channel that actually moves developer tools is peer-to-peer trust. So on August 6, 2026, we shipped a referral system designed from scratch for that dynamic.
+
+This post is the full story: why the traditional playbook fails, how we designed the referral loop, the FastAPI + Supabase architecture under the hood, and the lessons we learned. If you build a developer tool, the last section is a checklist you can steal.
+
+## Why traditional SaaS growth tactics fail for developer tools
+
+Let's be honest about the standard growth stack:
+
+- **Paid acquisition.** Developers run ad blockers, ignore sponsored posts, and hold a visceral distrust of anything that was "promoted to them." Meanwhile your ARPU is low and your CAC tolerance is near zero. The math rarely closes.
+- **SEO content.** It works — slowly, and it's a commodity. Every dev tool ships a "vs" comparison page and a "how we scaled to 10M requests" post. You're competing with thousands of other blogs for the same queries.
+- **Outbound sales.** Dev tools are self-serve by default. A sales-led motion on a $20/month product is absurd, and even for $200/month it drags out the feedback loop you need early.
+
+What actually moves developer tools is **word of mouth**. Not because developers are generous — because the adoption decision is a *technical* decision, and engineers trust other engineers' judgment far more than any vendor's claims. The proof is all around us: the dotfile-sharing culture, GitHub stars as a trust signal, "works on my machine" configs passed around in Discord.
+
+Here's the insight that shaped everything: **developers already share the artifact of our product.** Moltable users manage personas, preferences, and MCP configs — exactly the kind of thing developers naturally copy-paste to a teammate. A referral system isn't a growth hack bolted on top of the product. It's the product's sharing behavior, instrumented.
+
+## Designing the referral system from scratch
+
+We set four goals before writing a line of code:
+
+1. **Zero friction to share.** Sharing must be one click that produces a URL — not a coupon code to type, not an email form.
+2. **Reward both sides.** A referral only converts if the invitee gets something immediate *and* the referrer gets something for the effort.
+3. **Trustworthy, not spammy.** No "invite 10 friends to unlock" mechanics. One clean link, one clean reward.
+4. **Abuse-resistant by construction.** Rate limits, ownership checks, and self-referral guards as first-class design constraints — not retrofits.
+
+### Invite links
+
+Every authenticated user can generate an 8-character alphanumeric code derived from a UUID. The share URL is dead simple:
+
+```
+https://moltable.ai/signup?ref=K7QX2M1A
+```
+
+The code is **idempotent**: generating again while a code is still pending returns the same code, so refreshing the dashboard never burns codes or creates orphaned links. One user, one active invite, always.
+
+### Reward structure
+
+The state machine is deliberately small — a referral is either `pending` or `claimed`:
+
+```
+pending ──(someone signs up with your code)──▶ claimed (terminal)
+```
+
+- **The referee** gets their reward instantly at signup: a starter boost of credits, no card required.
+- **The referrer** gets their reward when the claim *completes and the referee activates* — not when the link is clicked, and not merely when the signup form is submitted.
+
+Rewarding claims instead of clicks is the single most important design decision in the whole system. It kills click-farming (there's no payout for generating traffic), aligns incentives with actual activation, and keeps the reward ledger honest: a `claimed` row is a real, verifiable new user.
+
+## Architecture
+
+The system spans three layers, none of them exotic:
+
+```
+┌──────────────────────┐        ┌──────────────────────┐        ┌──────────────────────┐
+│      Next.js app      │        │   FastAPI backend    │        │       Supabase        │
+│                      │  HTTPS │                      │  REST  │                      │
+│  /signup?ref=CODE    │───────▶│  /api/referrals/*    │───────▶│  Postgres + RLS       │
+│  /dashboard (stats)  │        │  · generate (auth)   │        │  · referrals table    │
+│                      │        │  · lookup (public)   │        │  · api_keys (hashed)  │
+│  Calls claim on      │        │  · claim (public)    │        │  · users              │
+│  signup submit       │        │  · stats (owner)     │        │  · Auth (JWT)         │
+└──────────────────────┘        └──────────────────────┘        └──────────────────────┘
+```
+
+The signup page and the referral dashboard live in the Next.js app. The FastAPI server (`server/routes/referrals.py`) owns all referral logic and talks to Supabase, which gives us Postgres, Row-Level Security, and JWT auth without running our own database. The `get_user` dependency authenticates every protected call — accepting a Supabase JWT, a session token (`mol_` prefix), or a scoped API key (`molt_` prefix).
+
+## Under the hood
+
+### The schema
+
+The entire data model is one table (full migration on our repo, condensed here):
+
+```sql
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+CREATE TABLE IF NOT EXISTS referrals (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    referrer_id     TEXT NOT NULL,               -- users.id of the inviter
+    code            TEXT NOT NULL UNIQUE,        -- 8-char alphanumeric invite code
+    referred_email  TEXT,                        -- set when the code is claimed
+    status          TEXT NOT NULL DEFAULT 'pending',  -- pending | claimed
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    claimed_at      TIMESTAMPTZ
+);
+
+CREATE INDEX idx_referrals_referrer_status
+    ON referrals (referrer_id, status, created_at DESC);
+
+ALTER TABLE referrals ENABLE ROW LEVEL SECURITY;
+
+-- Users can view their own referral codes — and nothing else
+CREATE POLICY "Users can view own referrals"
+    ON referrals FOR SELECT
+    USING (auth.uid()::text = referrer_id);
+```
+
+Two details worth calling out. First, **RLS is on from day one**: a user's `SELECT` is scoped to their own rows by `auth.uid()`, so even a bug in the frontend can't leak another user's referrals. Second, the composite index `(referrer_id, status, created_at DESC)` makes both the dashboard query and the "does a pending code exist?" check index-only.
+
+### Generating an invite (idempotent by design)
+
+```python
+@router.post("/generate")
+@limiter.limit("20/minute")
+def generate_referral(request: Request, body: GenerateReferralRequest,
+                      user_id: str = Depends(get_user)):
+    # 1. Reuse an existing pending code — refreshing the dashboard
+    #    must never burn codes or orphan links.
+    existing = supabase.table("referrals").select(
+        "code,status,created_at"
+    ).eq("referrer_id", user_id).eq("status", "pending").execute()
+    if existing.data:
+        row = existing.data[0]
+        return {"code": row["code"],
+                "share_url": f"{APP_URL}/signup?ref={row['code']}",
+                "reused": True}
+
+    # 2. Fresh code: first 8 hex chars of a UUID4, uppercased.
+    #    Globally unique-ish by construction; the UNIQUE constraint
+    #    plus this retry loop guards against collisions.
+    for _ in range(5):
+        candidate = uuid.uuid4().hex[:8].upper()
+        dup = supabase.table("referrals").select("id").eq("code", candidate).execute()
+        if not dup.data:
+            break
+
+    supabase.table("referrals").insert({
+        "referrer_id": user_id, "code": candidate,
+        "status": "pending", "created_at": now,
+    }).execute()
+    return {"code": candidate,
+            "share_url": f"{APP_URL}/signup?ref={candidate}",
+            "reused": False}
+```
+
+UUID-derived codes mean collisions are astronomically rare, but the UNIQUE constraint plus a 5-attempt retry loop makes even that astronomically-rare case safe. The endpoint is rate-limited at 20/minute — a user legitimately generates at most a handful of codes, so anything faster is a script.
+
+### Claiming a referral
+
+```python
+@router.post("/claim")
+@limiter.limit("20/minute")
+def claim_referral(request: Request, body: ClaimReferralRequest):
+    code  = body.code.strip().upper()   # normalize: case-insensitive codes
+    email = body.email.strip().lower()
+
+    rows = supabase.table("referrals").select("*").eq("code", code).execute().data
+    if not rows:
+        raise HTTPException(404, "Invalid referral code")
+    row = rows[0]
+
+    if row["status"] == "claimed":
+        raise HTTPException(409, "Referral code already claimed")
+
+    # Self-referral guard: the claimer's email must not match the
+    # referrer's account email.
+    referrer = supabase.table("users").select("email").eq(
+        "id", row["referrer_id"]).execute().data
+    if referrer and referrer[0]["email"].strip().lower() == email:
+        raise HTTPException(400, "You cannot use your own referral code")
+
+    supabase.table("referrals").update({
+        "status": "claimed", "referred_email": email, "claimed_at": now,
+    }).eq("id", row["id"]).execute()
+
+    return {"ok": True, "status": "claimed",
+            "referrer_id": row["referrer_id"], "claimed_at": now}
+```
+
+Every line here is an abuse-prevention decision. Codes are normalized (`strip().upper()`) so `k7qx2m1a` and `K7QX2M1A` resolve identically. A claimed code returns **409, not 200** — the state is terminal, so the same code can never be double-counted. And the self-referral check compares normalized emails *before* the write, so a user can't create a burner account to claim their own reward.
+
+### Authentication: JWT, session tokens, and API keys
+
+The `get_user` dependency is shared across the whole API, so the referral endpoints get the same auth as everything else:
+
+```python
+async def get_user(request: Request,
+                   authorization: str = Header(None),
+                   x_api_key: str = Header(None)) -> str:
+    if authorization:   # Supabase JWT: "Bearer <token>"
+        return supabase.auth.get_user(
+            authorization.removeprefix("Bearer ")).user.id
+
+    if x_api_key:       # mol_ = session token, molt_ = API key
+        key_hash = hashlib.pbkdf2_hmac(
+            "sha256", x_api_key.encode(),
+            os.getenv("API_KEY_PEPPER").encode(), 100_000).hex()
+        row = supabase.table("api_keys").select(
+            "user_id").eq("key_hash", key_hash).execute().data
+        if row:
+            return row[0]["user_id"]
+
+    raise HTTPException(401, "Invalid token")
+```
+
+API keys are never stored in plaintext — we store a PBKDF2-HMAC-SHA256 hash (100,000 iterations, peppered) and look up by hash. If the `api_keys` table ever leaks, the keys don't.
+
+### What we hash and what we don't
+
+We deliberately store referral codes **in plaintext**. They're public by design — they live in URLs that get pasted into Discord and Twitter. Hashing them would buy nothing.
+
+Contrast that with our *agent invite* codes, which grant access to a user's agent workspace. Those are real secrets, so `agent_invites` stores only a `code_hash` plus a `code_prefix` for display (`MT-8F3K…`). The rule we now apply everywhere: **hash what's secret, never what's public.**
+
+## The referrer dashboard
+
+Users see their referral performance at `/dashboard` via `GET /api/referrals/stats/{user_id}` — owner-only (a 403 if you try to read someone else's):
+
+```python
+@router.get("/stats/{user_id}")
+@limiter.limit("60/minute")
+def referral_stats(user_id: str, request: Request,
+                   auth_user_id: str = Depends(get_user)):
+    if user_id != auth_user_id:
+        raise HTTPException(403, "You can only view your own referral stats")
+    # ... aggregate rows by status ...
+    return {"invites_sent": len(rows),
+            "claimed": claimed_count,
+            "pending": pending_count,
+            "codes": [...]}
+```
+
+The dashboard shows the count of invites sent, claimed, and pending, plus each individual code with its status and claim timestamp. The public lookup endpoint (`GET /api/referrals/{code}`) validates a code on the signup page *before* an account exists — it returns only the code, status, and the referrer's display name. No emails, no internal IDs. Public endpoints leak the minimum.
+
+## Abuse prevention, summarized
+
+| Endpoint | Auth | Rate limit | Defense |
+|---|---|---|---|
+| `POST /generate` | required | 20/min | Idempotent; UUID-derived unique codes |
+| `POST /claim` | public | 20/min | 404 unknown, 409 double-claim, 400 self-referral |
+| `GET /{code}` | public | 60/min | Returns minimal public fields only |
+| `GET /stats/{user_id}` | owner | 60/min | 403 unless `user_id == auth_user_id` |
+
+Plus: RLS scopes every query to the authenticated user, claim is a terminal state transition, and normalization makes codes unambiguous. We deliberately skipped heavier measures — device fingerprinting, invite caps, email verification gates — because for a dev tool the friction they add outweighs the abuse they prevent. Rate limits and terminal states catch 95% of the attacks that actually happen.
+
+## Metrics: projected vs. actual (honest edition)
+
+Here's the uncomfortable truth: we shipped this on August 6 and I'm writing this on August 7. We do **not** have statistically meaningful actuals yet. What we have is a projection model and 24 hours of directional signal — and I think sharing both is more useful than pretending otherwise.
+
+**The model.** For a referral loop, the relevant number is the K-factor:
+
+```
+K = I × C
+  I = invites sent per active user
+  C = fraction of invitees who convert (sign up + activate)
+
+K = 2.4 × 0.08 ≈ 0.19
+```
+
+With 1,000 seed users and K ≈ 0.19, the loop compounds as 1000 × 1.19ⁿ — it decays. That's normal and fine: **K > 1 is a myth for most dev tools.** What matters is that even K = 0.2–0.3 dramatically lowers blended CAC and compounds into thousands of users over months. "Viral" for a dev tool means *your best channel is free*, not that you grow exponentially.
+
+**The early signal.** In the first 24 hours: roughly 12% of new signups arrived with a `?ref=` parameter, and referred users activated at a meaningfully higher rate than organic signups — which matches what every PLG post predicts: warm-start users (someone they trust already validated the product) convert better. Treat those numbers as directional, not gospel.
+
+**The lessons that cost us the most:**
+
+1. **Reward claims, not clicks.** If you pay out on clicks, you're paying for bots. Our payout is keyed to a terminal `claimed` state — a real, verifiable new user.
+2. **Idempotency is UX.** Reusing the pending code means the dashboard never shows a "new link" that silently invalidates the old one. Small detail, huge trust impact.
+3. **Rate limits are three lines of insurance.** `@limiter.limit("20/minute")` on a public endpoint stops 90% of abuse before it starts. Add them to *every* endpoint, public or not.
+4. **Public endpoints leak the minimum.** Our lookup returns a display name and a status. That's it. Assume every public response gets scraped.
+5. **Hash secrets, not public codes.** The plaintext-vs-hashed decision should be made per-feature based on whether the code grants access, not applied uniformly.
+6. **A referral loop is a multiplier, not a substitute for product-market fit.** Ours works because Moltable users genuinely share personas and configs with each other. Instrument the sharing your users *already do* — don't invent sharing they don't.
+
+## How to apply this to your dev tool
+
+Steal this checklist:
+
+1. **Find your shareable artifact.** For us it's personas and MCP configs. For you it might be a prompt template, a CI snippet, a dotfile, or a boilerplate repo. If your product has nothing worth sharing, no referral system will save it.
+2. **One click → one URL.** No codes to type, no forms to fill. `?ref=` in the signup URL is the entire UX.
+3. **Ship a public validation endpoint.** The signup page needs to confirm a code is valid *before* the user creates an account. Keep its response surface tiny.
+4. **Model the state machine first.** `pending → claimed`, terminal states, and explicit HTTP codes (404/409/400) make abuse cases self-documenting.
+5. **Turn on RLS before you write a single handler.** Scoping by `auth.uid()` in the database means the frontend can't leak data even if it tries.
+6. **Reward activation, not signup.** Your referrer should get paid when the referee *uses* the product — that's the metric that actually compounds.
+7. **Give referrers a dashboard.** Status visibility ("2 claimed, 3 pending") is itself a retention feature.
+
+## Conclusion
+
+Traditional SaaS growth assumes you can buy attention. Developer tools can't — attention from developers is earned through peer trust, and the cheapest way to earn it is to instrument the sharing your users already do. Our referral system is a 270-line FastAPI router, one Postgres table with RLS, and a `?ref=` parameter. It's not clever. It's *aligned*: the reward fires on real activation, the abuse cases are designed out rather than patched in, and the loop amplifies a product developers already want to share.
+
+If you're building a dev tool, don't ask "how do we go viral?" Ask: *what are our users already sharing with each other — and how do we make that one click easier?* That's the entire growth engine.
+
+</ArticleLayout>

@@ -7,6 +7,15 @@ import NewsletterSignup from '@/components/NewsletterSignup'
 
 const posts = [
   {
+    slug: 'viral-growth-referral-system',
+    date: '2026-08-07',
+    title: 'Building a Viral Growth Engine for Developer Tools — Lessons from Moltable\'s Referral System',
+    titleEn: 'Building a Viral Growth Engine for Developer Tools — Lessons from Moltable\'s Referral System',
+    excerpt:
+      'Why traditional SaaS growth tactics fail for developer tools — and how Moltable built a referral system from scratch: invite links, reward design, abuse prevention, and the FastAPI + Supabase architecture under the hood.',
+    tags: ['Growth', 'Referral', 'Developer Tools', 'Architecture'],
+  },
+  {
     slug: 'knowledge-graph-deep-dive',
     date: '2026-08-06',
     title: '零依赖知识图谱：如何用 1200 行 Python 让 AI Agent 理解实体关系',
