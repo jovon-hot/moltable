@@ -6,19 +6,12 @@ import { useLang } from '@/contexts/LanguageContext'
 import { apiFetch } from '@/lib/api'
 import { Loader2, Plus, ChevronDown, ChevronUp, Edit2, Trash2, X, Save, User, Users } from 'lucide-react'
 
-const DEMO_PERSONAS = [
-  { id: 'demo-p1', name: '战略顾问', description: '擅长宏观分析、战略规划和决策制定的 AI 人格，以结构化思维著称。', system_prompt: '你是一位经验丰富的战略顾问。分析问题时要考虑长远影响，提供结构化的建议。始终保持客观、理性。', type: 'constructed', traits: { 分析能力: 95, 战略思维: 90, 沟通: 85 }, created_at: new Date(Date.now() - 86400000).toISOString() },
-  { id: 'demo-p2', name: '创意伙伴', description: '富有创造力和想象力的 AI 人格，适合头脑风暴和创意写作。', system_prompt: '你是一位充满创意的合作伙伴。鼓励发散思维，大胆提出新颖想法。不要被常规思维限制。', type: 'constructed', traits: { 创造力: 98, 想象力: 92, 表达: 88 }, created_at: new Date(Date.now() - 172800000).toISOString() },
-  { id: 'demo-p3', name: '代码审查官', description: '严谨的代码审阅者，关注代码质量、安全性和最佳实践。', system_prompt: '你是一位资深代码审查官。严格检查代码质量、安全漏洞和性能问题。提出改进建议时要具体、可操作。', type: 'mirrored', traits: { 严谨: 96, 技术深度: 93, 耐心: 80 }, created_at: new Date(Date.now() - 259200000).toISOString() },
-]
-
 export default function PersonasPage() {
   const { toast } = useToast()
   const { t, lang } = useLang()
   const d = t.dashboard_ui as any
   const [personas, setPersonas] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [isDemo, setIsDemo] = useState(false)
   const [showCreate, setShowCreate] = useState(false)
   const [form, setForm] = useState({ name: '', description: '', system_prompt: '', type: 'constructed' })
   const [creating, setCreating] = useState(false)
@@ -27,21 +20,57 @@ export default function PersonasPage() {
   const [editForm, setEditForm] = useState({ name: '', description: '', system_prompt: '', type: 'constructed' })
   const [saving, setSaving] = useState(false)
 
-  const showDemoToast = () => toast(lang === 'zh' ? '演示模式下不可用 — 注册后开始使用' : 'Not available in demo — sign up to get started', 'info')
-
   useEffect(() => { fetchPersonas() }, [])
 
   const fetchPersonas = async () => {
     setLoading(true)
     try { const data = await apiFetch<any[]>('/api/personas'); setPersonas(Array.isArray(data) ? data : []) }
-    catch (err: any) { setPersonas([]); setIsDemo(false) }
+    catch (err: any) { toast(err?.message || (lang === 'zh' ? '加载 Persona 失败' : 'Failed to load personas'), 'error'); setPersonas([]) }
     finally { setLoading(false) }
   }
 
-  const handleCreate = async () => { showDemoToast() }
-  const startEdit = (p: any) => { if (isDemo) { showDemoToast(); return }; setEditingPersona(p); setEditForm({ name: p.name, description: p.description || '', system_prompt: p.system_prompt || '', type: p.type }) }
-  const handleUpdate = async () => { showDemoToast() }
-  const handleDelete = async (id: string, name: string) => { showDemoToast() }
+  const handleCreate = async () => {
+    if (!form.name.trim()) return
+    setCreating(true)
+    try {
+      await apiFetch('/api/personas', { method: 'POST', body: JSON.stringify(form) })
+      setForm({ name: '', description: '', system_prompt: '', type: 'constructed' })
+      setShowCreate(false)
+      toast(lang === 'zh' ? 'Persona 已创建' : 'Persona created', 'success')
+      fetchPersonas()
+    } catch (err: any) {
+      toast(err?.message || (lang === 'zh' ? '创建失败' : 'Failed to create'), 'error')
+    } finally { setCreating(false) }
+  }
+
+  const startEdit = (p: any) => {
+    setEditingPersona(p)
+    setEditForm({ name: p.name, description: p.description || '', system_prompt: p.system_prompt || '', type: p.type })
+  }
+
+  const handleUpdate = async () => {
+    if (!editingPersona || !editForm.name.trim()) return
+    setSaving(true)
+    try {
+      await apiFetch(`/api/personas/${editingPersona.id}`, { method: 'PUT', body: JSON.stringify(editForm) })
+      setEditingPersona(null)
+      toast(lang === 'zh' ? 'Persona 已更新' : 'Persona updated', 'success')
+      fetchPersonas()
+    } catch (err: any) {
+      toast(err?.message || (lang === 'zh' ? '更新失败' : 'Failed to update'), 'error')
+    } finally { setSaving(false) }
+  }
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm(lang === 'zh' ? `确认删除「${name}」？` : `Delete "${name}"?`)) return
+    try {
+      await apiFetch(`/api/personas/${id}`, { method: 'DELETE' })
+      toast(lang === 'zh' ? `「${name}」已删除` : `"${name}" deleted`, 'success')
+      fetchPersonas()
+    } catch (err: any) {
+      toast(err?.message || (lang === 'zh' ? '删除失败' : 'Failed to delete'), 'error')
+    }
+  }
   const typeLabel = (tp: string) => tp === 'constructed' ? d.persona_type_constructed : d.persona_type_mirrored
 
   return (
@@ -51,17 +80,11 @@ export default function PersonasPage() {
           <h1 className="text-2xl font-heading tracking-[-0.3px] text-ln-text">Persona</h1>
           <p className="text-sm text-ln-tertiary font-body mt-1">{d.personaPageTitle}</p>
         </div>
-        <button onClick={() => { if (isDemo) { showDemoToast(); return }; setShowCreate(!showCreate) }}
+        <button onClick={() => setShowCreate(!showCreate)}
           className="flex items-center gap-1.5 px-4 py-2 rounded-btn text-sm font-ui transition-all duration-150 bg-ln-accent text-white hover:bg-ln-accent-hover">
-          <Plus size={15} /> {isDemo ? d.demoMode : d.createPersona}
+          <Plus size={15} /> {d.createPersona}
         </button>
       </div>
-
-      {isDemo && (
-        <div className="mb-6 px-4 py-3 rounded-card bg-ln-accent-muted text-ln-accent-hover text-sm font-body shadow-border-accent animate-in">
-          🔍 {d.persona_demo_notice}
-        </div>
-      )}
 
       {showCreate && (
         <div className="p-5 rounded-card bg-ln-surface shadow-card mb-8 space-y-3 animate-in">
@@ -96,7 +119,7 @@ export default function PersonasPage() {
           <div className="w-12 h-12 rounded-panel bg-ln-surface mx-auto mb-4 flex items-center justify-center"><Users size={20} className="text-ln-tertiary" /></div>
           <p className="text-base mb-2 text-ln-text font-ui">{d.noPersonasYet}</p>
           <p className="text-sm mb-6 text-ln-tertiary font-body">{d.noPersonasDesc}</p>
-          <button onClick={() => { if (isDemo) { showDemoToast(); return }; setShowCreate(true) }}
+          <button onClick={() => setShowCreate(true)}
             className="inline-flex items-center gap-1.5 px-5 py-2 rounded-btn text-sm font-ui bg-ln-accent text-white hover:bg-ln-accent-hover transition-all duration-150">
             <Plus size={15} /> {d.createFirstPersona}
           </button>

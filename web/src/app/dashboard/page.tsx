@@ -5,9 +5,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { useLang } from '@/contexts/LanguageContext'
 import { apiFetch, activateTrial } from '@/lib/api'
 import Link from 'next/link'
-import { Loader2, Brain, User, ArrowRight, Zap, Sparkles, Clock, Layers } from 'lucide-react'
-
-const DEMO_STATS = { memories: 128, personas: 3, projects: 5, decisions: 42 }
+import { Loader2, Brain, User, ArrowRight, Zap, Sparkles, Clock, Layers, AlertTriangle, RefreshCw } from 'lucide-react'
 
 interface PlanInfo {
   plan: 'free' | 'pro' | 'trialing' | 'expired'
@@ -22,7 +20,7 @@ export default function DashboardPage() {
   const ui = t.dashboard_ui as any
   const [stats, setStats] = useState({ total_memories: 0, total_personas: 0, total_projects: 0 })
   const [loading, setLoading] = useState(true)
-  const [isDemo, setIsDemo] = useState(false)
+  const [error, setError] = useState(false)
   const [plan, setPlan] = useState<PlanInfo>({ plan: 'free' })
   const [activating, setActivating] = useState(false)
   const [showBanner, setShowBanner] = useState(true)
@@ -40,7 +38,7 @@ export default function DashboardPage() {
       ])
 
       if (memStats === null && personas === null && userInfo === null) {
-        setIsDemo(true)
+        setError(true)
         setLoading(false)
         return
       }
@@ -67,8 +65,8 @@ export default function DashboardPage() {
         }
       }
     } catch (err: any) {
-      setIsDemo(true)
-      setStats({ total_memories: 128, total_personas: 3, total_projects: 5 })
+      setError(true)
+      setStats({ total_memories: 0, total_personas: 0, total_projects: 0 })
     } finally {
       setLoading(false)
     }
@@ -127,7 +125,7 @@ export default function DashboardPage() {
   return (
     <div className="max-w-5xl mx-auto px-6 py-10">
       {/* Trial Activation Banner */}
-      {!isDemo && !loading && plan.plan === 'free' && showBanner && (
+      {!error && !loading && plan.plan === 'free' && showBanner && (
         <div className="mb-8 p-5 rounded-panel bg-ln-surface shadow-accent-glow border border-ln-accent/30 animate-in">
           <div className="flex items-start gap-4">
             <div className="flex-shrink-0 mt-0.5 w-10 h-10 rounded-full bg-gradient-to-br from-ln-accent to-ln-accent-hover flex items-center justify-center">
@@ -160,7 +158,7 @@ export default function DashboardPage() {
       )}
 
       {/* Active trial banner */}
-      {!isDemo && !loading && plan.plan === 'trialing' && plan.trial_days_left !== undefined && (
+      {!error && !loading && plan.plan === 'trialing' && plan.trial_days_left !== undefined && (
         <div className="mb-8 px-4 py-3 rounded-card bg-ln-accent-muted text-ln-accent-hover text-sm font-body shadow-border-accent animate-in flex items-center gap-2">
           <Sparkles size={16} />
           <span>{ui.trialActive as string}</span>
@@ -170,29 +168,29 @@ export default function DashboardPage() {
       )}
 
       {/* Expired trial banner */}
-      {!isDemo && !loading && plan.plan === 'expired' && (
+      {!error && !loading && plan.plan === 'expired' && (
         <div className="mb-8 px-4 py-3 rounded-card bg-ln-warning/10 text-ln-warning text-sm font-body shadow-[0_0_0_1px_rgba(234,179,8,0.2)] animate-in flex items-center gap-2">
           <Clock size={16} />
           <span>{ui.trialExpired as string}</span>
         </div>
       )}
 
-      {/* Registration CTA for demo users */}
-      {isDemo && (
-        <div className="mb-8 p-5 rounded-card bg-ln-accent-muted shadow-accent-glow border border-ln-accent/20">
+      {/* Error state */}
+      {error && (
+        <div className="mb-8 p-5 rounded-card bg-ln-warning/10 shadow-[0_0_0_1px_rgba(234,179,8,0.2)]">
           <div className="flex items-start gap-4">
-            <div className="flex-shrink-0 mt-0.5 w-8 h-8 rounded-full bg-ln-accent flex items-center justify-center">
-              <Brain size={16} className="text-white" />
+            <div className="flex-shrink-0 mt-0.5 w-8 h-8 rounded-full bg-ln-warning flex items-center justify-center">
+              <AlertTriangle size={16} className="text-white" />
             </div>
             <div className="flex-1">
-              <h3 className="text-base font-heading text-ln-text mb-1">{d.demoBanner}</h3>
+              <h3 className="text-base font-heading text-ln-text mb-1">{lang === 'zh' ? '无法加载数据' : 'Unable to load data'}</h3>
               <p className="text-sm text-ln-secondary mb-3">
-                {lang === 'zh' ? '注册后你的 AI Agent 可以记住所有对话，跨设备同步偏好和记忆。当前显示的是演示数据。' : 'After registering, your AI Agent remembers every conversation and syncs preferences across devices. Currently showing demo data.'}
+                {lang === 'zh' ? '请检查网络连接后重试。' : 'Please check your connection and try again.'}
               </p>
-              <Link href="/register" 
+              <button onClick={loadData}
                 className="inline-flex items-center gap-2 px-5 py-2 rounded-btn text-sm font-ui bg-ln-accent text-white hover:bg-ln-accent-hover transition-all">
-                {lang === 'zh' ? '立即注册' : 'Sign Up Now'} <ArrowRight size={14} />
-              </Link>
+                <RefreshCw size={14} /> {lang === 'zh' ? '重试' : 'Retry'}
+              </button>
             </div>
           </div>
         </div>
@@ -201,14 +199,10 @@ export default function DashboardPage() {
       {/* Page header */}
       <div className="mb-10">
         <h1 className="text-2xl mb-1 font-heading tracking-[-0.3px] text-ln-text">
-          {isDemo ? 'Moltable Dashboard' : lang === 'zh' ? '欢迎回来' : 'Welcome Back'}
+          {lang === 'zh' ? '欢迎回来' : 'Welcome Back'}
         </h1>
         <p className="text-sm text-ln-tertiary font-body">
-          {isDemo ? (
-            <>{lang === 'zh' ? '演示数据 — ' : 'Demo data — '}<Link href="/login" className="text-ln-accent hover:text-ln-accent-hover transition-colors font-ui">{lang === 'zh' ? '注册后' : 'Sign in'}</Link> {lang === 'zh' ? '开始使用' : 'to get started'}</>
-          ) : (
-            lang === 'zh' ? '管理你的 AI 身份、记忆和 Persona' : 'Manage your AI identity, memories and personas'
-          )}
+          {lang === 'zh' ? '管理你的 AI 身份、记忆和 Persona' : 'Manage your AI identity, memories and personas'}
         </p>
       </div>
 

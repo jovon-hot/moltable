@@ -14,14 +14,6 @@ const CAT_COLORS: Record<string, { bg: string; text: string; border: string }> =
   project: { bg: 'bg-[rgba(129,140,248,0.08)]', text: 'text-[#818cf8]', border: 'shadow-[0_0_0_1px_rgba(129,140,248,0.2)]' },
 }
 
-const DEMO_MEMORIES = [
-  { id: 'demo-1', content: '用户偏好使用深色主题，所有界面保持暗色设计', category: 'preference', source: 'demo', created_at: new Date(Date.now() - 3600000).toISOString() },
-  { id: 'demo-2', content: '用户对性能敏感，API 响应时间需控制在 200ms 以内', category: 'fact', source: 'demo', created_at: new Date(Date.now() - 86400000).toISOString() },
-  { id: 'demo-3', content: '决定采用 Next.js App Router 架构构建前端', category: 'decision', source: 'demo', created_at: new Date(Date.now() - 172800000).toISOString() },
-  { id: 'demo-4', content: '记忆管理模块是本项目核心功能，需要完善的搜索和分类', category: 'project', source: 'demo', created_at: new Date(Date.now() - 259200000).toISOString() },
-  { id: 'demo-5', content: '用户希望 Persona 支持构建体和映射体两种类型', category: 'preference', source: 'demo', created_at: new Date(Date.now() - 345600000).toISOString() },
-]
-
 const PAGE_SIZE = 20
 
 export default function MemoriesPage() {
@@ -45,7 +37,7 @@ export default function MemoriesPage() {
   const [hasMore, setHasMore] = useState(true)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editContent, setEditContent] = useState('')
-  const [isDemo, setIsDemo] = useState(false)
+  const [error, setError] = useState(false)
   const [newContent, setNewContent] = useState('')
   const [newCategory, setNewCategory] = useState('fact')
   const [adding, setAdding] = useState(false)
@@ -58,7 +50,6 @@ export default function MemoriesPage() {
   const [consolidating, setConsolidating] = useState(false)
   const [consolidateStrategy, setConsolidateStrategy] = useState('merge')
 
-  const showDemoToast = () => toast(lang === 'zh' ? '演示模式下不可用 — 注册后开始使用' : 'Not available in demo — sign up to get started', 'info')
 
   const fetchMemories = useCallback(async (query?: string, cat?: string, off?: number, append = false) => {
     setLoading(true)
@@ -82,28 +73,22 @@ export default function MemoriesPage() {
     } catch (err: any) {
       // Only show demo if truly unauthenticated — network errors show empty state
       const localKey = typeof window !== 'undefined' ? localStorage.getItem('moltable_key') : null
-      if (!localKey) { setIsDemo(true); setMemories(DEMO_MEMORIES) }
-      else { setIsDemo(false); setMemories([]) }
+      if (!localKey) { setError(true); setMemories([]) }
+      else { setMemories([]) }
       setHasMore(false)
     } finally { setLoading(false) }
   }, [toast, timeDecay])
 
   useEffect(() => { fetchMemories() }, [])
 
-  const handleSearch = () => {
-    if (isDemo) { showDemoToast(); return }
-    setOffset(0); fetchMemories(search || undefined, category)
+  const handleSearch = () => { setOffset(0); fetchMemories(search || undefined, category)
   }
-  const handleLoadMore = () => {
-    if (isDemo) { showDemoToast(); return }
-    const newOff = offset + PAGE_SIZE; setOffset(newOff)
+  const handleLoadMore = () => { const newOff = offset + PAGE_SIZE; setOffset(newOff)
     fetchMemories(search || undefined, category, newOff, true)
   }
 
   // ── Duplicate Detection ──────────────────────────
-  const fetchDuplicates = async () => {
-    if (isDemo) { showDemoToast(); return }
-    setDupLoading(true)
+  const fetchDuplicates = async () => { setDupLoading(true)
     try {
       const data = await apiFetch<{ groups: any[] }>('/api/memories/duplicates')
       setDuplicateGroups(data.groups || [])
@@ -121,9 +106,7 @@ export default function MemoriesPage() {
     })
   }
 
-  const handleConsolidate = async () => {
-    if (isDemo) { showDemoToast(); return }
-    const ids = Array.from(selectedForConsolidation)
+  const handleConsolidate = async () => { const ids = Array.from(selectedForConsolidation)
     if (ids.length < 2) { toast(d.dashboard_ui?.consolidateBtn?.replace('{count}', String(0)) || 'Need at least 2', 'error'); return }
     setConsolidating(true)
     try {
@@ -141,9 +124,7 @@ export default function MemoriesPage() {
       toast(err?.message || (d.consolidateFailed as string), 'error')
     } finally { setConsolidating(false) }
   }
-  const handleSave = async () => {
-    if (isDemo) { showDemoToast(); return }
-    if (!newContent.trim()) return
+  const handleSave = async () => { if (!newContent.trim()) return
     setAdding(true)
     try {
       await apiFetch('/api/memories', {
@@ -157,9 +138,7 @@ export default function MemoriesPage() {
       toast(err?.message || 'Failed to create memory', 'error')
     } finally { setAdding(false) }
   }
-  const handleDelete = async (id: string) => {
-    if (isDemo) { showDemoToast(); return }
-    try {
+  const handleDelete = async (id: string) => { try {
       await apiFetch(`/api/memories/${id}`, { method: 'DELETE' })
       toast(d.memoryDeleted as string, 'success')
       setMemories(prev => prev.filter(m => m.id !== id))
@@ -167,9 +146,7 @@ export default function MemoriesPage() {
       toast(err?.message || 'Failed to delete memory', 'error')
     }
   }
-  const handleArchive = async (id: string) => {
-    if (isDemo) { showDemoToast(); return }
-    try {
+  const handleArchive = async (id: string) => { try {
       await apiFetch(`/api/memories/${id}/archive`, { method: 'POST' })
       toast(d.memoryArchived as string, 'success')
       setMemories(prev => prev.filter(m => m.id !== id))
@@ -177,11 +154,9 @@ export default function MemoriesPage() {
       toast(err?.message || 'Failed to archive memory', 'error')
     }
   }
-  const startEdit = (m: any) => { if (isDemo) { showDemoToast(); return }; setEditingId(m.id); setEditContent(m.content) }
+  const startEdit = (m: any) => { ; setEditingId(m.id); setEditContent(m.content) }
   const cancelEdit = () => { setEditingId(null); setEditContent('') }
-  const saveEdit = async (id: string) => {
-    if (isDemo) { showDemoToast(); return }
-    if (!editContent.trim()) return
+  const saveEdit = async (id: string) => { if (!editContent.trim()) return
     try {
       await apiFetch(`/api/memories/${id}`, {
         method: 'PATCH',
@@ -202,7 +177,7 @@ export default function MemoriesPage() {
           <h1 className="text-2xl font-heading tracking-[-0.3px] text-ln-text">{d.memoryMgmt}</h1>
           <p className="text-sm text-ln-tertiary font-body mt-1">{d.memoryDesc}</p>
         </div>
-        <button onClick={() => { if (isDemo) { showDemoToast(); return }; setShowAddForm(!showAddForm) }}
+        <button onClick={() => { ; setShowAddForm(!showAddForm) }}
           className="flex items-center gap-1.5 px-4 py-2 rounded-btn text-sm font-ui transition-all duration-150 bg-ln-accent text-white hover:bg-ln-accent-hover">
           <Plus size={15} /> {d.addMemory}
         </button>
@@ -221,13 +196,13 @@ export default function MemoriesPage() {
             {d.searchBtn}
           </button>
         </div>
-        <select value={category} onChange={e => { if (isDemo) { showDemoToast(); return }; setCategory(e.target.value); setOffset(0); fetchMemories(search || undefined, e.target.value) }}
+        <select value={category} onChange={e => { ; setCategory(e.target.value); setOffset(0); fetchMemories(search || undefined, e.target.value) }}
           className="px-3 py-2 rounded-btn text-sm font-body bg-ln-surface text-ln-secondary shadow-border outline-none focus:shadow-border-accent transition-all">
           {CATEGORIES.map(c => (<option key={c.value} value={c.value}>{c.label}</option>))}
         </select>
       </div>
 
-      {!isDemo && (<div className="flex items-center gap-3 mb-4">
+      {(<div className="flex items-center gap-3 mb-4">
         <label className="flex items-center gap-2 text-xs text-ln-tertiary font-ui cursor-pointer select-none">
           <input type="checkbox" checked={timeDecay} onChange={e => setTimeDecay(e.target.checked)}
             className="w-3.5 h-3.5 rounded border-ln-tertiary accent-ln-accent" />
@@ -334,7 +309,7 @@ export default function MemoriesPage() {
             <button onClick={handleSave} disabled={adding || !newContent.trim()}
               className="flex items-center gap-1.5 px-4 py-2 rounded-btn text-sm font-ui disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 bg-ln-accent text-white hover:bg-ln-accent-hover">
               {adding ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
-              {isDemo ? d.demoMode : d.addBtn}
+              {d.addBtn}
             </button>
             <button onClick={() => { setShowAddForm(false); setNewContent('') }}
               className="px-3 py-2 rounded-btn text-sm font-body text-ln-tertiary hover:text-ln-secondary transition-colors">
@@ -344,7 +319,7 @@ export default function MemoriesPage() {
         </div>
       )}
 
-      {isDemo && (
+      {error && (
         <div className="mb-6 px-4 py-3 rounded-card bg-ln-accent-muted text-ln-accent-hover text-sm font-body shadow-border-accent animate-in">
           🔍 {d.memory_demo_notice}
         </div>
@@ -361,7 +336,7 @@ export default function MemoriesPage() {
           </div>
           <p className="text-base mb-2 text-ln-text font-ui">{d.noMemories}</p>
           <p className="text-sm mb-6 text-ln-tertiary font-body">{d.noMemoriesDesc}</p>
-          <button onClick={() => { if (!isDemo) setShowAddForm(true) }}
+          <button onClick={() => setShowAddForm(true)}
             className="inline-flex items-center gap-1.5 px-5 py-2 rounded-btn text-sm font-ui bg-ln-accent text-white hover:bg-ln-accent-hover transition-all duration-150">
             <Plus size={15} /> {d.addFirstMemory}
           </button>

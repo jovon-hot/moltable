@@ -23,7 +23,7 @@ export default function SettingsPage() {
   const [newKeyName, setNewKeyName] = useState('')
   const [creating, setCreating] = useState(false)
   const [copied, setCopied] = useState(false)
-  const [isDemo, setIsDemo] = useState(false)
+  const [error, setError] = useState(false)
   const [upgrading, setUpgrading] = useState(false)
   const [activeTab, setActiveTab] = useState<'profile' | 'keys' | 'sync'>('profile')
   const [syncCode, setSyncCode] = useState<string | null>(null)
@@ -39,12 +39,11 @@ export default function SettingsPage() {
       setUser(data)
       try { const keys = await apiFetch<ApiKey[]>('/api/auth/api-keys'); setApiKeys(Array.isArray(keys) ? keys : []) }
       catch { setApiKeys([]) }
-    } catch (err: any) { setIsDemo(true); setApiKeys([]) }
+    } catch (err: any) { setError(true); setApiKeys([]) }
     finally { setLoading(false) }
   }
 
   const handleCreateKey = async () => {
-    if (isDemo) { showDemoToast(); return }
     setCreating(true)
     try {
       const name = newKeyName.trim() || `Key ${apiKeys.length + 1}`
@@ -64,7 +63,6 @@ export default function SettingsPage() {
     finally { setCreating(false) }
   }
   const handleRevokeKey = async (id: string, name: string) => {
-    if (isDemo) { showDemoToast(); return }
     try {
       await apiFetch(`/api/auth/api-keys/${id}`, { method: 'DELETE' })
       setApiKeys(prev => prev.filter(k => k.id !== id))
@@ -73,7 +71,6 @@ export default function SettingsPage() {
       toast(err.message || (lang === 'zh' ? '吊销失败' : 'Revoke failed'), 'error')
     }
   }
-  const showDemoToast = () => toast(lang === 'zh' ? '演示模式 — 注册后可用' : 'Demo mode — sign up to use', 'info')
   const copyNewKey = () => { if (newKey) { navigator.clipboard.writeText(newKey); setCopied(true); setTimeout(() => setCopied(false), 2000) } }
 
   const generateSyncCode = async () => {
@@ -199,7 +196,7 @@ export default function SettingsPage() {
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm" style={{ fontWeight: 590, color: '#ffffff' }}>API {lang === 'zh' ? '密钥' : 'Keys'}</h2>
-            <button onClick={handleCreateKey} disabled={creating || isDemo}
+            <button onClick={handleCreateKey} disabled={creating}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] text-xs font-medium transition-all hover:opacity-90 disabled:opacity-50"
               style={{ background: '#4338CA', color: '#fff', fontWeight: 510 }}>
               <Plus size={14} /> {d.createKey}
@@ -217,7 +214,7 @@ export default function SettingsPage() {
           )}
 
           {apiKeys.length === 0 ? (
-            <p className="text-sm text-center py-8" style={{ color: '#888888' }}>{isDemo ? d.loginToView : d.noKeysYet}</p>
+            <p className="text-sm text-center py-8" style={{ color: '#888888' }}>{error ? (lang === 'zh' ? '加载失败，请重试' : 'Failed to load, please retry') : d.noKeysYet}</p>
           ) : (
             <div className="space-y-2">
               {apiKeys.map(key => (
