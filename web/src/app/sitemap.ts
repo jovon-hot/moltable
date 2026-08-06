@@ -12,6 +12,7 @@ const staticPages: { url: string; priority: number; changefreq?: MetadataRoute.S
   { url: '/pricing', priority: 0.9 },
   { url: '/blog', priority: 0.8 },
   { url: '/compare', priority: 0.9 },
+  { url: '/signup', priority: 0.8 },
   { url: '/about', priority: 0.7 },
   { url: '/faq', priority: 0.7, changefreq: 'monthly' as const },
   { url: '/privacy', priority: 0.3 },

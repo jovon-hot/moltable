@@ -10,6 +10,7 @@ function RegisterForm() {
   const { t } = useLang()
   const searchParams = useSearchParams()
   const planParam = searchParams.get('plan') || ''
+  const refParam = searchParams.get('ref') || ''
   const a = t.auth
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -23,8 +24,11 @@ function RegisterForm() {
     try {
       const data = await localRegister(email, password)
       if (data.key) {
-        // Store key in sessionStorage (not URL) — avoid browser history/log leaks
+        // Store key and referral code in sessionStorage
         sessionStorage.setItem('moltable_new_key', data.key)
+        if (refParam) {
+          sessionStorage.setItem('moltable_ref_code', refParam)
+        }
         const params = new URLSearchParams({ new: 'true' })
         if (planParam === 'pro') params.set('plan', 'pro')
         window.location.href = `/connect?${params.toString()}`

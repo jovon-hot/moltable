@@ -6,7 +6,7 @@ import { useLang } from '@/contexts/LanguageContext'
 import { apiFetch } from '@/lib/api'
 import {
   Loader2, Copy, Check, Gift, Share2, Users, UserCheck, Clock,
-  Mail, Twitter, Send, MessageCircle, Link2,
+  Mail, Twitter, Send, MessageCircle, Link2, Linkedin,
 } from 'lucide-react'
 
 interface ReferralStats {
@@ -99,6 +99,12 @@ export default function ReferralsPage() {
           label: 'X / Twitter',
           icon: Twitter,
           href: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
+          cls: 'hover:bg-ln-hover',
+        },
+        {
+          label: 'LinkedIn',
+          icon: Linkedin,
+          href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,
           cls: 'hover:bg-ln-hover',
         },
         {
@@ -200,6 +206,32 @@ export default function ReferralsPage() {
             ))}
           </div>
 
+          {/* Rewards */}
+          <div className="p-6 rounded-card bg-ln-surface shadow-card" style={{ borderLeft: '3px solid #4338CA' }}>
+            <div className="flex items-start gap-3">
+              <Gift size={18} className="text-ln-accent mt-0.5 flex-shrink-0" />
+              <div>
+                <h2 className="text-base font-ui text-ln-text mb-2">
+                  {zh ? '推荐奖励' : 'Referral Rewards'}
+                </h2>
+                <ul className="space-y-1.5 text-sm text-ln-secondary font-body">
+                  <li className="flex items-start gap-2">
+                    <Check size={14} className="text-emerald-400 mt-0.5 flex-shrink-0" />
+                    {zh ? '每位好友注册后，你获得额外 500 条记忆容量' : 'Earn 500 extra memory capacity per referred friend who signs up'}
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check size={14} className="text-emerald-400 mt-0.5 flex-shrink-0" />
+                    {zh ? '推荐 5 位好友 → 解锁「超级推荐人」徽章' : 'Refer 5 friends → unlock "Super Connector" badge'}
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check size={14} className="text-emerald-400 mt-0.5 flex-shrink-0" />
+                    {zh ? '你的好友获得 30 天免费 Pro 试用' : 'Your friends get 30-day free Pro trial'}
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
           {/* Share links */}
           <div className="p-6 rounded-card bg-ln-surface shadow-card">
             <div className="flex items-center gap-2 mb-4">
@@ -207,7 +239,7 @@ export default function ReferralsPage() {
               <h2 className="text-base font-ui text-ln-text">{zh ? '分享邀请' : 'Share Your Invite'}</h2>
             </div>
             {socialLinks.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                 {socialLinks.map(({ label, icon: Icon, href, cls }) => (
                   <a
                     key={label}
