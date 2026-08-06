@@ -1,36 +1,42 @@
-# Moltable — AI Identity Sync
+<p align="center">
+  <img src="web/public/logo-brand.svg" width="120" alt="Moltable" />
+</p>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+<h1 align="center">Moltable — AI Identity Sync</h1>
+<p align="center"><strong>One identity. Every agent.</strong> · <strong>你的 AI，永远认识你。</strong></p>
 
-**你的 AI，永远认识你。** · **One identity. Every agent.**
-
-Moltable 是 AI Agent 的身份同步层。一个身份接入，所有 Agent 自动同步偏好、技能和记忆。换电脑 3 分钟恢复完整 AI 环境。
-
-Moltable is the identity sync layer for AI agents. Connect once — every agent auto-syncs your preferences, skills, and memories. Full AI environment recovery in 3 minutes on any machine.
-
----
-
-## 核心能力 · Core Capabilities
-
-- 🔄 **3 分钟环境恢复** — 换电脑后身份/偏好/Persona/Skills/MCP 配置一键恢复
-  - **3-Minute Environment Recovery** — Identity, preferences, personas, skills, and MCP configs restore with one click
-- 🧠 **跨 Agent 记忆** — 10,000 条记忆跨平台同步（Pro），向量 + 全文混合搜索
-  - **Cross-Agent Memory** — 10,000 memories synced across platforms (Pro), hybrid vector + full-text search
-- 🗺️ **项目环境地图** — knowledge_bases + tools 配置化存储
-  - **Project Environment Map** — Configurable storage for knowledge bases and tool configurations
-- 🎭 **多 Persona 切换** — 不同角色不同视角
-  - **Multi-Persona Switching** — Different roles, different perspectives
+<p align="center">
+  <a href="https://github.com/jovon-hot/moltable/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
+  <a href="https://www.moltable.ai"><img src="https://img.shields.io/badge/Website-moltable.ai-4338CA" /></a>
+  <a href="https://www.moltable.ai/blog"><img src="https://img.shields.io/badge/Blog-18_posts-FB6B4B" /></a>
+</p>
 
 ---
 
-## 快速开始 · Quick Start
+Moltable is the **identity sync layer for AI agents**. Connect once — every agent (Claude, Cursor, Codex, Hermes) auto-syncs your preferences, Personas, skills, and memories. Switch computers? Full AI environment recovery in 3 minutes.
 
-```bash
-# 注册获取 API Key（30 秒）· Register for API Key (30 seconds)
-# https://moltable.ai/register
+Moltable 是 AI Agent 的**身份同步层**。一个身份接入，所有 Agent 自动同步偏好、Persona、技能和记忆。换电脑 3 分钟恢复完整 AI 环境。
+
+---
+
+## Why does my AI forget me every morning?
+
+> "Hey Claude, continue yesterday's work."  
+> "Hello! I don't have any context from previous conversations."
+
+Every AI agent session starts from zero. You spend 3.2 hours/week re-teaching your AI who you are. Moltable fixes this with a **three-layer identity architecture**:
+
+```
+Identity Layer    → Cross-platform unique ID
+Persona Layer     → Role management (Developer / Architect / Writer)
+Sync Layer        → One sync code restores everything
 ```
 
-### 🚀 一行接入 · One-Line Connect
+Not a memory tool. **An identity layer.** Read more: [moltable vs mem0](https://www.moltable.ai/blog/moltable-vs-mem0-identity-vs-memory)
+
+---
+
+## 🚀 One-line Connect
 
 ```bash
 # Claude Desktop
@@ -43,20 +49,9 @@ npx @moltable/connect cursor --api-key <your-api-key>
 npx @moltable/connect hermes --api-key <your-api-key>
 ```
 
-`@moltable/connect` 自动完成：读取/创建平台 MCP 配置 → 备份原配置 → 写入 Moltable
-server（`https://api.moltable.ai/mcp` + `X-API-Key` header）→ 在线验证 API Key →
-打印接入指引。无需手动编辑任何 JSON。
+No manual JSON editing. Auto-detects your config, backs it up, injects Moltable MCP server, validates your key. [Get a free API key →](https://moltable.ai/register)
 
-`@moltable/connect` auto-completes: read/create platform MCP config → backup original → write Moltable server → validate API key online → print setup guide. No manual JSON editing needed.
-
-### 其他方式 · Alternative Methods
-
-```bash
-# 一键脚本 · One-liner script (registered users)
-curl -sL https://moltable.ai/connect.sh | bash -s -- <your-api-key>
-
-# 或手动配置 MCP · Or manual MCP config
-```
+### Manual MCP config
 
 ```json
 {
@@ -72,39 +67,51 @@ curl -sL https://moltable.ai/connect.sh | bash -s -- <your-api-key>
 
 ---
 
-## 定价 · Pricing
+## Capabilities
 
-| | Free | Pro |
-|--|------|-----|
-| 价格 Price | ¥0 | ¥19/月 |
-| 记忆 Memory | 100 条 | 10,000 条 |
-| Persona | 2 个 | 无限 Unlimited |
-| 主机发现 Discovery | 1 个 | 无限 Unlimited |
-
----
-
-## 支持的 Agent · Supported Agents
-
-Hermes · Claude Code · Cursor · Any MCP-compatible client
+| | Free | Pro (¥19/mo) |
+|---|---|---|
+| Memory | 100 cards | 10,000 cards |
+| Personas | 2 | Unlimited |
+| Agent platforms | 3 | Unlimited |
+| Semantic search | ✅ | ✅ |
+| Sync code recovery | ✅ | ✅ |
+| Discovery | 1 host | Unlimited |
 
 ---
 
-## 自托管 · Self-Host
+## Supported Agents
+
+<p>
+  <img src="https://img.shields.io/badge/Hermes-Agent-4338CA" />
+  <img src="https://img.shields.io/badge/Claude_Desktop-MCP-4338CA" />
+  <img src="https://img.shields.io/badge/Cursor-MCP-4338CA" />
+  <img src="https://img.shields.io/badge/Codex-MCP-4338CA" />
+  <img src="https://img.shields.io/badge/OpenCode-MCP-4338CA" />
+</p>
+
+Any MCP-compatible client works out of the box.
+
+---
+
+## Self-Host
 
 ```bash
-git clone https://github.com/Moltable.git
+git clone https://github.com/jovon-hot/moltable.git
 cd moltable/server
 pip install -r requirements.txt
 python main.py
 ```
 
----
-
-## 📚 博客 · Blog
-
-Read deep dives on AI identity, MCP protocol, and agent memory architecture:
-→ [moltable.ai/blog](https://www.moltable.ai/blog)
+Licensed under **MIT**. Identity data belongs to you — always.
 
 ---
 
-MIT License
+<p align="center">
+  <a href="https://www.moltable.ai">🌐 Website</a> ·
+  <a href="https://www.moltable.ai/docs">📚 Docs</a> ·
+  <a href="https://www.moltable.ai/blog">📝 Blog</a> ·
+  <a href="https://www.moltable.ai/faq">❓ FAQ</a>
+</p>
+
+<p align="center"><sub>MIT License · Built with ❤️ in Beijing</sub></p>
