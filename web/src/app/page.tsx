@@ -277,11 +277,11 @@ export default function LandingPage() {
       {/* ── Privacy ── */}
       <section className="px-6 py-20 max-w-5xl mx-auto">
         <h2 className="text-2xl text-center mb-12 font-bold">{t.privacy.title}</h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-5 justify-items-center">
           {t.privacy.items.map((item: any, i: number) => {
             const Icon = privacyIcons[i]
             return (
-              <div key={i} className="p-5 rounded-xl text-center transition-all duration-200 hover:-translate-y-1"
+              <div key={i} className="p-5 rounded-xl text-center transition-all duration-200 hover:-translate-y-1 w-full"
                 style={{ background: '#14141E', border: '1px solid rgba(255,255,255,0.06)' }}>
                 <Icon size={22} style={{ color: '#6366F1', margin: '0 auto 12px' }} />
                 <h3 className="text-sm mb-2 font-semibold">{item.title}</h3>

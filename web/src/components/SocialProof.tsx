@@ -75,7 +75,7 @@ export default function SocialProof() {
     })
   }
 
-  if (stats.subscribers !== null) {
+  if (stats.subscribers !== null && stats.subscribers >= 50) {
     items.push({
       icon: <Mail size={14} style={{ color: '#6366F1' }} />,
       value: String(stats.subscribers),
