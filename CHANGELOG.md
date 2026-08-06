@@ -1,3 +1,15 @@
+## 2026-08-07 (R5 — 夜间维护·安全加固·依赖升级)
+
+- **安全审计**: npm audit — 0 漏洞 ✅ | pip-audit — 101→0 漏洞 🔧
+  - Python 3.9→3.11 运行时升级，创建 `.venv/` 隔离环境
+  - 关键修复: starlette 0.49.3→1.4.1 (SSRF/Host注入) | transformers 4.57.6→5.14.1 (RCE) | torch 2.8.0→2.13.0 (内存损坏)
+  - aiohttp 3.13.5→3.14.3 | urllib3 2.6.3→2.7.0 | requests 2.32.5→2.34.2
+  - setuptools 58.0.4→83.0.0 | wheel 0.37.0→0.47.0 | soupsieve 2.8.3→2.8.4
+- **测试**: 全量 172 passed, 3 skipped ✅（新 venv 通过）
+- **构建**: .next 260MB | 首屏 JS 103kB | 47 静态页面
+- **健康**: 6/6 端点 OK (200, 4.8s) ✅
+- **待升级**: Next.js 15→16 | Tailwind 3→4 | lucide-react 0.4→1.x | TypeScript 5→7（需适配破坏性变更）
+
 ## 2026-08-07 (R5 — 夜间维护·增长优化·内容生产)
 
 - **增长**: 推荐系统增强 — LinkedIn 分享 + 奖励展示 + 推荐落地页 🆕
