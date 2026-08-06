@@ -12,7 +12,7 @@ const aboutLayerIcons = [Shield, Users, Layers]
 const privacyIcons = [Shield, Download, Trash2, Mail]
 
 export default function LandingPage() {
-  const { t, lang } = useLang()
+  const { t } = useLang()
   const p = t.pricing as any
   const pricingFeatures = (t.pricing as any).features || {}
 
@@ -208,7 +208,7 @@ export default function LandingPage() {
               {plan.accent ? (
                 <Link href="/register" className="block w-full text-center px-4 py-2.5 rounded-lg text-sm font-semibold transition-all hover:opacity-90"
                   style={{ background: '#4338CA', color: '#fff' }}>
-                  {lang === 'zh' ? 'Pro · 90天免费体验' : 'Pro · 90-Day Free Trial'}
+                  {plan.cta}
                 </Link>
               ) : (
                 <Link href={plan.href || '#'} className="block w-full text-center px-4 py-2.5 rounded-lg text-sm font-semibold transition-all hover:bg-white/5"
