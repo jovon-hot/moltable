@@ -213,11 +213,45 @@ def save_memory(request: Request, body: MemoryCreate,
     except Exception:
         pass  # Temporal tracking is non-blocking
 
+    # ── Relationship inference: auto-detect SUPERSEDES/CONTRADICTS ─────
+    relationships_detected = 0
+    try:
+        from services.relationship_inference import infer_relationships
+        from services.embedding import embed as _embed_for_rel
+
+        all_mems = get_store().list(user_id, limit=500)
+        # Filter to other memories only
+        others = [m for m in all_mems if m["id"] != doc["id"]]
+        if others:
+            # Use simple word-overlap similarity for speed
+            def _quick_sim(a: str, b: str) -> float:
+                wa = set(a.lower().split())
+                wb = set(b.lower().split())
+                if not wa or not wb:
+                    return 0.0
+                return len(wa & wb) / len(wa | wb)
+
+            rels = infer_relationships(doc, others, _quick_sim)
+            total = (
+                len(rels.get("supersedes", []))
+                + len(rels.get("contradicts", []))
+                + len(rels.get("extends", []))
+            )
+            relationships_detected = total
+            if total:
+                import logging
+                logging.getLogger("moltable.memories").info(
+                    "Relationships: detected %d relationship(s) for memory %s", total, doc["id"]
+                )
+    except Exception:
+        pass  # Relationship inference is non-blocking
+
     return {
         "saved": True,
         "id": doc["id"],
         "source": source,
         "transitions_detected": transitions_detected,
+        "relationships_detected": relationships_detected,
     }
 
 

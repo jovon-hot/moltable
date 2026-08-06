@@ -1,3 +1,23 @@
+## 2026-08-07 (R8 — 夜间维护·Identity Graph 关系推理引擎)
+
+- **功能**: Relationship Inference 引擎 — 自动检测记忆间关系 🆕
+  - 三级关系检测: SUPERSEDES (>85%相似)、CONTRADICTS (矛盾事实)、EXTENDS (45-85%相似)
+  - Key-Value 事实提取: 自动识别 "uses X" / "lives in Y" / "prefers Z" 等事实对
+  - 中文矛盾检测: 支持「不对」「实际上」「修正」「不再」等中文矛盾信号词
+  - 矛盾语言检测 + 否定词计数 + 事实冲突识别 三层矛盾检测策略
+  - 集成到记忆保存管道: 每次保存自动检测关系（非阻塞）
+- **功能**: Identity Graph 查询服务 — 上下文感知记忆检索 🆕
+  - 6 步查询流程: 身份解析→Persona路由→项目作用域→图遍历→时序衰减→上下文组装
+  - 时序衰减引擎: 指数衰减 (半衰期 7 天)、新鲜度加权 (1.2×)、被取代惩罚 (0.1×)、活跃项目加成 (1.1×)
+  - Pinned 记忆免疫: 标记为 pinned 的记忆永久忽略衰减
+  - 偏好作用域过滤: 全局/Persona/Project 三级偏好自动匹配
+  - 图上下文: 自动连接相关知识图谱实体
+  - Auto Provision: 一键身份恢复（Persona 检测 + 偏好 + 记忆）
+- **集成**: 记忆保存 API 新增 `relationships_detected` 返回字段
+- **测试**: 40 个新测试 (29 relationship_inference + 11 identity_graph)
+- **全量测试**: 212 passed, 3 skipped ✅
+- **提交**: [本次]
+
 ## 2026-08-07 (R7 — 夜间维护·增长基建·代码重构)
 
 - **重构**: 提取共享博客数据模块 `web/src/data/blog-posts.ts` — 消除 blog/page.tsx 与 feed.xml/route.ts 之间的元数据重复
