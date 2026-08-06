@@ -67,10 +67,85 @@ class MemoryUpdate(BaseModel):
     persona_id: str | None = Field(default=None)
 
 
+# ── Auto-merge thresholds ────────────────────────────
+AUTO_UPDATE_THRESHOLD = 0.95   # Replace existing content entirely
+AUTO_ENRICH_THRESHOLD = 0.85   # Append new info to existing memory
+
+
+def _smart_merge(user_id: str, new_content: str, new_vec: list[float],
+                 new_category: str, new_source: str, new_confidence: float,
+                 new_tags: list[str], new_persona_id: str | None,
+                 conflicts: list[dict]) -> dict:
+    """Intelligently merge a new memory with existing conflicts.
+
+    Three-tier strategy based on similarity:
+      - > 0.95: UPDATE — replace existing content (near-identical fact)
+      - > 0.85: ENRICH — append new info as context update to best match
+      - < 0.85: normal save (handled by caller)
+
+    Returns {"action": "update"|"enrich", "id": str, "previous_content": str}
+    """
+    store = get_store()
+    # Find the highest-similarity conflict
+    best = max(conflicts, key=lambda c: c["similarity"])
+    sim = best["similarity"]
+    existing_id = best["id"]
+    existing_content = best.get("content", "")
+
+    if sim >= AUTO_UPDATE_THRESHOLD:
+        # Near-identical: replace content entirely (e.g., typo fix, rephrase)
+        store.update(existing_id, user_id,
+                     content=new_content,
+                     embedding=new_vec,
+                     category=new_category,
+                     source=new_source,
+                     confidence=new_confidence,
+                     tags=new_tags,
+                     persona_id=new_persona_id)
+        import logging
+        logging.getLogger("moltable.memories").info(
+            "Auto-updated memory %s (sim=%.3f)", existing_id, sim
+        )
+        return {
+            "action": "update",
+            "id": existing_id,
+            "previous_content": existing_content[:200],
+            "similarity": round(sim, 4),
+        }
+
+    elif sim >= AUTO_ENRICH_THRESHOLD:
+        # Similar but not identical: enrich existing with new context
+        enriched = (
+            f"{existing_content}\n\n"
+            f"[Updated: {new_source}] {new_content}"
+        )
+        store.update(existing_id, user_id,
+                     content=enriched,
+                     embedding=embed(enriched),
+                     source=f"{best.get('source','unknown')}+{new_source}",
+                     tags=list(set((best.get('tags') or []) + new_tags)),
+                     persona_id=new_persona_id or best.get("persona_id"))
+        import logging
+        logging.getLogger("moltable.memories").info(
+            "Auto-enriched memory %s (sim=%.3f)", existing_id, sim
+        )
+        return {
+            "action": "enrich",
+            "id": existing_id,
+            "previous_content": existing_content[:200],
+            "similarity": round(sim, 4),
+        }
+
+    # Below threshold — caller should do normal insert
+    return {"action": "insert"}
+
+
 # ── Save ──────────────────────────────────────────────
 @router.post("")
 @limiter.limit("60/minute")
-def save_memory(request: Request, body: MemoryCreate, force: bool = Query(False),
+def save_memory(request: Request, body: MemoryCreate,
+                force: bool = Query(False, description="Force overwrite on conflict"),
+                auto_merge: bool = Query(True, description="Smart auto-merge on duplicates (update/enrich instead of error)"),
                 user_id: str = Depends(get_user)):
     # ── 配额检查（按 plan 动态限额） ─────────────────
     from services.quota import check_quota
@@ -79,20 +154,39 @@ def save_memory(request: Request, body: MemoryCreate, force: bool = Query(False)
     check_quota(user_id, "memories", count)
     vec = embed(body.content)
 
-    if not force:
-        conflicts = get_store().find_conflicts(user_id, vec)
-        strong = [c for c in conflicts if c["similarity"] > 0.9]
-        if strong:
-            return {
-                "saved": False, "conflict": True,
-                "existing": [{"id": c["id"], "content": c["content"][:100],
-                               "similarity": c["similarity"]} for c in strong],
-                "message": "Similar memories found. Use ?force=true to overwrite.",
-            }
-
     # source 解析: 显式传参 → X-Agent-Platform 请求头 → unknown
     agent_platform = (request.headers.get("x-agent-platform") or "").strip()
     source = ((body.source or "").strip() or agent_platform or "unknown")[:200]
+
+    # ── Conflict resolution ─────────────────────────
+    if not force:
+        conflicts = get_store().find_conflicts(user_id, vec)
+        strong = [c for c in conflicts if c["similarity"] > AUTO_ENRICH_THRESHOLD]
+
+        if strong:
+            if auto_merge:
+                # Smart auto-merge: update or enrich based on similarity
+                merge_result = _smart_merge(
+                    user_id, body.content, vec,
+                    body.category, source, body.confidence,
+                    body.tags, body.persona_id,
+                    strong,
+                )
+                if merge_result["action"] != "insert":
+                    return {
+                        "saved": True,
+                        "auto_merged": True,
+                        **merge_result,
+                    }
+                # Fall through to normal insert if below all thresholds
+            else:
+                # Old behavior: return conflict error
+                return {
+                    "saved": False, "conflict": True,
+                    "existing": [{"id": c["id"], "content": c["content"][:100],
+                                   "similarity": c["similarity"]} for c in strong],
+                    "message": "Similar memories found. Use ?force=true to overwrite, or ?auto_merge=true for smart merge.",
+                }
 
     doc = get_store().insert(
         user_id, body.content, vec,
