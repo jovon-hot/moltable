@@ -1,3 +1,16 @@
+## 2026-08-07 (R6 — 夜间维护·构建修复·依赖升级)
+
+- **构建修复**: Next.js 15 viewport 弃用 — Metadata 中 viewport 迁移至独立 Viewport 导出 🔧
+  - 根 layout.tsx: `metadata.viewport` → `export const viewport: Viewport`
+  - 消除 9 个 viewport 弃用警告（所有页面继承根 layout，一并修复）
+  - 构建: 48 静态页面, 0 错误, 0 警告 ✅
+- **安全审计**: npm audit 0 漏洞 ✅ | pip-audit clean ✅
+- **依赖升级**: sentence-transformers 5.6.1→5.7.0（minor upgrade, 测试全通过）
+- **TypeScript**: devDependency ^5.5.0→^6.0.0（为未来兼容）
+- **测试**: 172 passed, 3 skipped ✅ | 健康检查 6/6 端点 OK
+- **待观察**: uvicorn 0.39→0.52（跨版本较多，建议白天人工评估）
+- **跳过**: Next.js 15→16 / Tailwind 3→4 / lucide-react 0.4→1.x（破坏性变更，需单独计划）
+
 ## 2026-08-07 (R5 — 夜间维护·安全加固·依赖升级)
 
 - **安全审计**: npm audit — 0 漏洞 ✅ | pip-audit — 101→0 漏洞 🔧
