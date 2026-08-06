@@ -1,12 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 48">
-  <!-- Icon -->
-  <g transform="translate(2,4)">
-    <rect width="40" height="40" rx="10" fill="#0D0D14"/>
-    <path d="M4 34 L4 10 L14 24 L21 6 L28 24 L36 10 L36 34"
-      fill="none" stroke="#4338CA" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M6 34 L6 12 L15 24 L21 8 L27 24 L34 12 L34 34"
-      fill="none" stroke="#FB6B4B" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 40">
+  <!-- M-shape VI Icon -->
+  <g transform="translate(0,0) scale(0.045)">
+    <path d="M325.482 146.947L405 334.279l79.518-187.332c5.4-12.722 17.955-20.219 30.987-19.792l.494.02c13.209-.636 25.014 6.889 30.483 19.772l207.869 489.709c7.013 16.522-.695 35.602-17.218 42.615s-35.602-.695-42.615-17.218L516 239.133l-179.517 422.92c-7.013 16.522-26.093 24.231-42.615 17.218s-24.231-26.093-17.218-42.615l93.044-219.2L292.5 235.6l-181.017 426.453c-7.013 16.522-26.093 24.231-42.615 17.218s-24.231-26.093-17.218-42.615L259.518 146.947c5.675-13.37 19.253-20.97 32.982-19.665 13.729-1.305 27.306 6.294 32.982 19.665L405 334.279zm-39.982 285.553c0 19.606-15.894 35.5-35.5 35.5s-35.5-15.894-35.5-35.5 15.894-35.5 35.5-35.5 35.5 15.894 35.5 35.5zm235 0c0 19.606-15.894 35.5-35.5 35.5s-35.5-15.894-35.5-35.5 15.894-35.5 35.5-35.5 35.5 15.894 35.5 35.5z" fill="#FFFFFF"/>
   </g>
   <!-- Wordmark -->
-  <text x="52" y="34" font-family="Inter,-apple-system,sans-serif" font-size="22" font-weight="700" fill="#F5F4F8" letter-spacing="-0.5">Moltable</text>
+  <text x="44" y="30" font-family="Inter,-apple-system,sans-serif" font-size="20" font-weight="700" fill="#FFFFFF" letter-spacing="-0.5">Moltable.ai</text>
 </svg>

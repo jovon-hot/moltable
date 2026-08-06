@@ -57,11 +57,11 @@ export default function PublicHeader() {
     >
       <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center">
+        <Link href="/" className="flex items-center shrink-0">
           <img
-            src="/logo-icon.svg"
+            src="/logo-horizontal-dark.svg"
             alt="Moltable.ai"
-            className="h-10 w-auto transition-all duration-200"
+            className="h-8 w-auto transition-all duration-200"
           />
         </Link>
 
