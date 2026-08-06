@@ -1,3 +1,20 @@
+## 2026-08-06 (R4 — 夜间维护·增长引擎·内容生产)
+
+- **增长**: Referral/Invite 推荐系统上线 — 病毒式增长引擎 🆕
+  - `routes/referrals.py` — 5 个 API：generate/lookup/stats/claim + 权限校验
+  - 8 位字母数字推荐码，分享链接一键复制
+  - `/dashboard/referrals` 页面 — 推荐统计、分享面板
+  - 数据库：`supabase/migrations/20260806_referrals.sql`
+- **内容**: 「Moltable vs Zep: Temporal Memory & Identity」深度对比博客 — ~2100字
+  - 6 端点对比表、模式检测分析（oscillation/gradual/rapid change）
+  - 中英双语摘要、架构对比、定价对比、选型建议
+  - 博客索引 + RSS 同步更新
+- **竞品对齐**: 更新 /compare 对比页 — 新增 Temporal Memory Timeline + Memory Health Scoring
+  - Moltable 对比功能从 15 项增至 17 项
+  - 中英文 features + strengths 同步更新
+- **构建**: Web Next.js build 成功 ✅
+- **提交**: [本次] - 3 commits
+
 ## 2026-08-06 (R3 — 夜间维护·功能开发·竞品对齐)
 
 - **功能**: Temporal Memory Timeline — 事实变化时间线追踪系统 🆕
