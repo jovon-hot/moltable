@@ -16,6 +16,15 @@ const posts = [
     tags: ['Knowledge Graph', '架构', 'Python', '技术深度'],
   },
   {
+    slug: 'identity-graph-vs-vector-search',
+    date: '2026-08-06',
+    title: '身份图谱：为什么仅有向量搜索无法给 AI Agent 真正的记忆',
+    titleEn: 'The Identity Graph: Why Vector Search Alone Can\'t Give Your AI Agent True Memory',
+    excerpt:
+      '向量数据库存储事实，身份图谱存储关系。当你的 AI Agent 检索到「John 偏好 TypeScript」却不知道 John 正处于 Project X 的代码审查模式时，这些记忆毫无意义。本文深度剖析向量搜索的隐藏失效模式，并给出身份图谱的解决方案。',
+    tags: ['Identity Graph', '向量搜索', 'AI Memory', '架构', '深度分析'],
+  },
+  {
     slug: 'rag-vs-finetuning-vs-identity',
     date: '2026-08-06',
     title: 'RAG vs Fine-Tuning vs Identity Layer：AI 个性化的不可能三角与破局之道',
