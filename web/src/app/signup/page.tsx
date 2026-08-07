@@ -15,10 +15,10 @@ function SignupContent() {
   const benefits = [
     {
       icon: Gift,
-      title: zh ? '30 天 Pro 免费试用' : '30-Day Free Pro Trial',
+      title: zh ? '额外 30 天 Pro 试用' : 'Bonus 30-Day Pro Trial',
       desc: zh
-        ? '通过邀请链接注册，自动获得 30 天 Pro 版全部功能'
-        : 'Sign up via invite link and get 30 days of full Pro features automatically',
+        ? '通过邀请链接注册，在 90 天试用的基础上额外获得 30 天 Pro 版全部功能'
+        : 'Sign up via invite link and get an extra 30 days of Pro features on top of the 90-day trial',
     },
     {
       icon: Zap,
