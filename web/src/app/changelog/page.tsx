@@ -128,7 +128,7 @@ export default function ChangelogPage() {
           </p>
           <div className="flex items-center gap-4 mt-4">
             <a
-              href="https://github.com/jovon-hot/moltable"
+              href="https://github.com/Moltable/moltable"
               className="text-xs text-ln-accent hover:underline"
               target="_blank"
               rel="noopener noreferrer"
@@ -152,7 +152,7 @@ export default function ChangelogPage() {
           <p className="text-xs text-ln-tertiary">
             Moltable is open source.{' '}
             <a
-              href="https://github.com/jovon-hot/moltable"
+              href="https://github.com/Moltable/moltable"
               className="text-ln-accent hover:underline"
               target="_blank"
               rel="noopener noreferrer"
