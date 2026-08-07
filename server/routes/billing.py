@@ -57,9 +57,10 @@ async def activate_trial(request: Request, body: ActivateRequest,
 
     if supabase is not None:
         try:
-            # 更新 users.plan（最简单可靠的方案）
+            # 更新 users.plan + trial_activated_at
             supabase.table("users").update({
                 "plan": plan_info["plan"],
+                "trial_activated_at": now.isoformat(),
             }).eq("id", user_id).execute()
             logger.info("Trial activated: user=%s plan=%s", user_id, body.plan)
         except Exception as e:

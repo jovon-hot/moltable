@@ -1,194 +1,182 @@
 #!/usr/bin/env python3
 """
-Moltable Billing Downgrade Cron
-Daily: Check for expired trials → downgrade to free plan → notify user.
+billing_cron.py — Trial expiration cron job
 
-Works in two modes:
-  1. SQLite direct (local dev) — when no MOLTABLE_API_URL set
-  2. API mode (production) — when MOLTABLE_API_URL + MOLTABLE_ADMIN_KEY set
+Scans for users whose 90-day free trial has expired and downgrades them
+from pro/team → free. Safe to run repeatedly (idempotent).
 
 Usage:
-    python3 billing_cron.py                # check and downgrade
-    python3 billing_cron.py --dry-run      # check only, no writes
-    python3 billing_cron.py --notify       # also send notification
+    python scripts/billing_cron.py          # dry-run (report only)
+    python scripts/billing_cron.py --apply  # actually downgrade
+
+Schedule: daily via cron or Hermes cron job.
 """
 
-import os, sys, json, sqlite3
-from datetime import datetime, timezone, timedelta
-from pathlib import Path
+import os
+import sys
+import sqlite3
+import logging
+from datetime import datetime, timedelta, timezone
+
+# ── Path setup ──────────────────────────────────────────
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+SERVER_DIR = os.path.dirname(SCRIPT_DIR)
+sys.path.insert(0, SERVER_DIR)
+
+from repositories.sqlite_adapter import DB_PATH
+from dotenv import load_dotenv
+load_dotenv()
 
 # ── Config ──────────────────────────────────────────────
-API_BASE = os.getenv("MOLTABLE_API_URL", "")
-ADMIN_KEY = os.getenv("MOLTABLE_ADMIN_KEY", "")
-DB_PATH = os.getenv(
-    "MOLTABLE_DB_PATH",
-    str(Path(__file__).resolve().parent.parent / "moltable_dev.db")
+TRIAL_DAYS = int(os.getenv("MOLTABLE_TRIAL_DAYS", "90"))
+DRY_RUN = "--apply" not in sys.argv
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
 )
-TRIAL_DAYS = 90
-WARN_DAYS = 7  # warn when ≤ 7 days left
-DRY_RUN = "--dry-run" in sys.argv
-NOTIFY = "--notify" in sys.argv
-USE_API = bool(API_BASE and ADMIN_KEY)
+logger = logging.getLogger("billing_cron")
 
-now = datetime.now(timezone.utc)
-
-
-# ═══════════════════════════════════════════════════
-#  SQLite mode
-# ═══════════════════════════════════════════════════
-
-def sqlite_get_users(db_path: str) -> list[dict]:
-    """Get all users who are NOT on free plan."""
-    if not os.path.exists(db_path):
-        print(f"  DB not found: {db_path}")
-        return []
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
-    rows = conn.execute(
-        "SELECT id, email, name, plan, created_at FROM users WHERE plan != 'free'"
-    ).fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
-
-
-def sqlite_downgrade(db_path: str, user_id: str) -> bool:
-    """Downgrade a user to free plan."""
-    conn = sqlite3.connect(db_path)
-    conn.execute("UPDATE users SET plan = 'free' WHERE id = ?", (user_id,))
-    conn.commit()
-    conn.close()
-    return True
-
-
-# ═══════════════════════════════════════════════════
-#  API mode
-# ═══════════════════════════════════════════════════
-
-def api_call(method, path, body=None):
-    import urllib.request, urllib.error
-    url = f"{API_BASE}{path}"
-    data = json.dumps(body).encode() if body else None
-    req = urllib.request.Request(url, data=data, method=method)
-    req.add_header("Content-Type", "application/json")
-    req.add_header("X-Admin-Key", ADMIN_KEY)
-    try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            return json.loads(resp.read())
-    except urllib.error.HTTPError as e:
-        return {"error": e.code, "body": e.read().decode()[:200]}
-    except Exception as e:
-        return {"error": str(e)}
-
-
-def api_get_users() -> tuple[list[dict], str | None]:
-    resp = api_call("GET", "/api/admin/users?plan=pro,team")
-    if "error" in resp:
-        return [], resp["error"]
-    return resp.get("users", resp.get("data", [])), None
-
-
-def api_downgrade(user_id: str):
-    return api_call("POST", f"/api/admin/users/{user_id}/downgrade", {
-        "plan": "free",
-        "reason": "trial_expired",
-    })
-
-
-def api_notify(user_id: str, email: str, notif_type: str, days_left: int = 0):
-    return api_call("POST", "/api/admin/notify", {
-        "user_id": user_id,
-        "email": email,
-        "type": notif_type,
-        "days_left": days_left,
-    })
-
-
-# ═══════════════════════════════════════════════════
-#  Core logic
-# ═══════════════════════════════════════════════════
-
-def process_users(users: list[dict]) -> dict:
-    downgraded, warned, active = 0, 0, 0
-
-    for user in users:
-        user_id = user.get("id", "")
-        email = user.get("email", "unknown")
-        plan = user.get("plan", "free")
-
-        # Determine trial start
-        trial_start = user.get("trial_started_at") or user.get("created_at")
-        if not trial_start:
-            continue
-
-        try:
-            started = datetime.fromisoformat(str(trial_start).replace("Z", "+00:00"))
-        except (ValueError, TypeError):
-            continue
-
-        expires = started + timedelta(days=TRIAL_DAYS)
-        days_left = (expires - now).days
-
-        # Expired → downgrade
-        if days_left < 0:
-            print(f"  ✗  {email:<30} trial expired ({abs(days_left)}d ago) → downgrading to free")
-            if not DRY_RUN:
-                success = False
-                if USE_API:
-                    result = api_downgrade(user_id)
-                    success = "error" not in result
-                else:
-                    success = sqlite_downgrade(DB_PATH, user_id)
-                if success:
-                    downgraded += 1
-                if NOTIFY and USE_API:
-                    api_notify(user_id, email, "trial_expired")
-            else:
-                downgraded += 1  # count as would-downgrade in dry-run
-            continue
-
-        # Warning period
-        if days_left <= WARN_DAYS:
-            print(f"  ⚠  {email:<30} {plan} · {days_left}d left — warning")
-            warned += 1
-            if not DRY_RUN and NOTIFY and USE_API:
-                api_notify(user_id, email, "trial_expiring", days_left)
-            continue
-
-        # Active
-        print(f"  ✓  {email:<30} {plan} · {days_left}d remaining")
-        active += 1
-
-    return {"downgraded": downgraded, "warned": warned, "active": active}
-
-
-# ═══════════════════════════════════════════════════
-#  Main
-# ═══════════════════════════════════════════════════
 
 def main():
-    print(f"Moltable Billing Cron — {now.strftime('%Y-%m-%d %H:%M UTC')}")
-    print(f"Mode: {'API → ' + API_BASE if USE_API else 'SQLite → ' + DB_PATH}")
-    print(f"{'DRY RUN — no writes' if DRY_RUN else 'LIVE MODE'}")
-    print()
+    mode = "DRY RUN" if DRY_RUN else "APPLY"
+    logger.info("=" * 60)
+    logger.info("Billing Cron — Trial Expiration Check (%s)", mode)
+    logger.info("Trial duration: %d days", TRIAL_DAYS)
+    logger.info("=" * 60)
 
-    # Fetch users
-    if USE_API:
-        users, err = api_get_users()
-        if err:
-            print(f"Failed to fetch users: {err}")
-            return 1
-    else:
-        users = sqlite_get_users(DB_PATH)
+    if not os.path.exists(DB_PATH):
+        logger.error("Database not found: %s", DB_PATH)
+        return 1
 
-    if not users:
-        print("No trial users found (all users on free plan)")
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+
+    # 1. Find trial users (pro/team with trial_activated_at set)
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT id, email, name, plan, trial_activated_at, created_at
+        FROM users
+        WHERE plan IN ('pro', 'team')
+          AND trial_activated_at IS NOT NULL
+    """)
+    trial_users = cursor.fetchall()
+
+    if not trial_users:
+        logger.info("No active trial users found. Nothing to do.")
+        conn.close()
         return 0
 
-    # Process
-    result = process_users(users)
-    total = result["downgraded"] + result["warned"] + result["active"]
-    print(f"\nSummary: {result['downgraded']} downgraded, {result['warned']} warned, "
-          f"{result['active']} active, {total} checked")
+    logger.info("Found %d trial user(s)", len(trial_users))
+
+    # 2. Check each for expiration
+    now = datetime.now(timezone.utc)
+    expired = []
+    still_active = []
+    no_trial_date = []
+
+    for user in trial_users:
+        user_id = user["id"]
+        email = user["email"] or "(no email)"
+        plan = user["plan"]
+        trial_at_str = user["trial_activated_at"]
+        created_at = user["created_at"]
+
+        if not trial_at_str:
+            # Fallback: use created_at if trial_activated_at was never set
+            # (legacy users who activated before the fix)
+            if created_at:
+                trial_date = datetime.fromisoformat(created_at)
+                no_trial_date.append((user_id, email, plan, trial_date.isoformat()))
+            else:
+                logger.warning("  SKIP: user %s has no trial_activated_at or created_at", user_id)
+                continue
+        else:
+            trial_date = datetime.fromisoformat(trial_at_str)
+
+        expires_at = trial_date + timedelta(days=TRIAL_DAYS)
+
+        # Ensure timezone-aware comparison
+        if trial_date.tzinfo is None:
+            trial_date = trial_date.replace(tzinfo=timezone.utc)
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+
+        if now > expires_at:
+            expired.append({
+                "id": user_id,
+                "email": email,
+                "plan": plan,
+                "trial_started": trial_date.isoformat(),
+                "expired_at": expires_at.isoformat(),
+                "days_overdue": (now - expires_at).days,
+                "source": "trial_activated_at" if trial_at_str else "created_at (fallback)",
+            })
+        else:
+            days_left = (expires_at - now).days
+            still_active.append({
+                "id": user_id,
+                "email": email,
+                "plan": plan,
+                "trial_started": trial_date.isoformat(),
+                "expires_at": expires_at.isoformat(),
+                "days_left": days_left,
+            })
+
+    # 3. Report active trials
+    if still_active:
+        logger.info("--- Active Trials (%d) ---", len(still_active))
+        for u in still_active:
+            logger.info(
+                "  %s | %s | %s | expires %s (%d days left)",
+                u["id"], u["email"], u["plan"], u["expires_at"][:10], u["days_left"]
+            )
+
+    # 4. Handle expired trials
+    if no_trial_date:
+        logger.info("--- Using created_at as fallback (%d) ---", len(no_trial_date))
+        for u in no_trial_date:
+            logger.info("  %s | %s | %s | created %s", u[0], u[1], u[2], u[3])
+
+    if expired:
+        logger.warning("--- EXPIRED Trials (%d) ---", len(expired))
+        for u in expired:
+            logger.warning(
+                "  %s | %s | %s | expired %s (%d days overdue) | source: %s",
+                u["id"], u["email"], u["plan"],
+                u["expired_at"][:10], u["days_overdue"], u["source"],
+            )
+
+        if not DRY_RUN:
+            # 5. Downgrade expired users
+            for u in expired:
+                try:
+                    conn.execute(
+                        "UPDATE users SET plan = 'free' WHERE id = ?",
+                        (u["id"],)
+                    )
+                    conn.commit()
+                    logger.info(
+                        "  DOWNGRADED: %s (%s) %s → free",
+                        u["id"], u["email"], u["plan"]
+                    )
+                except Exception as e:
+                    logger.error("  FAILED to downgrade %s: %s", u["id"], e)
+        else:
+            logger.info(
+                "DRY RUN — add --apply to actually downgrade %d user(s)", len(expired)
+            )
+    else:
+        logger.info("No expired trials found.")
+
+    # 6. Summary
+    logger.info("--- Summary ---")
+    logger.info("Total trial users checked: %d", len(trial_users))
+    logger.info("Still active: %d", len(still_active))
+    logger.info("Expired (would downgrade): %d", len(expired))
+    logger.info("Mode: %s", mode)
+
+    conn.close()
     return 0
 
 
