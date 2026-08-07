@@ -2,7 +2,7 @@ export type Lang = 'zh' | 'en'
 
 export const translations = {
   zh: {
-    nav: { features: '功能', pricing: '定价', about: '关于', docs: '文档', connect: '接入', research: '评测', blog: '博客', faq: 'FAQ', login: '登录', start: '免费开始' },
+    nav: { features: '功能', pricing: '定价', about: '关于', docs: '文档', connect: '接入', research: '评测', tools: '工具', blog: '博客', faq: 'FAQ', login: '登录', start: '免费开始' },
     hero: {
       tagline: 'DID+VC · 开源 MIT',
       title: 'AI Identity Sync — 一次注册，所有 AI 认识你',
@@ -329,7 +329,7 @@ export const translations = {
   },
 
   en: {
-    nav: { features: 'Features', pricing: 'Pricing', about: 'About', docs: 'Docs', connect: 'Connect', research: 'Research', blog: 'Blog', faq: 'FAQ', login: 'Sign In', start: 'Get Started' },
+    nav: { features: 'Features', pricing: 'Pricing', about: 'About', docs: 'Docs', connect: 'Connect', research: 'Research', tools: 'Tools', blog: 'Blog', faq: 'FAQ', login: 'Sign In', start: 'Get Started' },
     hero: {
       tagline: 'DID+VC · Open Source MIT',
       title: 'AI Identity Sync — One Registration, Every AI Knows You',

@@ -17,6 +17,7 @@ export default function PublicHeader() {
     { href: '#features', label: t.nav.features },
     { href: '/pricing', label: t.nav.pricing },
     { href: '/connect', label: t.nav.connect },
+    { href: '/tools', label: t.nav.tools },
     { href: '/docs', label: t.nav.docs },
     { href: '/blog', label: t.nav.blog },
     { href: '/faq', label: t.nav.faq },
