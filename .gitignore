@@ -18,3 +18,5 @@ claude-code/
 benchmarks/results/
 scripts/
 HANDOFF.md
+*.db-shm
+*.db-wal
