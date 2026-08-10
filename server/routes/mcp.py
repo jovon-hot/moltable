@@ -27,8 +27,10 @@ router = APIRouter(tags=["mcp"])
 # JSON-RPC 2.0 数据模型
 # ═══════════════════════════════════════════════════════════
 
+
 class JSONRPCRequest(BaseModel):
     """JSON-RPC 2.0 请求"""
+
     jsonrpc: str = Field(default="2.0", pattern=r"^2\.0$")
     method: str = Field(..., min_length=1, max_length=200)
     params: dict[str, Any] | list[Any] | None = None
@@ -37,6 +39,7 @@ class JSONRPCRequest(BaseModel):
 
 class JSONRPCError(Exception):
     """JSON-RPC 标准错误"""
+
     def __init__(self, code: int, message: str, data: Any = None):
         self.code = code
         self.message = message
@@ -44,14 +47,14 @@ class JSONRPCError(Exception):
 
 
 # ── JSON-RPC 2.0 标准错误码 ─────────────────────────────
-PARSE_ERROR = -32700       # 解析错误
-INVALID_REQUEST = -32600   # 无效请求
+PARSE_ERROR = -32700  # 解析错误
+INVALID_REQUEST = -32600  # 无效请求
 METHOD_NOT_FOUND = -32601  # 方法不存在
-INVALID_PARAMS = -32602    # 无效参数
-INTERNAL_ERROR = -32603    # 内部错误
+INVALID_PARAMS = -32602  # 无效参数
+INTERNAL_ERROR = -32603  # 内部错误
 # 自定义错误码
-AUTH_ERROR = -32001        # 认证失败
-TOOL_ERROR = -32000        # 工具调用错误
+AUTH_ERROR = -32001  # 认证失败
+TOOL_ERROR = -32000  # 工具调用错误
 SERVER_NOT_INITIALIZED = -32002  # 尚未初始化
 
 
@@ -98,7 +101,15 @@ MCP_TOOLS = [
                 "category": {
                     "type": "string",
                     "description": "可选过滤类别: preference, decision, fact, project, insight, task, relationship",
-                    "enum": ["preference", "decision", "fact", "project", "insight", "task", "relationship"],
+                    "enum": [
+                        "preference",
+                        "decision",
+                        "fact",
+                        "project",
+                        "insight",
+                        "task",
+                        "relationship",
+                    ],
                 },
             },
             "required": ["query"],
@@ -117,7 +128,15 @@ MCP_TOOLS = [
                 "category": {
                     "type": "string",
                     "description": "记忆类别: preference, decision, fact, project, insight, task, relationship",
-                    "enum": ["preference", "decision", "fact", "project", "insight", "task", "relationship"],
+                    "enum": [
+                        "preference",
+                        "decision",
+                        "fact",
+                        "project",
+                        "insight",
+                        "task",
+                        "relationship",
+                    ],
                     "default": "fact",
                 },
                 "source": {
@@ -174,7 +193,7 @@ MCP_TOOLS = [
             },
         },
     },
-                {
+    {
         "name": "archive_memory",
         "description": "归档记忆（软删除）。归档后的记忆不会出现在搜索和列表中，但数据保留。",
         "inputSchema": {
@@ -187,7 +206,8 @@ MCP_TOOLS = [
             },
             "required": ["memory_id"],
         },
-    },        {
+    },
+    {
         "name": "update_memory",
         "description": "更新已有记忆的内容、分类、标签或置信度。",
         "inputSchema": {
@@ -195,8 +215,24 @@ MCP_TOOLS = [
             "properties": {
                 "memory_id": {"type": "string", "description": "要更新的记忆 ID"},
                 "content": {"type": "string", "description": "新的记忆内容"},
-                "category": {"type": "string", "enum": ["preference","decision","fact","project","insight","task","relationship"], "description": "新的记忆类别"},
-                "tags": {"type": "array", "items": {"type": "string"}, "description": "新的标签列表"},
+                "category": {
+                    "type": "string",
+                    "enum": [
+                        "preference",
+                        "decision",
+                        "fact",
+                        "project",
+                        "insight",
+                        "task",
+                        "relationship",
+                    ],
+                    "description": "新的记忆类别",
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "新的标签列表",
+                },
                 "confidence": {"type": "number", "description": "新的置信度 0.0-1.0"},
             },
             "required": ["memory_id"],
@@ -329,13 +365,15 @@ TOOL_SCOPE_MAP = {
 # 工具实现（直接复用现有业务逻辑）
 # ═══════════════════════════════════════════════════════════
 
+
 def _keyword_score(query: str, content: str) -> float:
     """Simple keyword overlap score — 0.0 to 1.0.
-    
+
     Works as a lightweight fallback when semantic embeddings
     (sentence-transformers) are unavailable.
     """
     import re
+
     q_lower = query.lower()
     c_lower = content.lower()
 
@@ -343,14 +381,14 @@ def _keyword_score(query: str, content: str) -> float:
     # Split on word boundaries for mixed CJK/English text
     q_tokens = set()
     # English words
-    for w in re.findall(r'[a-zA-Z0-9]{2,}', q_lower):
+    for w in re.findall(r"[a-zA-Z0-9]{2,}", q_lower):
         q_tokens.add(w)
     # CJK bigrams (sliding window of 2 chars)
-    cjk = re.sub(r'[^\u4e00-\u9fff]', '', q_lower)
+    cjk = re.sub(r"[^\u4e00-\u9fff]", "", q_lower)
     for i in range(len(cjk)):
         q_tokens.add(cjk[i])  # single CJK char
         if i < len(cjk) - 1:
-            q_tokens.add(cjk[i:i+2])  # bigram
+            q_tokens.add(cjk[i : i + 2])  # bigram
 
     if not q_tokens:
         return 0.0
@@ -453,10 +491,20 @@ def _tool_save_memory(user_id: str, params: dict, agent_platform: str | None = N
         raise JSONRPCError(INVALID_PARAMS, "Missing required parameter: content")
 
     # Validate category enum
-    VALID_CATEGORIES = {"preference", "decision", "fact", "project", "insight", "task", "relationship"}
+    VALID_CATEGORIES = {
+        "preference",
+        "decision",
+        "fact",
+        "project",
+        "insight",
+        "task",
+        "relationship",
+    }
     if category not in VALID_CATEGORIES:
-        raise JSONRPCError(INVALID_PARAMS,
-            f"Invalid category: '{category}'. Must be one of: {', '.join(sorted(VALID_CATEGORIES))}")
+        raise JSONRPCError(
+            INVALID_PARAMS,
+            f"Invalid category: '{category}'. Must be one of: {', '.join(sorted(VALID_CATEGORIES))}",
+        )
 
     vec = embed(content)
 
@@ -480,9 +528,13 @@ def _tool_save_memory(user_id: str, params: dict, agent_platform: str | None = N
                 }
 
         doc = get_store().insert(
-            user_id, content, vec,
-            category=category, source=source,
-            confidence=confidence, tags=tags,
+            user_id,
+            content,
+            vec,
+            category=category,
+            source=source,
+            confidence=confidence,
+            tags=tags,
             persona_id=persona_id,
         )
         return {"saved": True, "id": doc["id"], "source": source}
@@ -527,15 +579,20 @@ def _tool_get_persona(user_id: str, params: dict) -> dict:
 
     # In-memory fallback
     from services.persona_store import get_persona_store
+
     p = get_persona_store().get(persona_id, user_id)
     if not p:
         raise JSONRPCError(TOOL_ERROR, f"Persona '{persona_id}' not found")
     return {
-        "id": p.get("id"), "name": p.get("name"),
-        "type": p.get("type"), "description": p.get("description"),
-        "system_prompt": p.get("system_prompt"), "traits": p.get("traits", {}),
+        "id": p.get("id"),
+        "name": p.get("name"),
+        "type": p.get("type"),
+        "description": p.get("description"),
+        "system_prompt": p.get("system_prompt"),
+        "traits": p.get("traits", {}),
         "model_preference": p.get("model_preference"),
-        "is_active": p.get("is_active", True), "created_at": p.get("created_at"),
+        "is_active": p.get("is_active", True),
+        "created_at": p.get("created_at"),
     }
 
 
@@ -558,6 +615,7 @@ def _tool_list_personas(user_id: str, params: dict) -> dict:
             pass
 
     from services.persona_store import get_persona_store
+
     personas = get_persona_store().list(user_id)
     return {"personas": personas}
 
@@ -575,6 +633,7 @@ def _tool_auto_provision(user_id: str, params: dict, ip_address: str = None) -> 
     # In-memory fallback: build from persona store + vector store
     from app_state import get_persona_version
     from services.persona_store import get_persona_store
+
     store = get_store()
     pstore = get_persona_store()
     personas = pstore.list(user_id)
@@ -592,7 +651,12 @@ def _tool_auto_provision(user_id: str, params: dict, ip_address: str = None) -> 
         "active_projects": [],
         "recent_decisions": [],
         "available_personas": [
-            {"id": p["id"], "name": p["name"], "description": p.get("description"), "type": p["type"]}
+            {
+                "id": p["id"],
+                "name": p["name"],
+                "description": p.get("description"),
+                "type": p["type"],
+            }
             for p in personas
         ],
         "core_knowledge": [],
@@ -637,6 +701,7 @@ def _tool_ping(user_id: str, params: dict) -> dict:
 
 # ── Skills tools ────────────────────────────────────────
 
+
 def _tool_list_skills(user_id: str, params: dict) -> dict:
     """列出用户的所有可用 Skills。
 
@@ -659,11 +724,8 @@ def _tool_list_skills(user_id: str, params: dict) -> dict:
     skills = []
     if supabase is not None:
         try:
-            resp = supabase.table("projects") \
-                .select("tools") \
-                .eq("user_id", user_id) \
-                .execute()
-            for r in (resp.data or []):
+            resp = supabase.table("projects").select("tools").eq("user_id", user_id).execute()
+            for r in resp.data or []:
                 tools = r.get("tools") or []
                 for t in tools:
                     if isinstance(t, dict) and t.get("type") == "skill":
@@ -686,15 +748,15 @@ def _tool_get_skill(user_id: str, params: dict) -> dict:
 
     if supabase is not None:
         try:
-            resp = supabase.table("projects") \
-                .select("tools") \
-                .eq("user_id", user_id) \
-                .execute()
-            for r in (resp.data or []):
+            resp = supabase.table("projects").select("tools").eq("user_id", user_id).execute()
+            for r in resp.data or []:
                 tools = r.get("tools") or []
                 for t in tools:
-                    if isinstance(t, dict) and t.get("type") == "skill" \
-                            and t.get("name") == skill_id:
+                    if (
+                        isinstance(t, dict)
+                        and t.get("type") == "skill"
+                        and t.get("name") == skill_id
+                    ):
                         return {"skill": t}
             raise JSONRPCError(TOOL_ERROR, f"Skill '{skill_id}' not found")
         except JSONRPCError:
@@ -707,25 +769,30 @@ def _tool_get_skill(user_id: str, params: dict) -> dict:
 
 # ── Project environment tools ──────────────────────────
 
+
 def _tool_list_projects(user_id: str, params: dict) -> dict:
     """列出用户的所有项目，含 knowledge_bases 和 tools 配置。"""
-    resp = supabase.table("projects") \
-        .select("*") \
-        .eq("user_id", user_id) \
-        .order("created_at", desc=True) \
+    resp = (
+        supabase.table("projects")
+        .select("*")
+        .eq("user_id", user_id)
+        .order("created_at", desc=True)
         .execute()
+    )
     projects = []
-    for r in (resp.data or []):
-        projects.append({
-            "id": r.get("id", ""),
-            "name": r.get("name", ""),
-            "description": r.get("description", ""),
-            "persona_id": r.get("persona_id"),
-            "knowledge_bases": r.get("knowledge_bases") or [],
-            "tools": r.get("tools") or [],
-            "is_active": r.get("is_active", False),
-            "created_at": str(r.get("created_at", "")),
-        })
+    for r in resp.data or []:
+        projects.append(
+            {
+                "id": r.get("id", ""),
+                "name": r.get("name", ""),
+                "description": r.get("description", ""),
+                "persona_id": r.get("persona_id"),
+                "knowledge_bases": r.get("knowledge_bases") or [],
+                "tools": r.get("tools") or [],
+                "is_active": r.get("is_active", False),
+                "created_at": str(r.get("created_at", "")),
+            }
+        )
     return {"projects": projects}
 
 
@@ -734,12 +801,14 @@ def _tool_get_project(user_id: str, params: dict) -> dict:
     project_id = params.get("project_id", "")
     if not project_id:
         raise JSONRPCError(INVALID_PARAMS, "Missing required parameter: project_id")
-    resp = supabase.table("projects") \
-        .select("*") \
-        .eq("id", project_id) \
-        .eq("user_id", user_id) \
-        .single() \
+    resp = (
+        supabase.table("projects")
+        .select("*")
+        .eq("id", project_id)
+        .eq("user_id", user_id)
+        .single()
         .execute()
+    )
     if not resp.data:
         raise JSONRPCError(TOOL_ERROR, f"Project not found: {project_id}")
     r = resp.data
@@ -762,6 +831,7 @@ def _tool_create_project(user_id: str, params: dict) -> dict:
     if not name:
         raise JSONRPCError(INVALID_PARAMS, "Missing required parameter: name")
     import uuid as _uid
+
     pid = str(_uid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
     row = {
@@ -786,12 +856,14 @@ def _tool_update_project(user_id: str, params: dict) -> dict:
     project_id = params.get("project_id", "")
     if not project_id:
         raise JSONRPCError(INVALID_PARAMS, "Missing required parameter: project_id")
-    existing = supabase.table("projects") \
-        .select("id") \
-        .eq("id", project_id) \
-        .eq("user_id", user_id) \
-        .single() \
+    existing = (
+        supabase.table("projects")
+        .select("id")
+        .eq("id", project_id)
+        .eq("user_id", user_id)
+        .single()
         .execute()
+    )
     if not existing.data:
         raise JSONRPCError(TOOL_ERROR, f"Project not found: {project_id}")
     payload = {"updated_at": datetime.now(timezone.utc).isoformat()}
@@ -800,7 +872,6 @@ def _tool_update_project(user_id: str, params: dict) -> dict:
             payload[f] = params[f]
     supabase.table("projects").update(payload).eq("id", project_id).execute()
     return {"id": project_id, "updated": True}
-
 
 
 # ── 工具路由表 ────────────────────────────────────────────
@@ -832,6 +903,7 @@ _PLATFORM_AWARE_TOOLS = {"save_memory"}
 # ═══════════════════════════════════════════════════════════
 # JSON-RPC 方法分发
 # ═══════════════════════════════════════════════════════════
+
 
 def _handle_jsonrpc(
     body: dict,
@@ -868,31 +940,41 @@ def _handle_jsonrpc(
     # ── 需要认证的方法（tools/list 和 initialize 不再免认证）──
     if method == "tools/list":
         if user_id is None:
-            return jsonrpc_error(AUTH_ERROR, "Authentication required — provide X-API-Key header", req_id)
+            return jsonrpc_error(
+                AUTH_ERROR, "Authentication required — provide X-API-Key header", req_id
+            )
         return jsonrpc_success({"tools": MCP_TOOLS}, req_id)
 
     if method == "initialize":
         if user_id is None:
-            return jsonrpc_error(AUTH_ERROR, "Authentication required — provide X-API-Key header", req_id)
-        return jsonrpc_success({
-            "protocolVersion": "2024-11-05",
-            "capabilities": {
-                "tools": {
-                    "listChanged": False,
+            return jsonrpc_error(
+                AUTH_ERROR, "Authentication required — provide X-API-Key header", req_id
+            )
+        return jsonrpc_success(
+            {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {
+                    "tools": {
+                        "listChanged": False,
+                    },
+                    "sampling": {},
+                    "experimental": {},
                 },
-                "sampling": {},
-                "experimental": {},
-            },
-            "serverInfo": {
-                "name": "moltable",
-                "version": "0.1.0",
-                "auth": {
-                    "type": "did_vc",
-                    "challenge": "placeholder",
-                    "supportedCredentials": ["AgentIdentityCredential", "PersonaDelegationCredential"]
+                "serverInfo": {
+                    "name": "moltable",
+                    "version": "0.1.0",
+                    "auth": {
+                        "type": "did_vc",
+                        "challenge": "placeholder",
+                        "supportedCredentials": [
+                            "AgentIdentityCredential",
+                            "PersonaDelegationCredential",
+                        ],
+                    },
                 },
             },
-        }, req_id)
+            req_id,
+        )
 
     # ── 需要认证的方法 ─────────────────────────────────
     if method == "tools/call":
@@ -914,7 +996,7 @@ def _handle_jsonrpc(
             )
 
         # ── 权限检查（DID+VC Agent 认证上下文）──
-        if hasattr(user_id, 'scopes'):
+        if hasattr(user_id, "scopes"):
             required = TOOL_SCOPE_MAP.get(tool_name, [])
             if required:
                 user_scopes = set(user_id.scopes or [])
@@ -933,14 +1015,17 @@ def _handle_jsonrpc(
             else:
                 result = handler(user_id, tool_params)
             # MCP tools/call 响应格式：将结果包裹在 content 中
-            return jsonrpc_success({
-                "content": [
-                    {
-                        "type": "text",
-                        "text": json.dumps(result, ensure_ascii=False, indent=2),
-                    }
-                ],
-            }, req_id)
+            return jsonrpc_success(
+                {
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": json.dumps(result, ensure_ascii=False, indent=2),
+                        }
+                    ],
+                },
+                req_id,
+            )
         except JSONRPCError as e:
             return jsonrpc_error(e.code, e.message, req_id, e.data)
         except Exception:
@@ -962,6 +1047,7 @@ def _handle_jsonrpc(
 # ═══════════════════════════════════════════════════════════
 # HTTP 端点
 # ═══════════════════════════════════════════════════════════
+
 
 @router.post("/mcp")
 @limiter.limit("300/minute")
@@ -1005,11 +1091,11 @@ async def mcp_endpoint(
         responses = []
         for req in body:
             if not isinstance(req, dict):
-                responses.append(
-                    jsonrpc_error(INVALID_REQUEST, "Invalid Request", None)
-                )
+                responses.append(jsonrpc_error(INVALID_REQUEST, "Invalid Request", None))
                 continue
-            responses.append(_handle_jsonrpc(req, user_id, ip_address=ip_address, agent_platform=agent_platform))
+            responses.append(
+                _handle_jsonrpc(req, user_id, ip_address=ip_address, agent_platform=agent_platform)
+            )
         return JSONRPCResponse(responses)
     else:
         if not isinstance(body, dict):
@@ -1017,7 +1103,9 @@ async def mcp_endpoint(
                 jsonrpc_error(INVALID_REQUEST, "Request must be a JSON object", None),
                 status_code=400,
             )
-        result = _handle_jsonrpc(body, user_id, ip_address=ip_address, agent_platform=agent_platform)
+        result = _handle_jsonrpc(
+            body, user_id, ip_address=ip_address, agent_platform=agent_platform
+        )
         status = 200
         if "error" in result:
             code = result["error"].get("code", 0)
@@ -1069,6 +1157,7 @@ async def mcp_discovery(request: Request):
 # Helper
 # ═══════════════════════════════════════════════════════════
 
+
 async def _resolve_api_key(x_api_key: str) -> str:
     """通过 X-API-Key 解析用户 ID，支持 API key（molt_xxx）和匿名会话 token（mol_xxx）。
 
@@ -1078,10 +1167,16 @@ async def _resolve_api_key(x_api_key: str) -> str:
     # 1. API key detection: if key starts with molt_, treat as API key
     if x_api_key.startswith("molt_"):
         from routes.auth import hash_api_key
+
         key_hash = hash_api_key(x_api_key)
         if supabase is None:
             raise JSONRPCError(INTERNAL_ERROR, "Database not available")
-        resp = supabase.table("api_keys").select("user_id, is_active").eq("key_hash", key_hash).execute()
+        resp = (
+            supabase.table("api_keys")
+            .select("user_id, is_active")
+            .eq("key_hash", key_hash)
+            .execute()
+        )
         if not resp.data:
             raise JSONRPCError(AUTH_ERROR, "Invalid API key")
         if not resp.data[0].get("is_active", False):
@@ -1095,7 +1190,14 @@ async def _resolve_api_key(x_api_key: str) -> str:
             raise JSONRPCError(INTERNAL_ERROR, "Database not available")
         try:
             from datetime import datetime, timezone
-            resp = supabase.table("sessions").select("session_uuid, token, expires_at, migrated_at").eq("token", x_api_key).execute()
+            from routes.auth import hash_session_token
+
+            resp = (
+                supabase.table("sessions")
+                .select("session_uuid, token, expires_at, migrated_at")
+                .eq("token", hash_session_token(x_api_key))
+                .execute()
+            )
             if not resp.data:
                 raise JSONRPCError(AUTH_ERROR, "Invalid session token")
             session = resp.data[0]
@@ -1115,10 +1217,13 @@ async def _resolve_api_key(x_api_key: str) -> str:
             raise JSONRPCError(AUTH_ERROR, "Invalid session token")
 
     from routes.auth import hash_api_key
+
     key_hash = hash_api_key(x_api_key)
     if supabase is None:
         raise JSONRPCError(INTERNAL_ERROR, "Database not available")
-    resp = supabase.table("api_keys").select("user_id, is_active").eq("key_hash", key_hash).execute()
+    resp = (
+        supabase.table("api_keys").select("user_id, is_active").eq("key_hash", key_hash).execute()
+    )
     if not resp.data:
         raise JSONRPCError(AUTH_ERROR, "Invalid API key")
     if not resp.data[0].get("is_active", False):
@@ -1128,5 +1233,6 @@ async def _resolve_api_key(x_api_key: str) -> str:
 
 class JSONRPCResponse(JSONResponse):
     """JSON-RPC 2.0 响应"""
+
     def __init__(self, content: Any, status_code: int = 200, **kwargs):
         super().__init__(content=content, status_code=status_code, **kwargs)

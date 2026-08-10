@@ -1,4 +1,5 @@
 """Session routes — anonymous session tokens for zero-registration Agent access"""
+
 import secrets
 from datetime import datetime, timedelta, timezone
 
@@ -6,6 +7,7 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from app_state import _is_sqlite, get_store, limiter, supabase
+from routes.auth import hash_session_token
 
 router = APIRouter(prefix="/api/sessions", tags=["sessions"])
 
@@ -65,9 +67,7 @@ async def create_session(request: Request):
 
     # ── Check active session count ────────────────────────
     try:
-        active_count = supabase.table("sessions").select(
-            "id", count="exact"
-        ).execute()
+        active_count = supabase.table("sessions").select("id", count="exact").execute()
         if active_count.count is not None and active_count.count > 1000:
             raise HTTPException(429, "Too many active sessions — try again later")
     except HTTPException:
@@ -79,12 +79,13 @@ async def create_session(request: Request):
     expires_at = datetime.now(timezone.utc) + timedelta(days=SESSION_DURATION_DAYS)
 
     row = {
-        "token": token,
+        "token": hash_session_token(token),
         "expires_at": expires_at.isoformat(),
     }
     # SQLite needs explicit id + session_uuid; Supabase generates them via gen_random_uuid()
     if _is_sqlite:
         import uuid as _uuid
+
         row["id"] = _uuid.uuid4().hex[:8]
         row["session_uuid"] = str(_uuid.uuid4())
 
@@ -110,7 +111,12 @@ async def migrate_session(request: Request, body: MigrateRequest):
     if not session_token.startswith(SESSION_TOKEN_PREFIX):
         raise HTTPException(400, "Invalid session token format")
 
-    sess_resp = supabase.table("sessions").select("*").eq("token", session_token).execute()
+    sess_resp = (
+        supabase.table("sessions")
+        .select("*")
+        .eq("token", hash_session_token(session_token))
+        .execute()
+    )
     if not sess_resp.data:
         raise HTTPException(404, "Session not found")
 
@@ -128,6 +134,7 @@ async def migrate_session(request: Request, body: MigrateRequest):
 
     # 2. Validate API key and get user_id
     from routes.auth import hash_api_key
+
     key_hash = hash_api_key(body.api_key)
     key_resp = supabase.table("api_keys").select("user_id").eq("key_hash", key_hash).execute()
     if not key_resp.data:
@@ -141,10 +148,12 @@ async def migrate_session(request: Request, body: MigrateRequest):
     count = store.migrate_user(session_user_id, user_id)
 
     # 4. Mark session as migrated
-    supabase.table("sessions").update({
-        "user_id": user_id,
-        "migrated_at": datetime.now(timezone.utc).isoformat(),
-    }).eq("token", session_token).execute()
+    supabase.table("sessions").update(
+        {
+            "user_id": user_id,
+            "migrated_at": datetime.now(timezone.utc).isoformat(),
+        }
+    ).eq("token", hash_session_token(session_token)).execute()
 
     return MigrateResponse(
         migrated=True,
