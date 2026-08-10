@@ -35,9 +35,3 @@ ALTER TABLE referrals ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view own referrals"
     ON referrals FOR SELECT
     USING (auth.uid()::text = referrer_id);
-
--- Service role bypass (backend API uses service/anon key)
-CREATE POLICY "Service role full access"
-    ON referrals FOR ALL
-    USING (true)
-    WITH CHECK (true);

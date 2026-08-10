@@ -53,9 +53,3 @@ CREATE POLICY "Users can view own temporal facts"
 CREATE POLICY "Users can insert own temporal facts"
     ON temporal_facts FOR INSERT
     WITH CHECK (auth.uid()::text = user_id);
-
--- Service role bypass (for backend API)
-CREATE POLICY "Service role full access"
-    ON temporal_facts FOR ALL
-    USING (true)
-    WITH CHECK (true);
