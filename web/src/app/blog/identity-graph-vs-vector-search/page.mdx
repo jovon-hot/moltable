@@ -158,15 +158,13 @@ The Identity Graph doesn't replace the vector database. It sits in front of it, 
 
 ## Real-World Impact
 
-| Metric | Vector-Only | Identity Graph + Vector |
-|---|---|---|
-| Context relevance (human eval) | 62% | 94% |
-| Token waste on irrelevant context | ~40% | ~8% |
-| Cross-Persona contamination | Frequent | Near-zero |
-| New device cold start | 5-10 min manual setup | Instant auto-provision |
-| Multi-agent consistency | 55% | 91% |
+We believe identity graphs materially improve context relevance — and that belief is grounded in how the architecture changes retrieval, not in unpublished benchmark numbers. Here's the mechanism:
 
-*Internal benchmarks, Moltable Research, August 2026.*
+- **A smaller, sharper retrieval surface.** The identity graph filters by active Persona, project scope, and temporal window *before* vector search runs. Fewer irrelevant candidates enter the search, so fewer irrelevant results can come out — regardless of embedding quality.
+- **Scoping is structural, not statistical.** A preference scoped to Project Y is excluded from Project X results by the data model itself, not merely ranked lower. This removes an entire class of "semantically similar but contextually wrong" results that cosine similarity alone cannot distinguish.
+- **Temporal relevance is explicit.** Superseded or outdated memories are deprioritized by design (e.g. "OAuth is overkill" from before a SOC2 requirement), so retrieval reflects *current* context rather than embedding drift.
+
+We have not yet published a controlled benchmark measuring context relevance between vector-only and identity-graph retrieval — that's on our roadmap. Until then, the qualitative differences above are architectural properties of the design, not measured results.
 
 ---
 

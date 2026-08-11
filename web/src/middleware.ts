@@ -37,10 +37,14 @@ export async function middleware(request: NextRequest) {
   }
 
   // No user: dashboard shows demo, auth pages stay accessible
-  // No redirects — let each page handle demo/empty state
+  // Admin pages are protected server-side — redirect to /login
+  if (path === '/admin' || path.startsWith('/admin/')) {
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
+
   return response
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/login', '/register'],
+  matcher: ['/dashboard/:path*', '/admin/:path*', '/login', '/register'],
 }

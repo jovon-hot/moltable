@@ -13,7 +13,7 @@
 
 ---
 
-Moltable is the **identity sync layer for AI agents**. Connect once — every agent (Claude, Cursor, Codex, Hermes) auto-syncs your preferences, Personas, skills, and memories. Switch computers? Full AI environment recovery in 3 minutes.
+Moltable is the **identity sync layer for AI agents**. Connect once — every agent (Claude, Cursor, Hermes) auto-syncs your preferences, Personas, skills, and memories. Switch computers? Full AI environment recovery in 3 minutes.
 
 Moltable 是 AI Agent 的**身份同步层**。一个身份接入，所有 Agent 自动同步偏好、Persona、技能和记忆。换电脑 3 分钟恢复完整 AI 环境。
 
@@ -69,14 +69,15 @@ No manual JSON editing. Auto-detects your config, backs it up, injects Moltable 
 
 ## Capabilities
 
-| | Free | Pro (¥19/mo) |
+| | Free | Pro (90-day free trial) |
 |---|---|---|
-| Memory | 100 cards | 10,000 cards |
-| Personas | 2 | Unlimited |
-| Agent platforms | 3 | Unlimited |
+| AI Identities | 1 | 3 |
+| Personas | 2 | 10 |
+| Memories | 100 | 10,000 |
+| Agents | 1 | 5 |
+| API calls / day | 50 | 500 |
 | Semantic search | ✅ | ✅ |
 | Sync code recovery | ✅ | ✅ |
-| Discovery | 1 host | Unlimited |
 
 ---
 
@@ -86,8 +87,6 @@ No manual JSON editing. Auto-detects your config, backs it up, injects Moltable 
   <img src="https://img.shields.io/badge/Hermes-Agent-4338CA" />
   <img src="https://img.shields.io/badge/Claude_Desktop-MCP-4338CA" />
   <img src="https://img.shields.io/badge/Cursor-MCP-4338CA" />
-  <img src="https://img.shields.io/badge/Codex-MCP-4338CA" />
-  <img src="https://img.shields.io/badge/OpenCode-MCP-4338CA" />
 </p>
 
 Any MCP-compatible client works out of the box.
