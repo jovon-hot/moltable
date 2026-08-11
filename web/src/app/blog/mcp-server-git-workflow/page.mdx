@@ -1,0 +1,661 @@
+export const meta = {
+  title: 'Building an MCP Memory Server for Git Workflows: Let Your AI Remember Every Commit',
+  date: '2026-08-11',
+  description: 'Hands-on tutorial: build an MCP server that gives AI agents persistent memory of your Git workflow — branches, commits, PR reviews, and project conventions. Complete Python implementation with FastMCP.',
+  tags: ['MCP', 'Git', '教程', 'Python', 'Hands-on', 'Memory'],
+  slug: 'mcp-server-git-workflow',
+}
+
+import ArticleLayout from '../_components/ArticleLayout'
+
+<ArticleLayout meta={meta}>
+
+# MCP 实战进阶：让 AI Agent 记住你的 Git 工作流
+
+**你正在让 Claude 审查一个 PR。你需要告诉它：这个仓库用的是 conventional commits、main 分支受保护、CI 跑的是 GitHub Actions、上次 deployment 因为 flaky test 失败了。你说完这些，已经过去 5 分钟。而 Claude 下一次对话，又会全部忘记。**
+
+这不应该是 2026 年的开发者体验。
+
+本文带你从零构建一个 Git-aware MCP Server。它不是一个通用工具——它是**专门为你的项目、你的团队、你的工作流**定制的记忆层。Agent 接入后，自动知道你在哪个分支、最近改了什么、项目的 commit 规范、上次 PR review 的结论。你不再需要每次对话都重新"教"它。
+
+**完整代码开源，可直接部署。** 读完这篇文章，你就能运行自己的 Git Memory MCP Server。
+
+---
+
+## 为什么需要 Git-aware MCP Server？
+
+先看两个场景：
+
+### 场景 A：没有 Git 记忆
+
+```
+你：帮我 review 一下最近的改动。
+
+Claude：当然！请把代码贴给我。
+
+你：...在 feature/payment-refactor 分支上。
+
+Claude：明白了。请问这个分支是从哪个基础分支切出来的？
+       你们项目的 commit 规范是什么？
+
+你：从 main 切的。用 conventional commits。feat: / fix: / chore: 这样。
+
+Claude：好的。请问你们的 CI 流程是什么？PR 需要哪些 check 通过？
+
+你：（叹气）GitHub Actions，需要 lint + test + build 三个 job 全绿。
+```
+
+**5 分钟过去了，你还没开始 review。**
+
+### 场景 B：有 Git 记忆
+
+```
+你：帮我 review 一下最近的改动。
+
+Claude（通过 MCP 自动读取 Git 上下文）：
+  检测到你当前在 feature/payment-refactor 分支（基于 main，领先 3 个 commits）。
+  项目使用 conventional commits，CI: GitHub Actions (lint/test/build)。
+  上次 PR review (#142) 中你强调了错误处理统一用 Result<T, E> 模式。
+
+  让我拉取 diff...
+
+  [读取 git diff main..HEAD]
+
+  发现 3 个 commits：
+  1. feat: add Stripe payment intent handler — 247 行新增
+  2. fix: handle webhook signature verification edge case — 34 行修改
+  3. chore: add payment error codes to shared types — 18 行新增
+
+  开始 review...
+```
+
+**0 秒 setup，直接进入正题。**
+
+---
+
+## 架构总览
+
+我们的 MCP Server 提供 5 个工具，覆盖 Git 工作流的关键上下文：
+
+```
+┌──────────────────────────────────────────┐
+│            Git Memory MCP Server          │
+├──────────────────────────────────────────┤
+│  Tools:                                   │
+│  📋 git_status     — 当前分支/状态/diff   │
+│  📝 git_log        — 最近 commits         │
+│  🏷️  git_conventions — 项目规范/约定       │
+│  🔍 git_context    — 综合上下文（一键）    │
+│  💾 git_remember   — 记录 review 结论      │
+├──────────────────────────────────────────┤
+│  Storage:                                 │
+│  ~/.moltable/git-memory/{project}/        │
+│  ├── conventions.json  — 项目规范          │
+│  ├── reviews.json      — review 历史       │
+│  └── config.json       — 仓库映射          │
+└──────────────────────────────────────────┘
+```
+
+**设计原则：**
+- **零外部依赖**：不需要数据库、不需要向量存储。文件系统 + JSON。
+- **项目隔离**：每个项目一个目录，不会交叉污染。
+- **渐进增强**：最简场景只需 `git_context` 一个工具；复杂场景用全部 5 个。
+- **与 Moltable 互补**：Git 上下文存本地，跨 Agent 的偏好/Persona 存 Moltable。
+
+---
+
+## 第一步：项目结构
+
+```bash
+git-memory-mcp/
+├── server.py          # MCP Server 入口
+├── tools/
+│   ├── __init__.py
+│   ├── git_ops.py     # Git 操作封装
+│   └── storage.py     # 持久化存储
+├── conventions.json   # 默认约定模板
+└── README.md
+```
+
+---
+
+## 第二步：核心实现
+
+### 2.1 存储层 (`tools/storage.py`)
+
+```python
+"""Git Memory 持久化存储 — 基于 JSON 文件，零外部依赖。"""
+import json
+import os
+from pathlib import Path
+from typing import Optional
+
+STORAGE_ROOT = Path.home() / ".moltable" / "git-memory"
+
+
+def _project_dir(repo_path: str) -> Path:
+    """根据仓库路径生成唯一项目目录名。"""
+    # 用路径的 hash 避免特殊字符问题
+    import hashlib
+    name = hashlib.sha256(repo_path.encode()).hexdigest()[:12]
+    # 同时存一个 human-readable 的映射
+    return STORAGE_ROOT / name
+
+
+def _ensure_dir(path: Path) -> None:
+    path.mkdir(parents=True, exist_ok=True)
+
+
+def load_conventions(repo_path: str) -> dict:
+    """加载项目约定。如果不存在，返回默认值。"""
+    proj_dir = _project_dir(repo_path)
+    conv_file = proj_dir / "conventions.json"
+    if conv_file.exists():
+        return json.loads(conv_file.read_text())
+    return {
+        "commit_style": "conventional",  # conventional | freeform | custom
+        "branch_naming": "feature/XXX, fix/XXX, chore/XXX",
+        "ci_provider": "unknown",
+        "code_review_focus": [],
+        "custom_rules": [],
+    }
+
+
+def save_conventions(repo_path: str, conventions: dict) -> None:
+    """保存项目约定。"""
+    proj_dir = _project_dir(repo_path)
+    _ensure_dir(proj_dir)
+    conv_file = proj_dir / "conventions.json"
+    conv_file.write_text(json.dumps(conventions, indent=2, ensure_ascii=False))
+
+
+def load_reviews(repo_path: str, limit: int = 20) -> list:
+    """加载最近的 review 记录。"""
+    proj_dir = _project_dir(repo_path)
+    review_file = proj_dir / "reviews.json"
+    if not review_file.exists():
+        return []
+    reviews = json.loads(review_file.read_text())
+    return reviews[-limit:]
+
+
+def save_review(repo_path: str, branch: str, summary: str,
+                key_findings: list[str], approved: bool) -> None:
+    """追加一条 review 记录。"""
+    proj_dir = _project_dir(repo_path)
+    _ensure_dir(proj_dir)
+    review_file = proj_dir / "reviews.json"
+    reviews = []
+    if review_file.exists():
+        reviews = json.loads(review_file.read_text())
+    reviews.append({
+        "timestamp": __import__("datetime").datetime.now().isoformat(),
+        "branch": branch,
+        "summary": summary,
+        "key_findings": key_findings,
+        "approved": approved,
+    })
+    review_file.write_text(json.dumps(reviews, indent=2, ensure_ascii=False))
+```
+
+### 2.2 Git 操作层 (`tools/git_ops.py`)
+
+```python
+"""Git 操作封装 — 只读操作，安全无副作用。"""
+import subprocess
+from pathlib import Path
+from typing import Optional
+
+
+def _run_git(repo_path: str, args: list[str]) -> tuple[int, str, str]:
+    """在指定仓库中执行 git 命令。返回 (exit_code, stdout, stderr)。"""
+    try:
+        result = subprocess.run(
+            ["git"] + args,
+            cwd=repo_path,
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        return result.returncode, result.stdout.strip(), result.stderr.strip()
+    except subprocess.TimeoutExpired:
+        return -1, "", "Git command timed out"
+    except FileNotFoundError:
+        return -1, "", "Git not found or repo_path does not exist"
+
+
+def validate_repo(repo_path: str) -> Optional[str]:
+    """验证是否是有效的 Git 仓库。"""
+    code, out, err = _run_git(repo_path, ["rev-parse", "--git-dir"])
+    if code != 0:
+        return f"Not a valid git repository: {repo_path}"
+    return None
+
+
+def get_current_branch(repo_path: str) -> str:
+    """获取当前分支名。"""
+    _, out, _ = _run_git(repo_path, ["branch", "--show-current"])
+    return out or "unknown"
+
+
+def get_status(repo_path: str) -> dict:
+    """获取仓库状态摘要。"""
+    branch = get_current_branch(repo_path)
+    
+    # 修改/暂存的文件
+    _, status_short, _ = _run_git(repo_path, ["status", "--short"])
+    changed_files = status_short.split("\n") if status_short else []
+    
+    # 领先/落后 upstream 的 commits 数
+    _, ahead, _ = _run_git(
+        repo_path, ["rev-list", "--count", f"HEAD..@{{upstream}}"]
+    )
+    _, behind, _ = _run_git(
+        repo_path, ["rev-list", "--count", f"@{{upstream}}..HEAD"]
+    )
+    
+    return {
+        "branch": branch,
+        "changed_files": len(changed_files),
+        "changed_list": changed_files[:20],  # 限制输出
+        "ahead_of_upstream": int(behind) if behind and behind.isdigit() else 0,
+        "behind_upstream": int(ahead) if ahead and ahead.isdigit() else 0,
+    }
+
+
+def get_recent_commits(repo_path: str, count: int = 10, 
+                       base_branch: str = "main") -> list[dict]:
+    """获取当前分支最近的 commits（相对于 base_branch）。"""
+    # 只获取当前分支独有的 commits
+    _, log_out, _ = _run_git(repo_path, [
+        "log", f"{base_branch}..HEAD", 
+        f"--max-count={count}",
+        "--format=%H||%s||%an||%ai"
+    ])
+    
+    if not log_out:
+        return []
+    
+    commits = []
+    for line in log_out.split("\n"):
+        parts = line.split("||", 3)
+        if len(parts) == 4:
+            commits.append({
+                "hash": parts[0][:8],
+                "message": parts[1],
+                "author": parts[2],
+                "date": parts[3][:10],
+            })
+    return commits
+
+
+def get_diff_summary(repo_path: str, base_branch: str = "main") -> dict:
+    """获取 diff 统计摘要。"""
+    _, stat_out, _ = _run_git(repo_path, [
+        "diff", "--stat", f"{base_branch}..HEAD"
+    ])
+    if not stat_out:
+        return {"files_changed": 0, "insertions": 0, "deletions": 0}
+    
+    # 解析最后一行的统计信息
+    lines = stat_out.strip().split("\n")
+    summary_line = lines[-1] if lines else ""
+    
+    files_changed = 0
+    insertions = 0
+    deletions = 0
+    
+    import re
+    # 格式: " X files changed, Y insertions(+), Z deletions(-)"
+    fm = re.search(r'(\d+) files? changed', summary_line)
+    im = re.search(r'(\d+) insertions?', summary_line)
+    dm = re.search(r'(\d+) deletions?', summary_line)
+    
+    return {
+        "files_changed": int(fm.group(1)) if fm else len(lines) - 1,
+        "insertions": int(im.group(1)) if im else 0,
+        "deletions": int(dm.group(1)) if dm else 0,
+    }
+```
+
+### 2.3 MCP Server 主程序 (`server.py`)
+
+```python
+#!/usr/bin/env python3
+"""
+Git Memory MCP Server — 让 AI Agent 记住你的 Git 工作流。
+
+工具列表:
+  git_status      — 当前仓库状态（分支/改动/领先落后）
+  git_log         — 当前分支最近的 commits
+  git_conventions — 查看/设置项目约定
+  git_context     — 一键获取完整上下文（推荐）
+  git_remember    — 记录 review 结论
+"""
+
+from mcp.server.fastmcp import FastMCP
+from tools.git_ops import (
+    validate_repo, get_status, get_recent_commits, get_diff_summary,
+)
+from tools.storage import (
+    load_conventions, save_conventions, load_reviews, save_review,
+)
+
+mcp = FastMCP("Git Memory")
+
+
+@mcp.tool()
+def git_status(repo_path: str) -> str:
+    """获取 Git 仓库的当前状态：分支、改动文件数、与 upstream 的差异。
+
+    Args:
+        repo_path: Git 仓库的本地路径（绝对路径）
+    """
+    err = validate_repo(repo_path)
+    if err:
+        return f"❌ {err}"
+
+    status = get_status(repo_path)
+    lines = [
+        f"📂 仓库: {repo_path}",
+        f"🌿 分支: {status['branch']}",
+        f"📝 改动文件: {status['changed_files']} 个",
+    ]
+    if status["ahead_of_upstream"]:
+        lines.append(f"⬆️  领先 upstream: {status['ahead_of_upstream']} commits")
+    if status["behind_upstream"]:
+        lines.append(f"⬇️  落后 upstream: {status['behind_upstream']} commits")
+    if status["changed_list"]:
+        lines.append("\n改动文件列表:")
+        for f in status["changed_list"][:15]:
+            lines.append(f"  {f}")
+    
+    return "\n".join(lines)
+
+
+@mcp.tool()
+def git_log(repo_path: str, count: int = 5, base_branch: str = "main") -> str:
+    """查看当前分支最近的 commits（相对于 base_branch 独有的）。
+
+    Args:
+        repo_path: Git 仓库的本地路径
+        count: 返回的 commit 数量（默认 5）
+        base_branch: 对比的基础分支（默认 main）
+    """
+    err = validate_repo(repo_path)
+    if err:
+        return f"❌ {err}"
+
+    commits = get_recent_commits(repo_path, count, base_branch)
+    if not commits:
+        return f"当前分支与 {base_branch} 无差异 commits。"
+
+    lines = [f"📋 相对于 {base_branch} 的最近 {len(commits)} 个 commits:"]
+    for c in commits:
+        lines.append(f"  {c['hash']} {c['message']} — {c['author']} ({c['date']})")
+    
+    return "\n".join(lines)
+
+
+@mcp.tool()
+def git_conventions(repo_path: str, action: str = "view", 
+                    key: str = "", value: str = "") -> str:
+    """查看或设置项目的 Git 约定（commit 风格、分支命名、CI 等）。
+
+    Args:
+        repo_path: Git 仓库路径
+        action: "view"（查看）或 "set"（设置）
+        key: 要设置的约定项（commit_style, branch_naming, ci_provider, custom_rules）
+        value: 约定的值
+    """
+    err = validate_repo(repo_path)
+    if err:
+        return f"❌ {err}"
+
+    if action == "view":
+        conv = load_conventions(repo_path)
+        lines = ["📐 项目约定:"]
+        lines.append(f"  Commit 风格: {conv.get('commit_style', '未设置')}")
+        lines.append(f"  分支命名: {conv.get('branch_naming', '未设置')}")
+        lines.append(f"  CI 提供商: {conv.get('ci_provider', '未设置')}")
+        if conv.get("code_review_focus"):
+            lines.append(f"  Review 关注点: {', '.join(conv['code_review_focus'])}")
+        if conv.get("custom_rules"):
+            lines.append("  自定义规则:")
+            for rule in conv["custom_rules"]:
+                lines.append(f"    • {rule}")
+        return "\n".join(lines)
+
+    if action == "set":
+        if not key:
+            return "❌ 请指定要设置的 key"
+        conv = load_conventions(repo_path)
+        conv[key] = value
+        save_conventions(repo_path, conv)
+        return f"✅ 已设置 {key} = {value}"
+
+    return "❌ 未知操作。支持: view / set"
+
+
+@mcp.tool()
+def git_context(repo_path: str) -> str:
+    """一键获取完整的 Git 上下文：状态 + commits + diff 统计 + 约定 + review 历史。
+    
+    这是推荐的首选工具——Agent 调用一次就能获得所有需要的项目背景。
+    """
+    err = validate_repo(repo_path)
+    if err:
+        return f"❌ {err}"
+
+    status = get_status(repo_path)
+    commits = get_recent_commits(repo_path, 5)
+    diff = get_diff_summary(repo_path)
+    conv = load_conventions(repo_path)
+    reviews = load_reviews(repo_path, 5)
+
+    lines = [
+        "═══════════════════════════════════════════",
+        "  📋 Git 上下文总览",
+        "═══════════════════════════════════════════",
+        "",
+        "🌿 当前状态:",
+        f"  分支: {status['branch']}",
+        f"  改动文件: {status['changed_files']} 个",
+    ]
+    if status["ahead_of_upstream"]:
+        lines.append(f"  领先 upstream: {status['ahead_of_upstream']} commits")
+
+    lines.append("")
+    lines.append(f"📊 Diff 统计 (vs main):")
+    lines.append(f"  文件: {diff.get('files_changed', 0)} | "
+                 f"+{diff.get('insertions', 0)} / -{diff.get('deletions', 0)}")
+
+    if commits:
+        lines.append("")
+        lines.append("📝 最近 commits:")
+        for c in commits:
+            lines.append(f"  {c['hash']} {c['message']}")
+
+    lines.append("")
+    lines.append("📐 项目约定:")
+    lines.append(f"  Commit: {conv.get('commit_style', '未设置')}")
+    lines.append(f"  分支命名: {conv.get('branch_naming', '未设置')}")
+    lines.append(f"  CI: {conv.get('ci_provider', '未设置')}")
+
+    if reviews:
+        lines.append("")
+        lines.append("🔍 最近 Review:")
+        for r in reviews[-3:]:
+            status_icon = "✅" if r.get("approved") else "🔴"
+            lines.append(f"  {status_icon} {r['branch']}: {r['summary'][:80]}")
+
+    lines.append("")
+    lines.append("═══════════════════════════════════════════")
+    
+    return "\n".join(lines)
+
+
+@mcp.tool()
+def git_remember(repo_path: str, branch: str, summary: str,
+                 key_findings: str = "", approved: bool = False) -> str:
+    """记录一次 code review 的结论，供未来 Agent 对话参考。
+
+    Args:
+        repo_path: Git 仓库路径
+        branch: 当前分支名
+        summary: Review 摘要（一句话总结）
+        key_findings: 关键发现，用逗号分隔
+        approved: 是否通过审查
+    """
+    err = validate_repo(repo_path)
+    if err:
+        return f"❌ {err}"
+
+    findings = [f.strip() for f in key_findings.split(",") if f.strip()]
+    save_review(repo_path, branch, summary, findings, approved)
+    
+    status = "✅ 通过" if approved else "🔴 需修改"
+    return f"已记录 review: {status}\n摘要: {summary}\n关键发现: {', '.join(findings) if findings else '无'}"
+
+
+if __name__ == "__main__":
+    mcp.run()
+```
+
+---
+
+## 第三步：配置 Claude Desktop
+
+在 `claude_desktop_config.json` 中添加：
+
+```json
+{
+  "mcpServers": {
+    "git-memory": {
+      "command": "python3",
+      "args": [
+        "/absolute/path/to/git-memory-mcp/server.py"
+      ]
+    }
+  }
+}
+```
+
+重启 Claude Desktop。在对话中输入：
+
+```
+你：帮我看看 /Users/adai/work/my-project 的 Git 上下文。
+
+Claude 调用 git_context(repo_path="/Users/adai/work/my-project")
+
+返回：
+🌿 分支: feature/stripe-webhook
+📊 Diff: 12 文件, +347 / -89
+📝 最近 commits:
+  a3f2c1b feat: add webhook signature verification
+  8d4e2a7 fix: handle idempotency key collision
+📐 约定: conventional commits, CI: GitHub Actions
+🔍 Review: 无历史记录
+```
+
+Agent 自动获取了你项目的全部上下文。**零手动输入。**
+
+---
+
+## 第四步：结合 Moltable 实现跨 Agent 同步
+
+Git Memory Server 解决的是"这个项目的 Git 上下文是什么"——但它存在本地文件系统上。换一台电脑，或者换一个 Agent（从 Claude 切到 Cursor），这些数据不会自动跟随。
+
+这就需要 Moltable 的 Identity Sync：
+
+```
+┌──────────────────────────────────────────────────────┐
+│                    你的 AI 工作流                      │
+├──────────────────────────────────────────────────────┤
+│                                                      │
+│  Git Memory MCP Server          Moltable             │
+│  ┌─────────────────┐       ┌──────────────┐         │
+│  │ git_context()   │       │ Persona:      │         │
+│  │ git_conventions │       │   代码审查员   │         │
+│  │ git_remember()  │       │               │         │
+│  │ git_log()       │       │ Preferences:  │         │
+│  │ git_status()    │       │   TypeScript  │         │
+│  └────────┬────────┘       │   Prettier    │         │
+│           │                │   Railway     │         │
+│   项目级上下文               └──────┬───────┘         │
+│   (本地、Git 相关)                  │                 │
+│                           个人级身份                  │
+│                           (云端、跨 Agent)            │
+│                           │                          │
+│                    ┌──────┴──────┐                   │
+│                    │   Agent 获得  │                  │
+│                    │   完整上下文   │                  │
+│                    └─────────────┘                   │
+└──────────────────────────────────────────────────────┘
+```
+
+**分工明确：**
+- **Git Memory Server** → "这个项目怎么 build？CI 是什么？上次 review 说了什么？"
+- **Moltable** → "你是谁？用什么语言？喜欢什么风格？哪个 Persona 在工作？"
+
+一起用，Agent 不仅知道你在哪个分支，还知道**你**是谁。
+
+---
+
+## 部署与使用
+
+### 本地运行
+
+```bash
+git clone https://github.com/Moltable/git-memory-mcp.git
+cd git-memory-mcp
+pip install mcp
+python3 server.py
+```
+
+### 配置到 Cursor / Hermes
+
+Cursor 和 Hermes 同样支持 MCP 协议。配置方式与 Claude Desktop 几乎一致——在对应的 MCP 配置文件中添加相同的 server 条目。
+
+### 首次使用建议
+
+1. 先在主力项目上设置约定：
+   ```
+   你：帮我设置 /Users/adai/work/api 的项目约定：
+       commit_style = conventional
+       branch_naming = feature/XXX, fix/XXX
+       ci_provider = GitHub Actions
+       code_review_focus = 错误处理、类型安全、SQL 注入防护
+   ```
+
+2. 每次 review 完记录结论：
+   ```
+   你：记住这次 review：feature/payment-v2 分支，
+       核心问题是 PaymentService 缺少幂等性保护，
+       建议在 Stripe API 调用前加 idempotency key。
+   ```
+
+3. 下次 Agent 对话时，直接调用 `git_context` 获取全部背景。
+
+---
+
+## 总结
+
+| 需要 | 工具 | 解决的问题 |
+|------|------|-----------|
+| 项目 Git 上下文 | Git Memory MCP Server | Agent 自动知道分支/commits/约定 |
+| 跨项目/跨设备身份 | Moltable | 你的偏好/Persona 跟随你到任何 Agent |
+| Review 记忆 | `git_remember()` | 上次 review 的结论不会丢失 |
+| 零配置上手 | `git_context()` | 一个工具调用拿到全部信息 |
+
+**代码已开源，30 分钟部署到你的开发环境。** 从此之后，你的 AI Agent 不再是"每次对话都重新认识你"的陌生人——它知道你项目的一切。
+
+→ [GitHub: Moltable/git-memory-mcp](https://github.com/Moltable/git-memory-mcp)
+→ [Moltable Identity Sync: moltable.ai](https://www.moltable.ai)
+
+---
+
+*发表于 2026 年 8 月 11 日 · Moltable 团队*
+*标签：MCP, Git, 教程, Python, Hands-on, Memory*
+
+</ArticleLayout>

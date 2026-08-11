@@ -12,6 +12,15 @@ export interface BlogPost {
 
 const posts: BlogPost[] = [
   {
+    slug: 'mcp-server-git-workflow',
+    date: '2026-08-11',
+    title: 'MCP 实战进阶：让 AI Agent 记住你的 Git 工作流',
+    titleEn: 'Building an MCP Memory Server for Git Workflows: Let Your AI Remember Every Commit',
+    excerpt:
+      '手把手教程：从零构建一个 Git-aware MCP Server，让你的 AI Agent 自动知道分支、commits、项目约定和 review 历史。完整 Python 实现 + FastMCP，30 分钟部署。',
+    tags: ['MCP', 'Git', '教程', 'Python', 'Hands-on', 'Memory'],
+  },
+  {
     slug: 'viral-growth-referral-system',
     date: '2026-08-07',
     title: 'Building a Viral Growth Engine for Developer Tools — Lessons from Moltable\'s Referral System',
