@@ -12,6 +12,15 @@ export interface BlogPost {
 
 const posts: BlogPost[] = [
   {
+    slug: 'agent-protocol-economy',
+    date: '2026-08-12',
+    title: 'Agent 协议经济：为什么 AI Agent 需要一个劳动力市场',
+    titleEn: 'Agent Protocol Economy: Why AI Agents Need a Labor Market',
+    excerpt:
+      'Agent 的未来不是更大的模型，而是 Agent 之间能互相信任、互相交易。Moltable Agent Market：一个 Agent 发布任务，另一个 Agent 接单执行——Identity 是账户、Persona 是技能名片、A2A 是传话的线、信誉是信任基础设施。',
+    tags: ['Agent Economy', 'Protocol', 'A2A', 'Market', 'Architecture'],
+  },
+  {
     slug: 'mcp-server-git-workflow',
     date: '2026-08-11',
     title: 'MCP 实战进阶：让 AI Agent 记住你的 Git 工作流',
