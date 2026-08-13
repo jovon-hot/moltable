@@ -15,16 +15,17 @@ from services.identity_graph import (
 class TestTemporalDecay:
     def test_recent_memory_high_weight(self):
         """Recently created memory should have high weight."""
-        import time
-        now = time.time()
+        from datetime import datetime
         mem = {
             "content": "test",
             "confidence": 1.0,
             "created_at": "2026-08-07T00:00:00",
             "last_accessed": "2026-08-07T00:00:00",
         }
-        # Simulate "now" as a few hours after creation
-        now_ts = now
+        # Simulate "now" a few hours after creation. (Deterministic — the
+        # previous version used time.time(), which let the weight decay below
+        # 0.8 as real days elapsed past the 7-day half-life.)
+        now_ts = datetime.fromisoformat("2026-08-07T04:00:00").timestamp()
         weight = _temporal_decay_weight(mem, now_ts=now_ts)
         assert weight > 0.8  # Very recent → high weight
 
