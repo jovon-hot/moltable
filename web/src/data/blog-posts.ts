@@ -12,6 +12,15 @@ export interface BlogPost {
 
 const posts: BlogPost[] = [
   {
+    slug: 'indie-dev-ai-toolchain',
+    date: '2026-08-13',
+    title: '独立开发者的 AI 工具链：真实使用记录',
+    titleEn: "An Indie Developer's AI Toolchain: A Real Usage Case Study",
+    excerpt:
+      '一个人同时用 Claude Code、OpenCode、Hermes 等多个 AI Agent，最耗精力的不是写 prompt，而是重复交代「我是谁」。一份真实的工具链使用记录：瓶颈不在模型层，而在跨 Agent 身份同步。',
+    tags: ['Case Study', 'Identity', 'Toolchain', 'Solo Dev', 'AI Memory'],
+  },
+  {
     slug: 'agent-protocol-economy',
     date: '2026-08-12',
     title: 'Agent 协议经济：为什么 AI Agent 需要一个劳动力市场',
