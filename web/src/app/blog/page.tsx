@@ -188,7 +188,7 @@ export default function BlogPage() {
           </p>
           <p className="text-sm text-ln-tertiary">
             {isEn ? 'More content coming · Follow ' : '更多内容即将发布 · 关注 '}
-            <a href="https://github.com/moltable" className="text-ln-accent hover:underline">
+            <a href="https://github.com/Moltable" className="text-ln-accent hover:underline">
               GitHub
             </a>
             {' '}{isEn ? 'for updates' : '获取更新'}

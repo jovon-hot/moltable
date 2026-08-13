@@ -30,7 +30,7 @@ export default function PublicFooter() {
           <h4 className="text-sm mb-4 text-ln-text font-ui">{t.footer.resources}</h4>
           <ul className="space-y-3">
             <li>
-              <a href="https://github.com/moltable/moltable" target="_blank" rel="noopener noreferrer"
+              <a href="https://github.com/Moltable/moltable" target="_blank" rel="noopener noreferrer"
                 className="text-sm font-body text-ln-tertiary hover:text-ln-secondary transition-colors duration-150">
                 {t.footer.github}
               </a>
