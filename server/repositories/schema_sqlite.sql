@@ -13,8 +13,12 @@ CREATE TABLE IF NOT EXISTS users (
     plan TEXT DEFAULT 'free',
     last_active_at TEXT,
     trial_activated_at TEXT,
+    expires_at TEXT,
     created_at TEXT DEFAULT (datetime('now'))
 );
+
+-- 迁移：为旧库补充 expires_at 列（新库已在 CREATE TABLE 中定义）
+ALTER TABLE users ADD COLUMN expires_at TEXT;
 
 -- API 密钥 (legacy, deprecated)
 CREATE TABLE IF NOT EXISTS api_keys (
@@ -66,12 +70,21 @@ CREATE TABLE IF NOT EXISTS memories (
     confidence REAL DEFAULT 1.0,
     is_archived INTEGER DEFAULT 0,
     source_session_id TEXT,
+    -- 同步字段 (Git-style bidirectional sync)
+    version INTEGER DEFAULT 1,
+    base_content TEXT DEFAULT '',
+    updated_at TEXT DEFAULT (datetime('now')),
     created_at TEXT DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_memories_user ON memories(user_id);
 CREATE INDEX IF NOT EXISTS idx_memories_category ON memories(category);
 CREATE INDEX IF NOT EXISTS idx_memories_user_archived ON memories(user_id, is_archived);
 CREATE VIRTUAL TABLE IF NOT EXISTS memories_fts USING fts5(content, content_rowid='rowid');
+
+-- 迁移：为旧库补充同步字段（新库已在 CREATE TABLE 中定义；重复 ALTER 会被跳过）
+ALTER TABLE memories ADD COLUMN version INTEGER DEFAULT 1;
+ALTER TABLE memories ADD COLUMN base_content TEXT DEFAULT '';
+ALTER TABLE memories ADD COLUMN updated_at TEXT DEFAULT '';
 
 -- Persona
 CREATE TABLE IF NOT EXISTS personas (
@@ -82,9 +95,15 @@ CREATE TABLE IF NOT EXISTS personas (
     type TEXT DEFAULT 'constructed',
     definition TEXT,
     is_active INTEGER DEFAULT 1,
+    version INTEGER DEFAULT 1,
+    base_content TEXT DEFAULT '',
+    updated_at TEXT DEFAULT (datetime('now')),
     created_at TEXT DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_personas_user ON personas(user_id);
+ALTER TABLE personas ADD COLUMN version INTEGER DEFAULT 1;
+ALTER TABLE personas ADD COLUMN base_content TEXT DEFAULT '';
+ALTER TABLE personas ADD COLUMN updated_at TEXT DEFAULT '';
 
 -- 项目 (aligned with schema.sql — persona_id/knowledge_bases/tools/updated_at)
 CREATE TABLE IF NOT EXISTS projects (
@@ -96,10 +115,14 @@ CREATE TABLE IF NOT EXISTS projects (
     knowledge_bases TEXT DEFAULT '[]',
     tools TEXT DEFAULT '[]',
     is_active INTEGER DEFAULT 1,
+    version INTEGER DEFAULT 1,
+    base_content TEXT DEFAULT '',
     created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_projects_user ON projects(user_id);
+ALTER TABLE projects ADD COLUMN version INTEGER DEFAULT 1;
+ALTER TABLE projects ADD COLUMN base_content TEXT DEFAULT '';
 
 -- 决策
 CREATE TABLE IF NOT EXISTS decisions (

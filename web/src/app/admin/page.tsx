@@ -33,7 +33,6 @@ export default function AdminDashboard() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState('')
-  const [loggedIn, setLoggedIn] = useState(false)
   const [stats, setStats] = useState<AdminStats | null>(null)
   const [users, setUsers] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
@@ -55,7 +54,6 @@ export default function AdminDashboard() {
       const d = await r.json()
       setToken(d.token)
       setRole(d.role || 'operator')
-      setLoggedIn(true)
     } catch (e: any) {
       setError(e.message)
     } finally {
@@ -86,15 +84,15 @@ export default function AdminDashboard() {
   }
 
   useEffect(() => {
-    if (loggedIn) {
+    if (token) {
       fetchStats()
       fetchUsers()
       const i = setInterval(fetchStats, 30000)
       return () => clearInterval(i)
     }
-  }, [loggedIn, token])
+  }, [token])
 
-  if (!loggedIn) {
+  if (!token) {
     return (
       <div className="min-h-screen px-6 py-24 max-w-md mx-auto" style={{ background: '#0D0D14', color: '#ffffff' }}>
         <h1 className="text-2xl mb-6" style={{ fontWeight: 590 }}>Admin</h1>

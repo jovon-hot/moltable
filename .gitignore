@@ -21,3 +21,5 @@ scripts/
 HANDOFF.md
 *.db-shm
 *.db-wal
+.sisyphus/
+web/tsconfig.tsbuildinfo

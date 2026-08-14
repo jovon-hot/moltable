@@ -6,13 +6,18 @@
   "permissions": [
     "storage",
     "activeTab",
-    "scripting"
+    "scripting",
+    "idle"
   ],
   "host_permissions": [
     "https://chatgpt.com/*",
     "https://claude.ai/*",
     "https://gemini.google.com/*",
-    "https://chat.deepseek.com/*"
+    "https://chat.deepseek.com/*",
+    "http://localhost:8642/*",
+    "https://moltable.ai/*",
+    "https://www.moltable.ai/*",
+    "https://moltable-production-15ad.up.railway.app/*"
   ],
   "action": {
     "default_popup": "popup.html",

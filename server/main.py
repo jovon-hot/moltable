@@ -1,6 +1,7 @@
 """Moltable API Server — AI Identity Layer
 FastAPI + Supabase + MCP + DeepSeek LLM
 """
+
 import logging
 import os
 import signal
@@ -28,10 +29,8 @@ deepseek_key = os.getenv("DEEPSEEK_API_KEY")
 deepseek_client = None
 if deepseek_key:
     from openai import OpenAI
-    deepseek_client = OpenAI(
-        api_key=deepseek_key,
-        base_url="https://api.deepseek.com/v1"
-    )
+
+    deepseek_client = OpenAI(api_key=deepseek_key, base_url="https://api.deepseek.com/v1")
 else:
     logger.warning("DEEPSEEK_API_KEY missing — LLM features disabled")
 
@@ -45,6 +44,7 @@ async def lifespan(_app: FastAPI):
     import asyncio
 
     from services.stats_collector import collect_daily_stats, stats_collector_loop
+
     # Collect immediately on startup (only if not already collected today)
     try:
         collect_daily_stats()
@@ -57,6 +57,7 @@ async def lifespan(_app: FastAPI):
     # Shutdown
     logger.info("Moltable shutting down")
 
+
 # ── FastAPI App ───────────────────────────────────────────
 app = FastAPI(
     title="Moltable — AI Identity Layer",
@@ -64,6 +65,7 @@ app = FastAPI(
     description="Cross-AI identity system: Identity → Persona → Agent",
     lifespan=lifespan,
 )
+
 
 # ── Security Headers Middleware ───────────────────────────
 @app.middleware("http")
@@ -73,10 +75,13 @@ async def add_security_headers(request: Request, call_next):
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
-    response.headers["Content-Security-Policy"] = "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://moltable-production-15ad.up.railway.app https://wjkyoqbjcxqqsruuutvf.supabase.co; font-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://moltable-production-15ad.up.railway.app https://wjkyoqbjcxqqsruuutvf.supabase.co; font-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+    )
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
     return response
+
 
 # ── CORS ──────────────────────────────────────────────────
 app.add_middleware(
@@ -84,7 +89,16 @@ app.add_middleware(
     allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "X-API-Key", "X-Session-Token", "X-Admin-Token", "Accept", "Accept-Language", "Content-Language"],
+    allow_headers=[
+        "Authorization",
+        "Content-Type",
+        "X-API-Key",
+        "X-Session-Token",
+        "X-Admin-Token",
+        "Accept",
+        "Accept-Language",
+        "Content-Language",
+    ],
 )
 
 # ── Rate Limiting Handler ─────────────────────────────────
@@ -99,6 +113,7 @@ async def add_api_version_header(request: Request, call_next):
     response.headers["X-API-Version"] = "1"
     return response
 
+
 # ── 1MB Request Body Size Limit Middleware ──────────────
 @app.middleware("http")
 async def limit_request_body_size(request: Request, call_next):
@@ -108,6 +123,7 @@ async def limit_request_body_size(request: Request, call_next):
         try:
             if int(content_length) > 1_048_576:
                 from fastapi.responses import JSONResponse
+
                 return JSONResponse(
                     status_code=413,
                     content={"detail": "Request body too large — max 1MB"},
@@ -184,6 +200,7 @@ from routes import (
     provision,
     referrals,
     sessions,
+    sync,
     temporal,
     v1,
 )
@@ -202,6 +219,7 @@ app.include_router(v1.router)
 app.include_router(agents.router)
 app.include_router(projects.router)
 app.include_router(referrals.router)
+app.include_router(sync.router)
 app.include_router(admin.router, include_in_schema=False)
 app.include_router(experiments.router, include_in_schema=False)
 app.add_api_route("/.well-known/mcp", mcp.mcp_discovery, methods=["GET"], tags=["mcp"])
@@ -238,6 +256,7 @@ async def health(request: Request):
 
 if __name__ == "__main__":
     import uvicorn
+
     port = int(os.getenv("PORT", "8700"))
 
     def shutdown(sig, frame):

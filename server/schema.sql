@@ -17,6 +17,7 @@ create table users (
     language      text default 'zh',
     last_active_at        timestamptz,
     trial_activated_at    timestamptz,
+    expires_at            timestamptz,
     created_at    timestamptz default now(),
     updated_at    timestamptz default now()
 );
@@ -64,6 +65,7 @@ create table personas (
     traits          jsonb default '{}',
     model_preference text,
     version         integer default 1,
+    base_content    text default '',
     parent_id       uuid references personas(id),
     is_active       boolean default true,
     memory_count    integer default 0,
@@ -98,6 +100,8 @@ create table memories (
     embedding     vector(384),
     tags          text[] default '{}',
     is_archived   boolean default false,
+    version       integer default 1,
+    base_content  text default '',
     created_at    timestamptz default now(),
     updated_at    timestamptz default now()
 );
@@ -122,6 +126,8 @@ create table projects (
     knowledge_bases jsonb default '[]',
     tools         jsonb default '[]',
     is_active     boolean default true,
+    version       integer default 1,
+    base_content  text default '',
     created_at    timestamptz default now(),
     updated_at    timestamptz default now()
 );
@@ -385,6 +391,7 @@ create table if not exists daily_stats (
 -- ── 用户活跃度追踪 ──────────────────────────────
 alter table users add column if not exists last_active_at timestamptz;
 alter table users add column if not exists trial_activated_at timestamptz;
+alter table users add column if not exists expires_at timestamptz;
 
 -- ── Admin accounts (email+password auth) ───────
 create table if not exists admin_users (
@@ -393,6 +400,7 @@ create table if not exists admin_users (
     password_hash   text not null,
     role            text not null default 'operator' check (role in ('admin', 'operator')),
     is_active       boolean default true,
+    token_version   integer default 1,
     last_login_at   timestamptz,
     created_at      timestamptz default now()
 );

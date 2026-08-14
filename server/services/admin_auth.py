@@ -68,13 +68,18 @@ _MAX_FAILURES = 5
 def _client_ip(request: Optional[Request]) -> str:
     if request is None:
         return "unknown"
-    xff = request.headers.get("X-Forwarded-For", "")
-    if xff:
-        return xff.split(",")[0].strip()
-    xri = request.headers.get("X-Real-IP", "")
-    if xri:
-        return xri.strip()
-    return request.client.host if request.client else "unknown"
+    direct = request.client.host if request.client else None
+    allowed_proxies = os.getenv("ALLOWED_PROXY_IPS", "")
+    if allowed_proxies and direct and direct in [ip.strip() for ip in allowed_proxies.split(",")]:
+        xff = request.headers.get("X-Forwarded-For", "")
+        if xff:
+            return xff.split(",")[0].strip()
+        xri = request.headers.get("X-Real-IP", "")
+        if xri:
+            return xri.strip()
+    if direct:
+        return direct
+    return "unknown"
 
 
 def _hash_password(password: str) -> str:
@@ -84,7 +89,65 @@ def _hash_password(password: str) -> str:
     return base64.b64encode(salt).decode() + digest
 
 
+def _is_legacy_hash(stored_hash: str) -> bool:
+    """True if stored_hash is a pre-2026-08-10 bare 64-char hex pbkdf2 digest.
+
+    Legacy hashes have no salt prefix; current hashes prepend a 24-char
+    base64 salt (88 chars total), so the shapes are unambiguous.
+    """
+    return (
+        isinstance(stored_hash, str)
+        and len(stored_hash) == 64
+        and all(c in "0123456789abcdef" for c in stored_hash)
+    )
+
+
+_LEGACY_PEPPER_ENVS = (
+    "ADMIN_PASSWORD_PEPPER",
+    "SUPABASE_SERVICE_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
+)
+
+
+def _legacy_salts() -> list[bytes]:
+    """Candidate pbkdf2 salts for legacy bare-hex hashes, in priority order.
+
+    Before commit f68a9290 the salt was the first 16 bytes of a global pepper:
+    _PASSWORD_PEPPER = os.getenv("SUPABASE_SERVICE_KEY", JWT_SECRET).
+    ADMIN_PASSWORD_PEPPER was introduced to preserve that value; try all
+    candidates so existing accounts verify regardless of which secret was used.
+    """
+    salts: list[bytes] = []
+    for env in _LEGACY_PEPPER_ENVS:
+        value = os.getenv(env)
+        if value and len(value) >= 16:
+            salt = value[:16].encode()
+            if salt not in salts:
+                salts.append(salt)
+    jwt_salt = ADMIN_JWT_SECRET[:16].encode()
+    if jwt_salt not in salts:
+        salts.append(jwt_salt)
+    return salts
+
+
+def _verify_legacy_password(password: str, stored_hash: str) -> bool:
+    for salt in _legacy_salts():
+        expected = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 100_000).hex()
+        if hmac.compare_digest(expected, stored_hash):
+            return True
+    return False
+
+
 def _verify_password(password: str, stored_hash: str) -> bool:
+    """Verify against the current salted format, or the legacy bare-hex format.
+
+    Legacy hashes are accepted so existing accounts keep working; login_admin()
+    migrates them to the current format after a successful verify.
+    """
+    if not stored_hash:
+        return False
+    if _is_legacy_hash(stored_hash):
+        return _verify_legacy_password(password, stored_hash)
     try:
         salt = base64.b64decode(stored_hash[:24])
         expected = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 100_000).hex()
@@ -162,6 +225,20 @@ def login_admin(email: str, password: str, request: Optional[Request] = None) ->
             return None
 
         _record_success(ip)
+
+        # Auto-migrate legacy (bare-hex) hashes to the salted format on success.
+        if _is_legacy_hash(user.get("password_hash", "")):
+            try:
+                supabase.table("admin_users").update(
+                    {"password_hash": _hash_password(password)}
+                ).eq("email", email.lower().strip()).execute()
+                logger.info("Migrated legacy password hash for admin %s", email.lower().strip())
+            except Exception as e:
+                logger.error(
+                    "Failed to migrate legacy password hash for admin %s: %s",
+                    email.lower().strip(),
+                    e,
+                )
 
         # Update last_login
         supabase.table("admin_users").update(

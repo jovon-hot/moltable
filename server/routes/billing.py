@@ -3,6 +3,7 @@
 激活即获得 90 天 Pro 体验，无需支付信息。
 后续收费功能待 Stripe 账户开通后再接入。
 """
+
 import logging
 import os
 from datetime import datetime, timedelta, timezone
@@ -24,12 +25,26 @@ TRIAL_ACTIVE = os.getenv("MOLTABLE_TRIAL_ACTIVE", "true").lower() in ("1", "true
 # ── 用户计划元数据 ───────────────────────────────
 TRIAL_PLANS = {
     "pro": {
-        "plan": "pro", "plan_name": "Pro (限时体验)",
-        "limits": {"identities": 3, "personas": 10, "memories": 10000, "agents": 5, "api_calls_per_day": 500},
+        "plan": "pro",
+        "plan_name": "Pro (限时体验)",
+        "limits": {
+            "identities": 3,
+            "personas": 10,
+            "memories": 10000,
+            "agents": 5,
+            "api_calls_per_day": 500,
+        },
     },
     "team": {
-        "plan": "team", "plan_name": "Team (限时体验)",
-        "limits": {"identities": 10, "personas": -1, "memories": 50000, "agents": -1, "api_calls_per_day": 2000},
+        "plan": "team",
+        "plan_name": "Team (限时体验)",
+        "limits": {
+            "identities": 10,
+            "personas": -1,
+            "memories": 50000,
+            "agents": -1,
+            "api_calls_per_day": 2000,
+        },
     },
 }
 
@@ -43,10 +58,10 @@ class ActivateRequest(BaseModel):
 #  激活免费试用
 # ═══════════════════════════════════════════════════
 
+
 @router.post("/activate")
 @limiter.limit("10/minute")
-async def activate_trial(request: Request, body: ActivateRequest,
-                         user_id: str = Depends(get_user)):
+async def activate_trial(request: Request, body: ActivateRequest, user_id: str = Depends(get_user)):
     """激活 90 天 Pro/Team 免费试用。一次调用，即时生效。"""
     if not TRIAL_ACTIVE:
         raise HTTPException(503, "Trial activation is currently disabled")
@@ -56,12 +71,35 @@ async def activate_trial(request: Request, body: ActivateRequest,
     expires_at = now + timedelta(days=TRIAL_DAYS)
 
     if supabase is not None:
+        # 拒绝重复激活：已有生效中的试用（trial_activated_at 存在且 expires_at 在未来）
         try:
-            # 更新 users.plan + trial_activated_at
-            supabase.table("users").update({
-                "plan": plan_info["plan"],
-                "trial_activated_at": now.isoformat(),
-            }).eq("id", user_id).execute()
+            existing = (
+                supabase.table("users")
+                .select("trial_activated_at", "expires_at")
+                .eq("id", user_id)
+                .execute()
+            )
+            row = existing.data[0] if existing.data else {}
+            if row.get("trial_activated_at") and row.get("expires_at"):
+                existing_exp = row["expires_at"]
+                if isinstance(existing_exp, str):
+                    existing_exp = datetime.fromisoformat(existing_exp.replace("Z", "+00:00"))
+                if existing_exp > now:
+                    raise HTTPException(409, "Trial already active — cannot re-activate")
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.warning("Trial status check failed (non-fatal): %s", e)
+
+        try:
+            # 更新 users.plan + trial_activated_at + expires_at
+            supabase.table("users").update(
+                {
+                    "plan": plan_info["plan"],
+                    "trial_activated_at": now.isoformat(),
+                    "expires_at": expires_at.isoformat(),
+                }
+            ).eq("id", user_id).execute()
             logger.info("Trial activated: user=%s plan=%s", user_id, body.plan)
         except Exception as e:
             logger.warning("Trial activation DB update failed (non-fatal): %s", e)
@@ -80,6 +118,7 @@ async def activate_trial(request: Request, body: ActivateRequest,
 # ═══════════════════════════════════════════════════
 #  订阅状态查询
 # ═══════════════════════════════════════════════════
+
 
 @router.get("/subscription")
 @limiter.limit("60/minute")
@@ -106,6 +145,7 @@ async def get_subscription(request: Request, user_id: str = Depends(get_user)):
 #  计划列表（公开）
 # ═══════════════════════════════════════════════════
 
+
 @router.get("/plans")
 @limiter.limit("120/minute")
 def get_plans(request: Request):
@@ -126,7 +166,13 @@ def get_plans(request: Request):
                 "MCP 工具 (8 个)",
                 "基础 API 访问 (50/天)",
             ],
-            "limits": {"identities": 1, "personas": 2, "memories": 100, "agents": 1, "api_calls_per_day": 50},
+            "limits": {
+                "identities": 1,
+                "personas": 2,
+                "memories": 100,
+                "agents": 1,
+                "api_calls_per_day": 50,
+            },
         },
         "pro": {
             "name": "Pro · 限时体验",
@@ -143,7 +189,13 @@ def get_plans(request: Request):
                 "记忆离线缓存",
                 "完整 API 访问 (500/天)",
             ],
-            "limits": {"identities": 3, "personas": 10, "memories": 10000, "agents": 5, "api_calls_per_day": 500},
+            "limits": {
+                "identities": 3,
+                "personas": 10,
+                "memories": 10000,
+                "agents": 5,
+                "api_calls_per_day": 500,
+            },
             "trial_days": TRIAL_DAYS,
             "note": "Stripe 接入后恢复 ¥19/月。早鸟用户有专属优惠。",
         },
@@ -159,7 +211,13 @@ def get_plans(request: Request):
                 "优先支持",
                 "完整 API 访问 (2000/天)",
             ],
-            "limits": {"identities": 10, "personas": -1, "memories": 50000, "agents": -1, "api_calls_per_day": 2000},
+            "limits": {
+                "identities": 10,
+                "personas": -1,
+                "memories": 50000,
+                "agents": -1,
+                "api_calls_per_day": 2000,
+            },
             "trial_days": TRIAL_DAYS,
             "note": "联系 hi@moltable.ai 开通团队试用",
         },

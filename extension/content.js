@@ -14,6 +14,16 @@
     MAX_RESULTS: 5,
     TOOLBAR_ID: 'moltable-toolbar-root',
     SEARCH_DEBOUNCE_MS: 350,
+    CAPTURE_QUEUE_KEY: 'moltable_capture_queue',
+    CAPTURE_DEBOUNCE_MS: 2000,
+    CAPTURE_MIN_LENGTH: 40,
+    CAPTURE_MAX_QUEUE: 200,
+    CAPTURE_SELECTORS: {
+      'chatgpt.com': '[data-message-author-role="assistant"]',
+      'claude.ai': '[data-testid="assistant-message"], .font-claude-message',
+      'gemini.google.com': '.model-response-text',
+      'chat.deepseek.com': '.ds-markdown',
+    },
   };
 
   // --- DOM ---
@@ -358,6 +368,95 @@
     document.body.appendChild(rootEl);
   }
 
+  // --- Auto-capture: save new assistant messages as memories ---
+  const capturePending = new Set();
+  const captureLastLen = new WeakMap();
+  const captureHashes = new Set();
+  let captureTimer = null;
+
+  function captureSelectorForHost() {
+    const host = window.location.hostname;
+    for (const [domain, selector] of Object.entries(CONFIG.CAPTURE_SELECTORS)) {
+      if (host.endsWith(domain)) return selector;
+    }
+    return null;
+  }
+
+  function isAssistantNode(node) {
+    if (node.nodeType !== Node.ELEMENT_NODE || !node.matches) return false;
+    const selector = captureSelectorForHost();
+    if (!selector) return false;
+    return node.matches(selector) || !!node.closest(selector);
+  }
+
+  function captureHash(text) {
+    let hash = 0;
+    for (let i = 0; i < text.length; i++) hash = ((hash << 5) - hash + text.charCodeAt(i)) | 0;
+    return hash;
+  }
+
+  async function queueCapturedMemory(text) {
+    if (!(await getApiKey())) return;
+    const stored = await chrome.storage.local.get(CONFIG.CAPTURE_QUEUE_KEY);
+    const queue = stored[CONFIG.CAPTURE_QUEUE_KEY] || [];
+    queue.push({
+      id: `ext-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+      content: text,
+      base_version: 0,
+      updated_at: new Date().toISOString(),
+    });
+    await chrome.storage.local.set({ [CONFIG.CAPTURE_QUEUE_KEY]: queue.slice(-CONFIG.CAPTURE_MAX_QUEUE) });
+    chrome.runtime.sendMessage({ type: 'MOLTABLE_CAPTURED' }).catch(() => {});
+  }
+
+  function scheduleCapture() {
+    clearTimeout(captureTimer);
+    captureTimer = setTimeout(flushCapture, CONFIG.CAPTURE_DEBOUNCE_MS);
+  }
+
+  async function flushCapture() {
+    if (capturePending.size === 0 || !(await getApiKey())) return;
+    const ready = [];
+    let unstable = false;
+    const keep = new Set();
+    for (const node of capturePending) {
+      const text = (node.textContent || '').trim();
+      if (text.length < CONFIG.CAPTURE_MIN_LENGTH) continue;
+      const prev = captureLastLen.get(node);
+      if (prev === undefined || prev !== text.length) {
+        captureLastLen.set(node, text.length);
+        unstable = true;
+        keep.add(node);
+        continue;
+      }
+      const hash = captureHash(text);
+      if (captureHashes.has(hash)) continue;
+      captureHashes.add(hash);
+      ready.push(text);
+    }
+    capturePending.clear();
+    for (const node of keep) capturePending.add(node);
+    if (unstable) scheduleCapture();
+    for (const text of ready) await queueCapturedMemory(text);
+    if (captureHashes.size > 1000) captureHashes.clear();
+  }
+
+  function startCaptureObserver() {
+    if (!captureSelectorForHost()) return;
+    new MutationObserver((mutations) => {
+      let found = false;
+      for (const mutation of mutations) {
+        for (const node of mutation.addedNodes) {
+          if (isAssistantNode(node)) {
+            capturePending.add(node);
+            found = true;
+          }
+        }
+      }
+      if (found) scheduleCapture();
+    }).observe(document.body, { childList: true, subtree: true });
+  }
+
   // --- Listen for messages from popup ---
   chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     if (msg.action === 'moltable_toggle') {
@@ -393,8 +492,9 @@
     return true;
   });
 
-  // --- Initialize: inject toolbar ---
+  // --- Initialize: inject toolbar + auto-capture ---
   function init() {
+    startCaptureObserver();
     // Wait for DOM to be ready
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', injectToolbar);

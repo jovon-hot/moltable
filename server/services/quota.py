@@ -1,15 +1,24 @@
 """
 Quota 检查 — 按 plan 限制资源使用量
 
-PLAN LIMITS:
-  free:  1 identity, 1 persona, 100 memories, 1 agent, 50 api/day
+PLAN LIMITS (默认值，可用环境变量覆盖):
+  free:  1 identity, 2 personas, 100 memories, 1 agent, 50 api/day
   pro:   3 identities, 10 personas, 10000 memories, 5 agents, 500 api/day
-  team:  10 identities, 无限 personas, 50000 memories, 无限制 agents, 2000 api/day
+  team:  10 identities, 999999 personas, 50000 memories, 999999 agents, 2000 api/day
+
+环境变量命名: MOLTABLE_QUOTA_{PLAN}_{RESOURCE}（PLAN ∈ FREE/PRO/TEAM，
+RESOURCE ∈ IDENTITIES/PERSONAS/MEMORIES/AGENTS/API_CALLS_PER_DAY）。
+未设置或非法值时回退到上述默认值。例如:
+  MOLTABLE_QUOTA_FREE_PERSONAS=2
+  MOLTABLE_QUOTA_PRO_MEMORIES=10000
 """
+
+import os
+from datetime import datetime, timezone
 
 from fastapi import HTTPException
 
-PLAN_LIMITS = {
+_DEFAULT_PLAN_LIMITS = {
     "free": {
         "identities": 1,
         "personas": 2,
@@ -32,6 +41,27 @@ PLAN_LIMITS = {
         "api_calls_per_day": 2_000,
     },
 }
+
+
+def _load_plan_limits() -> dict:
+    """构建 PLAN_LIMITS：优先读取环境变量，未配置或非法值回退到默认值。"""
+    limits = {}
+    for plan, resources in _DEFAULT_PLAN_LIMITS.items():
+        limits[plan] = {}
+        for resource, default in resources.items():
+            env_key = f"MOLTABLE_QUOTA_{plan.upper()}_{resource.upper()}"
+            raw = os.getenv(env_key)
+            if raw is not None and raw.strip():
+                try:
+                    limits[plan][resource] = int(raw.strip())
+                    continue
+                except ValueError:
+                    pass
+            limits[plan][resource] = default
+    return limits
+
+
+PLAN_LIMITS = _load_plan_limits()
 
 PLAN_NAMES = {
     "free": "免费版",
@@ -75,18 +105,48 @@ PLAN_FEATURES = {
 
 def get_plan_limit(user_id: str, resource: str) -> int:
     """获取某用户某资源的限额。返回上限值。"""
-    # 默认 free plan
+    plan = _get_user_plan(user_id)
+    return PLAN_LIMITS.get(plan, PLAN_LIMITS["free"]).get(resource, 0)
+
+
+def check_trial_expiry(user_id: str) -> str:
+    """
+    检查试用是否过期；过期则自动降级为 free。
+
+    读取 users.expires_at，若试用已过期且当前为 pro 计划，自动降级为 free。
+    返回降级后（或未降级）的生效 plan。
+    """
     from app_state import supabase
+
     if supabase is None:
-        return PLAN_LIMITS["free"].get(resource, 0)
+        return "free"
 
     try:
-        result = supabase.table("users").select("plan").eq("id", user_id).execute()
-        plan = (result.data[0].get("plan", "free") if result.data else "free")
+        result = supabase.table("users").select("plan", "expires_at").eq("id", user_id).execute()
+        row = result.data[0] if result.data else {}
     except Exception:
-        plan = "free"
+        return "free"
 
-    return PLAN_LIMITS.get(plan, PLAN_LIMITS["free"]).get(resource, 0)
+    plan = row.get("plan", "free")
+    expires_at = row.get("expires_at")
+    if plan not in ("pro", "team") or not expires_at:
+        return plan
+
+    if isinstance(expires_at, str):
+        try:
+            expires_at = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+        except ValueError:
+            return plan
+
+    if expires_at < datetime.now(timezone.utc):
+        # 试用过期 → 自动降级 free
+        try:
+            supabase.table("users").update({"plan": "free"}).eq("id", user_id).execute()
+        except Exception:
+            pass
+        return "free"
+
+    return plan
 
 
 def check_quota(user_id: str, resource: str, current_count: int, operation: str = "create"):
@@ -121,6 +181,7 @@ def check_quota(user_id: str, resource: str, current_count: int, operation: str 
 def get_usage(user_id: str) -> dict:
     """获取用户当前用量统计。"""
     from app_state import supabase
+
     if supabase is None:
         return _empty_usage()
 
@@ -129,8 +190,10 @@ def get_usage(user_id: str) -> dict:
         # Persona count: use InMemoryPersonaStore in SQLite mode
         try:
             from app_state import _is_sqlite
+
             if _is_sqlite:
                 from services.persona_store import get_persona_store
+
                 all_p = get_persona_store().list(user_id)
                 personas = sum(1 for p in all_p if p.get("user_id") == user_id)
             else:
@@ -170,25 +233,24 @@ def _count(supabase, table: str, user_id: str, extra_field: str = None, extra_va
 
 
 def _get_user_plan(user_id: str) -> str:
-    from app_state import supabase
-    if supabase is None:
-        return "free"
+    return check_trial_expiry(user_id)
     try:
         result = supabase.table("users").select("plan").eq("id", user_id).execute()
-        return (result.data[0].get("plan", "free") if result.data else "free")
+        return result.data[0].get("plan", "free") if result.data else "free"
     except Exception:
         return "free"
 
 
 def _empty_usage() -> dict:
+    free_limits = PLAN_LIMITS["free"]
     return {
         "plan": "free",
         "plan_name": "免费版",
         "usage": {
-            "memories": {"used": 0, "limit": 100},
-            "personas": {"used": 0, "limit": 2},
-            "agents": {"used": 0, "limit": 1},
-            "identities": {"used": 1, "limit": 1},
+            "memories": {"used": 0, "limit": free_limits["memories"]},
+            "personas": {"used": 0, "limit": free_limits["personas"]},
+            "agents": {"used": 0, "limit": free_limits["agents"]},
+            "identities": {"used": 1, "limit": free_limits["identities"]},
             "api_keys": {"used": 0, "limit": 10},
         },
     }

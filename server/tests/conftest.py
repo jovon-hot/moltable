@@ -14,14 +14,19 @@ os.environ.pop("SUPABASE_SERVICE_ROLE_KEY", None)
 os.environ.pop("DEEPSEEK_API_KEY", None)
 os.environ["_HERMES_TESTING"] = "1"
 os.environ["API_KEY_PEPPER"] = "test-pepper-for-ci"
+# Admin auth: services.admin_auth refuses to boot (RuntimeError) without these.
+os.environ["ADMIN_JWT_SECRET"] = "test-admin-jwt-secret-0123456789abcdef0123456789abcdef"
+os.environ["ADMIN_PASSWORD_PEPPER"] = "test-admin-password-pepper-0123456789abcdef"
 
 # ── Global mocks ─────────────────────────────────────
 from services.vector_store import VectorStore
 
 _test_store = VectorStore()
 
+
 def _mock_get_store():
     return _test_store
+
 
 patch("app_state.get_store", side_effect=_mock_get_store).start()
 

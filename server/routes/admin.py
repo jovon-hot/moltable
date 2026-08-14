@@ -4,8 +4,11 @@ Roles:
   - admin:   full access (stats, users, account management, health)
   - operator: read-only (stats, health)
 
-No ADMIN_SECRET env var needed. Accounts stored in admin_users table.
+Secrets (see services/admin_auth.py): ADMIN_JWT_SECRET + ADMIN_PASSWORD_PEPPER
+are required — the server refuses to boot without them. Accounts are stored in
+the admin_users table.
 """
+
 import logging
 import os
 
@@ -30,6 +33,7 @@ router = APIRouter(prefix="/api/admin", tags=["admin"])
 #  Request models
 # ═══════════════════════════════════════════════════
 
+
 class LoginRequest(BaseModel):
     email: str = Field(..., max_length=254)
     password: str = Field(..., min_length=1, max_length=128)
@@ -46,6 +50,7 @@ class CreateAccountRequest(BaseModel):
 #  Auth endpoints
 # ═══════════════════════════════════════════════════
 
+
 @router.post("/login")
 @app_state.limiter.limit("10/minute")
 async def admin_login(request: Request, body: LoginRequest):
@@ -60,35 +65,65 @@ async def admin_login(request: Request, body: LoginRequest):
 #  Stats (admin + operator)
 # ═══════════════════════════════════════════════════
 
+
 @router.get("/stats")
 @app_state.limiter.limit("30/minute")
 def admin_stats(request: Request, _staff=Depends(require_staff)):
     if app_state.supabase is None or app_state._is_sqlite:
         return {"error": "Stats unavailable in SQLite mode"}
 
-    stats = {"total_users": 0, "new_users_today": 0, "new_users_week": 0,
-             "active_users_today": 0, "trial_activated": 0, "trial_active": 0,
-             "total_memories": 0, "total_projects": 0, "total_personas": 0,
-             "api_calls_today": 0}
+    stats = {
+        "total_users": 0,
+        "new_users_today": 0,
+        "new_users_week": 0,
+        "active_users_today": 0,
+        "trial_activated": 0,
+        "trial_active": 0,
+        "total_memories": 0,
+        "total_projects": 0,
+        "total_personas": 0,
+        "api_calls_today": 0,
+    }
 
     import datetime
+
     today = datetime.date.today().isoformat()
 
     try:
         r = app_state.supabase.table("users").select("count", count="exact").execute()
         stats["total_users"] = r.count if hasattr(r, "count") else 0
-        r = app_state.supabase.table("users").select("count", count="exact").gte("created_at", today).execute()
+        r = (
+            app_state.supabase.table("users")
+            .select("count", count="exact")
+            .gte("created_at", today)
+            .execute()
+        )
         stats["new_users_today"] = r.count if hasattr(r, "count") else 0
-        r = app_state.supabase.table("users").select("count", count="exact").eq("plan", "pro").execute()
+        r = (
+            app_state.supabase.table("users")
+            .select("count", count="exact")
+            .eq("plan", "pro")
+            .execute()
+        )
         stats["trial_active"] = r.count if hasattr(r, "count") else 0
-        r = app_state.supabase.table("memories").select("count", count="exact").eq("is_archived", False).execute()
+        r = (
+            app_state.supabase.table("memories")
+            .select("count", count="exact")
+            .eq("is_archived", False)
+            .execute()
+        )
         stats["total_memories"] = r.count if hasattr(r, "count") else 0
         r = app_state.supabase.table("projects").select("count", count="exact").execute()
         stats["total_projects"] = r.count if hasattr(r, "count") else 0
         r = app_state.supabase.table("personas").select("count", count="exact").execute()
         stats["total_personas"] = r.count if hasattr(r, "count") else 0
         try:
-            r = app_state.supabase.table("users").select("count", count="exact").gte("last_active_at", today).execute()
+            r = (
+                app_state.supabase.table("users")
+                .select("count", count="exact")
+                .gte("last_active_at", today)
+                .execute()
+            )
             stats["active_users_today"] = r.count if hasattr(r, "count") else 0
         except Exception:
             stats["active_users_today"] = 0
@@ -109,13 +144,17 @@ def admin_stats(request: Request, _staff=Depends(require_staff)):
             "total_projects": stats["total_projects"],
             "total_personas": stats["total_personas"],
         },
-        "api": {"calls_today": stats["api_calls_today"], "error_count": app_state.get_error_count()},
+        "api": {
+            "calls_today": stats["api_calls_today"],
+            "error_count": app_state.get_error_count(),
+        },
     }
 
 
 # ═══════════════════════════════════════════════════
 #  Users (admin + operator)
 # ═══════════════════════════════════════════════════
+
 
 @router.get("/users")
 @app_state.limiter.limit("30/minute")
@@ -130,7 +169,9 @@ def admin_users(
         return {"users": [], "total": 0}
 
     try:
-        q = app_state.supabase.table("users").select("id,email,name,plan,language,created_at", count="exact")
+        q = app_state.supabase.table("users").select(
+            "id,email,name,plan,language,created_at", count="exact"
+        )
         if search:
             q = q.ilike("email", "%{}%".format(search))
         q = q.order("created_at", desc=True).range(offset, offset + limit - 1)
@@ -161,6 +202,7 @@ def admin_users(
 #  Health (admin + operator)
 # ═══════════════════════════════════════════════════
 
+
 @router.get("/health")
 @app_state.limiter.limit("30/minute")
 def admin_health(request: Request, _staff=Depends(require_staff)):
@@ -175,6 +217,7 @@ def admin_health(request: Request, _staff=Depends(require_staff)):
 # ═══════════════════════════════════════════════════
 #  Account management (admin only)
 # ═══════════════════════════════════════════════════
+
 
 @router.post("/accounts")
 @app_state.limiter.limit("10/minute")
