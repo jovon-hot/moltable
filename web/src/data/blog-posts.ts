@@ -12,6 +12,15 @@ export interface BlogPost {
 
 const posts: BlogPost[] = [
   {
+    slug: 'agent-memory-stack-comparison',
+    date: '2026-08-14',
+    title: 'AI Agent Memory 全家桶：LangChain Memory vs Chroma vs Pinecone vs Moltable',
+    titleEn: 'The Complete AI Agent Memory Stack: LangChain Memory vs Chroma vs Pinecone vs Moltable',
+    excerpt:
+      'LangChain Memory、Chroma、Pinecone 与 Moltable 都自称「记忆」，却解决四个不同问题：上下文管理、向量检索、托管检索、身份层。一张对比表 + 决策指南，帮你一次选对。',
+    tags: ['对比', 'LangChain', 'Chroma', 'Pinecone', 'AI Memory', '选型'],
+  },
+  {
     slug: 'indie-dev-ai-toolchain',
     date: '2026-08-13',
     title: '独立开发者的 AI 工具链：真实使用记录',

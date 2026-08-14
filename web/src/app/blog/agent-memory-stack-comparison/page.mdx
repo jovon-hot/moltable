@@ -1,0 +1,133 @@
+export const meta = {
+  title: 'AI Agent Memory Stack Comparison: LangChain Memory vs Chroma vs Pinecone vs Moltable',
+  date: '2026-08-14',
+  description: 'AI Agent 记忆选型横评：LangChain Memory、Chroma、Pinecone 与 Moltable 四类方案在存储模型、持久化、跨 Agent 协作、MCP 协议支持、自托管与成本上的全面对比，帮你一次选对记忆层。',
+  tags: ['对比', 'LangChain', 'Chroma', 'Pinecone', 'AI Memory', '选型', 'MCP'],
+  slug: 'agent-memory-stack-comparison',
+}
+
+import ArticleLayout from '../_components/ArticleLayout'
+
+<ArticleLayout meta={meta}>
+
+**「给你的 AI Agent 加记忆」——这句话你已经听腻了。但真正动手选型时，你会发现搜出来的方案根本不是一回事：LangChain Memory 是会话缓冲，Chroma 是本地向量库，Pinecone 是托管向量云，Moltable 是身份层。**
+
+它们都自称「记忆」，却分别解决四个完全不同的问题。大多数人选错，不是不懂技术，而是没先回答一个前置问题：**你到底想让 Agent 记住什么？**
+
+记住「刚才聊到哪」和记住「你是谁、偏好什么、正在做什么项目」，是两个层次的需求。用错工具，前者过度设计，后者完全没覆盖。
+
+---
+
+## 四种「记忆」，四个层次
+
+先把概念对齐。AI Agent 的「记忆」其实是四个不同的东西：
+
+| 层次 | 内容 | 举例 | 典型载体 |
+|------|------|------|----------|
+| 短期记忆 | 当前对话上下文 | 「你刚才说要用 JWT」 | 对话窗口 / LangChain Memory |
+| 长期记忆 | 跨会话持久化的事实 | 「他偏好 TypeScript」 | 向量库 / mem0 |
+| 语义记忆 | 可检索的知识片段 | 文档、代码库问答 | Chroma / Pinecone |
+| 身份记忆 | 「我是谁、我做过什么」 | Persona、项目上下文、工具配置 | Moltable |
+
+**关键洞察：前三种记忆大多数方案都在做，第四种几乎没人做。** 而这恰恰是「换了台电脑 Agent 就不认识你」的根因。
+
+---
+
+## 逐个拆解：它们到底是什么
+
+### LangChain Memory：会话内的「上下文管理」
+
+LangChain Memory 的本质，是把对话历史结构化地塞回 prompt 里。`ConversationBufferMemory` 记全文，`SummaryMemory` 记摘要，`EntityMemory` 记实体。
+
+它的真实定位是**上下文管理工具，不是记忆系统**：
+
+- **进程内**：重启即失忆，没有任何持久化
+- **单会话**：绑定在某一个 Chain/Agent 实例上，换个会话就断
+- **不跨 Agent**：Claude 里的 ConversationBuffer 不会同步到 Cursor
+- **成本线性增长**：对话越长，token 开销越大，直到超出窗口
+
+**什么时候用**：只想让单次长对话别丢上下文，不想引入任何外部依赖。
+
+### Chroma：离你最近的向量数据库
+
+Chroma 是开源嵌入式向量库，Python 或 JS 几行代码就能本地起一个，是 RAG 入门的默认选择。
+
+它擅长的是**语义检索**——把文档切成向量存进去，查询时返回最相关的 top-k。这是「知识记忆」的底座。
+
+但它的边界也很清楚：
+
+- **只存「事实向量」，不理解「你是谁」**：存了 100 万条向量，Agent 依然不知道你偏好什么、正在做什么项目
+- **跨 Agent 要自己搭**：想让 Claude 和 Cursor 共享同一份向量，你得自己写同步层
+- **没有身份概念**：没有 Persona、没有角色切换、没有「工作模式 vs 创作模式」
+
+**什么时候用**：要做文档问答 / RAG 原型，本地跑，零成本。
+
+### Pinecone：企业级托管向量云
+
+Pinecone 是 serverless 托管向量库，把 Chroma 那一套做成免运维的 SaaS：高可用、低延迟、能扛海量向量。
+
+它是 Chroma 的「生产升级路径」——当你的 RAG 要上生产、要 SLA、要弹性扩容时，用 Pinecone 而不是自己运维 Chroma 集群。
+
+**局限与 Chroma 同源**：它仍然是「facts not identity」。规模再大、延迟再低，也回答不了「这是谁的记忆、他现在处于什么上下文」。
+
+**什么时候用**：RAG 上生产、要托管运维、要稳定 SLA。
+
+### Moltable：跨 Agent 的身份层
+
+Moltable 走了一条和前三个都不一样的路——**它不做向量检索，专攻「身份」这一层**。
+
+核心能力一句话：**一次配置你的 Persona、技术偏好、项目上下文、MCP 工具配置，所有 AI Agent 共享同一份「我是谁」。**
+
+- **原生跨 Agent**：Claude → Cursor → Codex → Hermes 读同一份 Persona
+- **角色隔离**：「工作模式」和「创作模式」是两个 Persona，互不污染
+- **换机可恢复**：新电脑一条命令恢复完整 AI 环境
+- **MCP 原生**：身份层本身就是一个 MCP 能力来源
+
+它的边界同样诚实：**它不替代向量搜索**。语义检索（文档问答、代码检索）仍要接 Chroma / Pinecone。Moltable 解决的是「身份」，不是「知识」。
+
+**什么时候用**：要让 AI 真正「认识你」，并跨工具、跨设备持续保持这个认识。
+
+---
+
+## 横向对比
+
+| 维度 | LangChain Memory | Chroma | Pinecone | Moltable |
+|------|------------------|--------|----------|----------|
+| 记住什么 | 对话历史 | 事实向量 | 事实向量 | 身份 + 偏好 + 项目 |
+| 持久化 | ❌ 进程内 | ✅ 本地文件 | ✅ 云端 | ✅ 云端 / 自托管 |
+| 跨 Agent 共享 | ❌ | ❌ 需自搭同步 | ❌ 需自搭同步 | ✅ 原生 |
+| 语义检索 | ❌ | ✅ | ✅ | ⚠️ 需接外部向量库 |
+| MCP 支持 | ⚠️ 需封装 | ⚠️ 需封装 | ⚠️ 需封装 | ✅ 原生 |
+| 自托管 | ✅ | ✅ | ❌ 纯 SaaS | ✅ |
+| 学习曲线 | 低 | 低 | 低 | 中 |
+| 成本 | 免费（token 内耗） | 免费开源 | 按量付费 | 免费试用起 |
+
+---
+
+## 决策指南：什么时候选谁
+
+| 你的需求 | 选型 |
+|----------|------|
+| 单次长对话别丢上下文 | LangChain Memory |
+| 本地做文档问答 / RAG 原型 | Chroma |
+| RAG 上生产、要 SLA 和免运维 | Pinecone |
+| 让 AI 记住「你是谁」并跨工具同步 | Moltable |
+| 既要知识检索又要身份 | Chroma/Pinecone（知识）+ Moltable（身份）|
+
+**最后一行才是大多数真实场景的答案。** 向量库和身份层不是竞争关系，是上下游：向量库管「世界知识」，身份层管「你是谁」。硬用一个替代另一个，两边都做不好。
+
+---
+
+## 诚实地说
+
+**向量搜索 ≠ 记忆。** 这是本文最想让你带走的一句话。
+
+你把 100 万条向量塞进 Pinecone，Agent 检索得又快又准，但它还是不知道你是谁、你偏好什么、你此刻正在哪个项目里。因为「事实」和「身份」是两种数据，需要两种存储。
+
+当你开始把 AI Agent 当作同事而不是工具时，你会先意识到它需要「认识你」——而这一层，恰恰是 LangChain Memory、Chroma、Pinecone 都没有覆盖的空白。
+
+身份层补上这一块。向量层管知识，身份层管「我是谁」，两个都配上，你的 Agent 才第一次真正「记得你」。
+
+> 想在 3 分钟内让所有 AI Agent 共享同一份身份，试试 [Moltable](https://moltable.ai)——身份同步，一次配置，处处生效。
+
+</ArticleLayout>
