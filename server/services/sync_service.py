@@ -76,6 +76,14 @@ ITEM_REGISTRY: Dict[str, ItemType] = {
         conflict_strategy="append_only",
         user_scoped=False,
     ),
+    "profile": ItemType(
+        table="profiles",
+        fields=("nickname", "location", "education", "career", "values", "history"),
+        json_fields=("education", "career", "values", "history"),
+        conflict_strategy="lww",
+        key_col="user_id",
+        user_scoped=False,  # 主键即 user_id，1:1，无需额外过滤
+    ),
 }
 
 # 向后兼容：item_type -> table 映射

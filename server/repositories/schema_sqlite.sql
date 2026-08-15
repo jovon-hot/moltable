@@ -268,3 +268,19 @@ ALTER TABLE credentials ADD COLUMN IF NOT EXISTS updated_at TEXT;
 
 ALTER TABLE persona_versions ADD COLUMN IF NOT EXISTS updated_at TEXT;
 
+-- P1: profiles 表 — 身份深层字段(1:1, PII 分级, phone 加密不进同步)
+CREATE TABLE IF NOT EXISTS profiles (
+    user_id         uuid primary key references users(id) on delete cascade,
+    nickname        text,
+    phone_encrypted text,
+    location        text,
+    education       TEXT default '[]',
+    career          TEXT default '[]',
+    values          TEXT default '[]',
+    history         TEXT default '[]',
+    version         integer default 1,
+    base_content    text default '',
+    updated_at      TEXT,
+    created_at      TEXT default now()
+);
+

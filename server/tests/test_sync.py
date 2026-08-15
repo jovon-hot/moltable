@@ -250,7 +250,7 @@ class TestPull:
         client, _db = sync_env
         resp = client.post("/api/sync/pull", json={}, headers=auth_headers)
         assert resp.status_code == 200
-        assert resp.json() == {"memories": [], "personas": [], "projects": [], "decisions": [], "did_registry": [], "credentials": [], "persona_versions": []}
+        assert resp.json() == {"memories": [], "personas": [], "projects": [], "decisions": [], "did_registry": [], "credentials": [], "persona_versions": [], "profiles": []}
 
     def test_pull_all_returns_everything(self, sync_env, auth_headers):
         client, _db = sync_env

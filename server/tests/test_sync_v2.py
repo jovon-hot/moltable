@@ -49,7 +49,7 @@ class FakeTable:
     def execute(self):
         if self._mode == "insert":
             row = dict(self._insert_payload)
-            key = row.get("id") or row.get("did")
+            key = row.get("id") or row.get("did") or row.get("user_id")
             self.db._ensure(self.name)[key] = row
             return FakeResp([row])
         if self._mode == "update":
@@ -144,3 +144,32 @@ def test_credential_user_via_subject_did_no_user_id():
     svc = SyncService(db, "user-1")
     svc.push([{"id": "cred-1", "content": {"credential_jwt": "eyJ...", "subject_did": "did:web:my-agent", "credential_type": "X", "issuer_did": "i", "claims": {}}, "updated_at": "2026-01-01T00:00:00Z"}], "credential")
     assert "user_id" not in db.tables["credentials"]["cred-1"]
+
+def test_profile_lww_new_insert():
+    """profile：1:1，主键 user_id，lww 同步。"""
+    db = FakeDB()
+    svc = SyncService(db, "user-1")
+    r = svc.push([{"id": "user-1", "content": {"nickname": "阿福", "location": "北京", "values": ["忍耐", "不将就"]}, "updated_at": "2026-01-01T00:00:00Z"}], "profile")
+    assert len(r["accepted"]) == 1 and not r["conflicts"]
+    assert db.tables["profiles"]["user-1"]["nickname"] == "阿福"
+
+
+def test_profile_phone_not_in_sync_content():
+    """phone 不进同步协议：注册表 fields 不含 phone。"""
+    spec = ITEM_REGISTRY["profile"]
+    assert "phone" not in spec.fields and "phone_encrypted" not in spec.fields
+    assert "nickname" in spec.fields
+
+
+def test_phone_encrypt_decrypt_roundtrip():
+    """phone AES-256-GCM 加解密往返。"""
+    import os
+    import base64
+    os.environ["PROFILE_PHONE_KEY"] = base64.b64encode(b"k" * 32).decode()
+    import importlib
+    import services.profile_crypto as pc
+    importlib.reload(pc)
+    ct = pc.encrypt_phone("18600042931")
+    assert ct != "18600042931"  # 已加密
+    assert pc.decrypt_phone(ct) == "18600042931"  # 解密还原
+
