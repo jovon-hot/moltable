@@ -339,6 +339,41 @@ function describeUser(user) {
   return name ? ' (' + name + ')' : '';
 }
 
+/* ------------------------------------------------------------------ *
+ *  Login config + skill install (备份/恢复的产品层)
+ * ------------------------------------------------------------------ */
+
+const SKILL_SOURCE_URL =
+  'https://raw.githubusercontent.com/jovon-hot/moltable/main/skill/moltable-sync/SKILL.md';
+
+function saveLoginConfig(apiKey) {
+  // 一次性登录：把 API key 存到 ~/.moltable/config.json，skill 之后静默读取。
+  const dir = path.join(homedir(), '.moltable');
+  fs.mkdirSync(dir, { recursive: true });
+  const file = path.join(dir, 'config.json');
+  const payload = {
+    api_key: apiKey,
+    saved_at: new Date().toISOString(),
+    note: 'Moltable login — 由 moltable-sync skill 自动读取。',
+  };
+  fs.writeFileSync(file, JSON.stringify(payload, null, 2));
+  return file;
+}
+
+async function installSyncSkill() {
+  // 下载 moltable-sync skill 到 ~/.hermes/skills/moltable-sync/SKILL.md。
+  // 之后用户一句"备份我"/"恢复我"即触发。
+  const skillDir = path.join(homedir(), '.hermes', 'skills', 'moltable-sync');
+  const skillFile = path.join(skillDir, 'SKILL.md');
+  fs.mkdirSync(skillDir, { recursive: true });
+  const res = await httpRequest(SKILL_SOURCE_URL, { method: 'GET' });
+  if (res.status === 200 && res.body && res.body.indexOf('moltable-sync') !== -1) {
+    fs.writeFileSync(skillFile, res.body);
+    return true;
+  }
+  return false;
+}
+
 function printGuide(platform, mcpUrl) {
   out('');
   out(C.bold + '🎉 Moltable MCP server configured for ' + PLATFORMS[platform].label + C.reset);
@@ -459,7 +494,26 @@ async function main() {
   }
   ok('Moltable MCP server written to ' + configPath + '.');
 
-  // 4. Guide.
+  // 4. Save login config (一次性登录).
+  try {
+    const cfgFile = saveLoginConfig(args.apiKey);
+    ok('Login saved → ' + cfgFile);
+  } catch (e) {
+    warn('Could not save login config: ' + e.message);
+  }
+
+  // 5. Install sync skill (Hermes 独有:备份/恢复一句话触发).
+  if (platform.kind === 'hermes') {
+    const installed = await installSyncSkill();
+    if (installed) {
+      ok('同步 skill 已安装 → ~/.hermes/skills/moltable-sync/');
+      out(C.dim + '  以后一句话触发:"备份我" / "恢复我" + 同步码。' + C.reset);
+    } else {
+      warn('同步 skill 下载失败(网络?)— 不影响 MCP 连接,可稍后重试。');
+    }
+  }
+
+  // 6. Guide.
   printGuide(args.platform, mcpUrl);
 }
 
