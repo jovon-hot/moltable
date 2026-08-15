@@ -250,7 +250,7 @@ class TestPull:
         client, _db = sync_env
         resp = client.post("/api/sync/pull", json={}, headers=auth_headers)
         assert resp.status_code == 200
-        assert resp.json() == {"memories": [], "personas": [], "projects": []}
+        assert resp.json() == {"memories": [], "personas": [], "projects": [], "decisions": [], "did_registry": [], "credentials": [], "persona_versions": []}
 
     def test_pull_all_returns_everything(self, sync_env, auth_headers):
         client, _db = sync_env
@@ -311,7 +311,7 @@ class TestExportImport:
         assert body["memories"][0]["content"] == "m"
         assert body["personas"][0]["content"]["name"] == "Alice"
         assert "exported_at" in body
-        assert body["schema_version"] == 1
+        assert body["schema_version"] == 2
 
     def test_import_creates_new_rows(self, sync_env, auth_headers):
         client, db = sync_env

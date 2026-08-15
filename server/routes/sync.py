@@ -18,7 +18,15 @@ from services.sync_service import SyncService
 
 router = APIRouter(prefix="/api/sync", tags=["sync"])
 
-ITEM_TYPES = (("memory", "memories"), ("persona", "personas"), ("project", "projects"))
+ITEM_TYPES = (
+    ("memory", "memories"),
+    ("persona", "personas"),
+    ("project", "projects"),
+    ("decision", "decisions"),
+    ("did", "dids"),
+    ("credential", "credentials"),
+    ("persona_version", "persona_versions"),
+)
 
 
 class SyncItem(BaseModel):
@@ -32,6 +40,10 @@ class PushRequest(BaseModel):
     memories: List[SyncItem] = Field(default_factory=list)
     personas: List[SyncItem] = Field(default_factory=list)
     projects: List[SyncItem] = Field(default_factory=list)
+    decisions: List[SyncItem] = Field(default_factory=list)
+    dids: List[SyncItem] = Field(default_factory=list)
+    credentials: List[SyncItem] = Field(default_factory=list)
+    persona_versions: List[SyncItem] = Field(default_factory=list)
 
 
 class PullRequest(BaseModel):
@@ -40,7 +52,7 @@ class PullRequest(BaseModel):
 
 class ResolveRequest(BaseModel):
     id: str
-    type: Literal["memory", "persona", "project"]
+    type: Literal["memory", "persona", "project", "decision"]
     resolved_content: Any
     base_version: int = Field(default=0, ge=0)
 
