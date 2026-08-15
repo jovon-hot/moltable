@@ -81,6 +81,7 @@ def get_pricing():
         prices = {}
         for (plan, period), pid in PRICE_IDS.items():
             p = stripe.Price.retrieve(pid)
+            p = p.to_dict() if hasattr(p, "to_dict") else p
             prices[f"{plan}_{period}"] = {
                 "amount": p.get("unit_amount", 0),
                 "currency": p.get("currency", "usd"),
