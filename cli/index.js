@@ -108,6 +108,7 @@ function usage() {
   out('');
   out('Options:');
   out('  -k, --api-key <key>   Moltable API key (molt_...) or session token (mol_...)');
+  out('      --sync-code <code> 换机恢复:用同步码换取 API key(新机器首次连接)');
   out('      --mcp-url <url>   Override MCP endpoint        (default: ' + DEFAULTS.MCP_URL + ')');
   out('      --api-base <url>  Override API base for key validation');
   out('                        (default: ' + DEFAULTS.API_BASE + ')');
@@ -130,6 +131,7 @@ function parseArgs(argv) {
     mcpUrl: DEFAULTS.MCP_URL,
     apiBase: DEFAULTS.API_BASE,
     configPath: null,
+    syncCode: null,
     verify: true,
     help: false,
     version: false,
@@ -152,6 +154,7 @@ function parseArgs(argv) {
       case '--mcp-url': a.mcpUrl = take(i, arg); i++; break;
       case '--api-base': a.apiBase = take(i, arg); i++; break;
       case '--config-path': a.configPath = take(i, arg); i++; break;
+      case '--sync-code': a.syncCode = take(i, arg); i++; break;
       case '--skip-verify': a.verify = false; break;
       default:
         if (arg.startsWith('--api-key=')) a.apiKey = arg.slice('--api-key='.length);
@@ -196,6 +199,7 @@ function httpRequest(url, options) {
     req.setTimeout(options.timeout || 15000, () => {
       req.destroy(new Error('Request timed out after ' + (options.timeout || 15000) + 'ms'));
     });
+    if (options.body) req.write(options.body);
     req.end();
   });
 }
@@ -216,6 +220,38 @@ async function verifyKey(apiBase, apiKey) {
     let user = {};
     try { user = JSON.parse(res.body) || {}; } catch (_) { /* non-JSON body — ignore */ }
     return { ok: true, user };
+  }
+  let detail = '';
+  try {
+    const parsed = JSON.parse(res.body);
+    detail = parsed.detail || parsed.message || parsed.error || '';
+  } catch (_) { /* ignore */ }
+  return { ok: false, status: res.status, detail: String(detail || '').trim() };
+}
+
+async function consumeSyncCode(apiBase, syncCode) {
+  // 换机场景:新机器没有 API key,只有同步码 → 换取账号级 key。
+  const base = String(apiBase).replace(/\/+$/, '');
+  const url = base + '/api/auth/sync';
+  info('用同步码换取 API key …');
+  let res;
+  try {
+    res = await httpRequest(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ sync_code: syncCode }),
+    });
+  } catch (e) {
+    return { ok: false, error: 'Network error: ' + e.message };
+  }
+  if (res.status === 200) {
+    try {
+      const parsed = JSON.parse(res.body);
+      if (parsed.api_key) return { ok: true, apiKey: parsed.api_key };
+      return { ok: false, detail: '响应中无 api_key' };
+    } catch (_) {
+      return { ok: false, detail: '非 JSON 响应' };
+    }
   }
   let detail = '';
   try {
@@ -438,8 +474,19 @@ async function main() {
     process.exit(1);
   }
 
+  // 换机场景:新机器没有 key,只有同步码 → 先换 key。
+  if (!args.apiKey && args.syncCode) {
+    const c = await consumeSyncCode(args.apiBase, args.syncCode);
+    if (!c.ok) {
+      fail('同步码换 key 失败' + (c.status ? ' (HTTP ' + c.status + ')' : '') + (c.detail ? ': ' + c.detail : '') + '.');
+      process.exit(1);
+    }
+    args.apiKey = c.apiKey;
+    ok('同步码有效,已换取 API key。');
+  }
+
   if (!args.apiKey) {
-    fail('Missing API key. Pass it with --api-key <molt_xxx> (or set MOLTABLE_API_KEY).');
+    fail('Missing API key. Pass --api-key <molt_xxx> (or set MOLTABLE_API_KEY), or --sync-code <molt_sync_xxx> for a new machine.');
     usage();
     process.exit(1);
   }
