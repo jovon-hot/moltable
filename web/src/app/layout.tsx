@@ -71,7 +71,7 @@ const jsonLd = {
       name: 'Moltable.ai',
       url: 'https://www.moltable.ai',
       logo: 'https://www.moltable.ai/logo-icon.svg',
-      sameAs: ['https://github.com/Moltable'],
+      sameAs: ['https://github.com/jovon-hot/moltable'],
       description:
         'Cross-platform AI identity sync — one registration, every AI agent knows you.',
     },

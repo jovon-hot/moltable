@@ -6,7 +6,7 @@
 <p align="center"><strong>One identity. Every agent.</strong> · <strong>你的 AI，永远认识你。</strong></p>
 
 <p align="center">
-  <a href="https://github.com/Moltable/moltable/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
+  <a href="https://github.com/jovon-hot/moltable/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
   <a href="https://www.moltable.ai"><img src="https://img.shields.io/badge/Website-moltable.ai-4338CA" /></a>
   <a href="https://www.moltable.ai/blog"><img src="https://img.shields.io/badge/Blog-18_posts-FB6B4B" /></a>
 </p>
@@ -96,7 +96,7 @@ Any MCP-compatible client works out of the box.
 ## Self-Host
 
 ```bash
-git clone https://github.com/Moltable/moltable.git
+git clone https://github.com/jovon-hot/moltable.git
 cd moltable/server
 pip install -r requirements.txt
 python main.py

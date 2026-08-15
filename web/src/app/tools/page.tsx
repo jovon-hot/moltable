@@ -18,8 +18,8 @@ const tools = [
       '认知流水线：提取 → 证据驱动候选 → 碎片化验证 → 闭环激活',
       '三条铁律：用过 · 记得 · 复用',
     ],
-    github: 'https://github.com/Moltable/moltable/tree/main/tools/ailib-knowledge-base',
-    download: 'https://raw.githubusercontent.com/Moltable/moltable/main/tools/ailib-knowledge-base/SKILL.md',
+    github: 'https://github.com/jovon-hot/moltable/tree/main/tools/ailib-knowledge-base',
+    download: 'https://raw.githubusercontent.com/jovon-hot/moltable/main/tools/ailib-knowledge-base/SKILL.md',
     install: '放到 ~/.hermes/skills/ailib-knowledge-base/SKILL.md，对 Hermes 说"建知识库"',
   },
 ]
@@ -97,7 +97,7 @@ export default function ToolsPage() {
           <p className="text-xs text-ln-tertiary">
             More tools coming.{' '}
             <a
-              href="https://github.com/Moltable/moltable"
+              href="https://github.com/jovon-hot/moltable"
               className="text-ln-accent hover:underline"
               target="_blank"
               rel="noopener noreferrer"
