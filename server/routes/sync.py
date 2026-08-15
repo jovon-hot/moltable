@@ -26,6 +26,7 @@ ITEM_TYPES = (
     ("did", "dids"),
     ("credential", "credentials"),
     ("persona_version", "persona_versions"),
+    ("profile", "profiles"),
 )
 
 
@@ -44,6 +45,7 @@ class PushRequest(BaseModel):
     dids: List[SyncItem] = Field(default_factory=list)
     credentials: List[SyncItem] = Field(default_factory=list)
     persona_versions: List[SyncItem] = Field(default_factory=list)
+    profiles: List[SyncItem] = Field(default_factory=list)
 
 
 class PullRequest(BaseModel):
