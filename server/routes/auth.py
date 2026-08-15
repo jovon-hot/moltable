@@ -610,13 +610,16 @@ def consume_sync_code(request: Request, body: SyncCodeRequest):
 
     user_id = invite["user_id"]
 
-    # 一次性：标记 used（条件更新，防并发双花）
-    supabase.table("agent_invites").update(
+    # 一次性：标记 used（条件更新 + 检查影响行数，防并发双花）
+    consumed = supabase.table("agent_invites").update(
         {
             "status": "used",
             "used_at": now.isoformat(),
         }
     ).eq("id", invite["id"]).eq("status", "pending").execute()
+    if not consumed.data:
+        # 并发双花防护：条件 UPDATE 影响 0 行说明已被其他请求消费
+        raise HTTPException(409, "同步码已使用")
 
     # 返回账号级 API Key（明文不落库，仅存哈希 — 与注册一致）
     raw_key = "molt_" + secrets.token_urlsafe(24)

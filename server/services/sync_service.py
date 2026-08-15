@@ -79,7 +79,7 @@ ITEM_REGISTRY: Dict[str, ItemType] = {
         fields=("persona_id", "version", "diff", "changelog", "snapshot"),
         json_fields=("diff", "snapshot"),
         conflict_strategy="append_only",
-        user_scoped=False,
+        user_scoped=True,  # 按 user_id 过滤,防跨用户泄露
     ),
     "profile": ItemType(
         table="profiles",

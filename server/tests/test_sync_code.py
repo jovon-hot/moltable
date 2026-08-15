@@ -95,7 +95,7 @@ class TestSyncConsume:
         invites = table_mocks("agent_invites")
         invites.select.return_value.eq.return_value.execute.return_value.data = [invite]
         invites.update.return_value.eq.return_value.eq.return_value \
-            .execute.return_value.data = []
+            .execute.return_value.data = [{"id": "inv-1", "status": "used"}]
         api_keys = table_mocks("api_keys")
         api_keys.insert.return_value.execute.return_value.data = [{}]
         users = table_mocks("users")

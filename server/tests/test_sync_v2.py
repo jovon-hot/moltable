@@ -124,7 +124,7 @@ def test_credential_replace_atomic():
 
 def test_persona_version_append_only():
     """persona_version：已存在则跳过。"""
-    db = FakeDB({"persona_versions": {"pv-1": {"id": "pv-1", "version": 1, "updated_at": "2026-01-01T00:00:00Z"}}})
+    db = FakeDB({"persona_versions": {"pv-1": {"id": "pv-1", "version": 1, "updated_at": "2026-01-01T00:00:00Z", "user_id": "user-1"}}})
     svc = SyncService(db, "user-1")
     r = svc.push([{"id": "pv-1", "content": {"persona_id": "p1", "version": 2, "snapshot": {}}, "updated_at": "2026-01-02T00:00:00Z"}], "persona_version")
     assert len(r["accepted"]) == 1 and r["accepted"][0].get("skipped") is True

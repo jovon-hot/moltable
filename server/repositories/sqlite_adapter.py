@@ -170,7 +170,8 @@ class QueryBuilder:
             elif self._op == "update":
                 cursor.execute(sql, params)
                 conn.commit()
-                return Result([])
+                # 模拟 Supabase:rowcount>0 表示命中行,返回非空 data(供双花防护等检查)
+                return Result([{"updated": True}]) if cursor.rowcount > 0 else Result([])
             elif self._op == "delete":
                 cursor.execute(sql, params)
                 conn.commit()

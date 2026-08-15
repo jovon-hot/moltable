@@ -349,29 +349,37 @@ const SKILL_SOURCE_URL =
 function saveLoginConfig(apiKey) {
   // 一次性登录：把 API key 存到 ~/.moltable/config.json，skill 之后静默读取。
   const dir = path.join(homedir(), '.moltable');
-  fs.mkdirSync(dir, { recursive: true });
+  fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
   const file = path.join(dir, 'config.json');
   const payload = {
     api_key: apiKey,
     saved_at: new Date().toISOString(),
     note: 'Moltable login — 由 moltable-sync skill 自动读取。',
   };
-  fs.writeFileSync(file, JSON.stringify(payload, null, 2));
+  fs.writeFileSync(file, JSON.stringify(payload, null, 2), { mode: 0o600 });
   return file;
 }
 
 async function installSyncSkill() {
   // 下载 moltable-sync skill 到 ~/.hermes/skills/moltable-sync/SKILL.md。
   // 之后用户一句"备份我"/"恢复我"即触发。
-  const skillDir = path.join(homedir(), '.hermes', 'skills', 'moltable-sync');
-  const skillFile = path.join(skillDir, 'SKILL.md');
-  fs.mkdirSync(skillDir, { recursive: true });
-  const res = await httpRequest(SKILL_SOURCE_URL, { method: 'GET' });
-  if (res.status === 200 && res.body && res.body.indexOf('moltable-sync') !== -1) {
-    fs.writeFileSync(skillFile, res.body);
-    return true;
+  try {
+    const skillDir = path.join(homedir(), '.hermes', 'skills', 'moltable-sync');
+    const skillFile = path.join(skillDir, 'SKILL.md');
+    fs.mkdirSync(skillDir, { recursive: true });
+    const res = await httpRequest(SKILL_SOURCE_URL, { method: 'GET' });
+    // 严格校验:必须是 200 且 frontmatter 的 name 字段精确匹配 moltable-sync。
+    const valid = res.status === 200 && res.body &&
+      /^---\s*\nname:\s*moltable-sync\s*\n/.test(res.body);
+    if (valid) {
+      fs.writeFileSync(skillFile, res.body);
+      return true;
+    }
+    return false;
+  } catch (e) {
+    // 网络错误等：降级为失败，不向上抛异常（避免误导性 exit(1)）。
+    return false;
   }
-  return false;
 }
 
 function printGuide(platform, mcpUrl) {
