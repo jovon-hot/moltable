@@ -12,6 +12,15 @@ export interface BlogPost {
 
 const posts: BlogPost[] = [
   {
+    slug: 'a2a-agent-collaboration',
+    date: '2026-08-15',
+    title: 'Agent Protocol 实战：用 A2A 让两个 Agent 自动协作',
+    titleEn: 'A2A Hands-On: Make Two AI Agents Collaborate Automatically',
+    excerpt:
+      '上篇讲了 Agent 协议经济的「为什么」，这篇讲「怎么做」。用 Agent Card + JSON-RPC 2.0 + SSE，让研究员 Agent 和写手 Agent 自己发现、自己传任务、自己看进度——全程零人工中转。附完整代码。',
+    tags: ['A2A', 'Protocol', '教程', 'Hands-on', 'Agent'],
+  },
+  {
     slug: 'agent-memory-stack-comparison',
     date: '2026-08-14',
     title: 'AI Agent Memory 全家桶：LangChain Memory vs Chroma vs Pinecone vs Moltable',

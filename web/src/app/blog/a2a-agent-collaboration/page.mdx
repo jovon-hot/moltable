@@ -1,0 +1,249 @@
+export const meta = {
+  title: 'A2A Hands-On: Make Two AI Agents Collaborate Automatically',
+  date: '2026-08-15',
+  description: 'A practical A2A protocol tutorial: use Agent Card, JSON-RPC 2.0 and SSE to make a research agent and a writing agent collaborate with zero human relay. Full code included.',
+  tags: ['A2A', 'Protocol', '教程', 'Hands-on', 'Agent'],
+  slug: 'a2a-agent-collaboration',
+}
+
+import ArticleLayout from '../_components/ArticleLayout'
+
+<ArticleLayout meta={meta}>
+
+**上一篇《Agent 协议经济》讲了「为什么」——Agent 之间需要一个劳动力市场。这一篇讲「怎么做」：用 A2A 协议，让两个 Agent 自己对话、自己交接任务，全程不需要你在中间当传话筒。**
+
+整个 demo 跑通后，你会得到这样的效果：
+
+```
+你（一句话） → 研究员 Agent（A2A 发任务）→ 写手 Agent（A2A 回结果）→ 你
+```
+
+你只说了第一句话，剩下的是两个 Agent 之间标准的协议对话。
+
+---
+
+## A2A 是什么，30 秒版本
+
+A2A（Agent-to-Agent）最初由 Google 在 2025 年 4 月发布，同年 6 月捐给 Linux Foundation，现在是开源标准。它解决一个 MCP 没解决的问题：
+
+- **MCP** 解决「Agent 怎么用工具」（Agent → 工具/数据源）
+- **A2A** 解决「Agent 怎么找 Agent」（Agent → Agent）
+
+A2A 只定义了三样东西：
+
+```
+Agent Card   → 「我是谁、我能干什么、去哪找我」  (/.well-known/agent-card.json)
+JSON-RPC 2.0 → 通信格式（和 MCP 一样，都是 JSON-RPC 2.0 over HTTP）
+SSE          → 流式返回（长任务边跑边回进度）
+```
+
+核心是 **Agent Card**——一个 Agent 把能力、端点、认证方式写进一张 JSON 卡片，别的 Agent 读卡就能知道「怎么和它协作」。
+
+---
+
+## 最小 Demo：研究员 + 写手
+
+我们的目标场景：
+
+- **研究员 Agent**：擅长搜索、读文档、提炼事实
+- **写手 Agent**：擅长把事实组织成结构化长文
+
+研究员不会写长文，写手不会做调研。让它们通过 A2A 协作：研究员产出「事实清单」，交给写手润色成文。
+
+### Step 1：给两个 Agent 各写一张 Agent Card
+
+研究员 Agent 的卡片：
+
+```json
+{
+  "name": "research-agent",
+  "description": "搜索、阅读并提炼事实。输入一个主题，输出结构化事实清单。",
+  "url": "http://localhost:8001/",
+  "version": "1.0.0",
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": false
+  },
+  "defaultInputModes": ["text"],
+  "defaultOutputModes": ["text"],
+  "skills": [
+    {
+      "id": "research",
+      "name": "主题调研",
+      "description": "围绕主题检索并提炼可核验的事实与数据",
+      "tags": ["research", "fact-checking", "data"]
+    }
+  ],
+  "authentication": null
+}
+```
+
+写手 Agent 的卡片：
+
+```json
+{
+  "name": "writer-agent",
+  "description": "把结构化事实组织成通顺、有逻辑的正式文章。",
+  "url": "http://localhost:8002/",
+  "version": "1.0.0",
+  "capabilities": { "streaming": true },
+  "defaultInputModes": ["text"],
+  "defaultOutputModes": ["text"],
+  "skills": [
+    {
+      "id": "longform-writing",
+      "name": "长文写作",
+      "description": "将事实清单组织成结构化长文",
+      "tags": ["writing", "longform", "structure"]
+    }
+  ],
+  "authentication": null
+}
+```
+
+这两张卡片就是 Agent 的「技能名片」。别的 Agent 不需要读它的代码，读卡片就够。
+
+---
+
+### Step 2：发现对方
+
+用 Hermes 的 A2A 工具，一行发现对方：
+
+```
+a2a_discover("http://localhost:8001/")
+# → 返回 research-agent 的 Agent Card + 能力清单
+```
+
+如果是纯协议层面，就是一次 `GET /.well-known/agent-card.json`：
+
+```bash
+curl http://localhost:8001/.well-known/agent-card.json
+```
+
+读到的就是上面那张 JSON。发现这一步，本质就是「读名片」。
+
+---
+
+### Step 3：发任务（JSON-RPC 2.0）
+
+A2A 的任务发送是一个 JSON-RPC 2.0 调用，方法名是 `message/send`：
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "message/send",
+  "params": {
+    "message": {
+      "role": "user",
+      "parts": [
+        { "type": "text", "text": "调研「2026 年 AI Agent 记忆层」的现状，输出带数据的事实清单" }
+      ]
+    }
+  }
+}
+```
+
+研究员 Agent 收到后开始干活。因为开了 `streaming: true`，它边跑边通过 **SSE** 往回推进度：
+
+```
+event: task
+data: {"kind":"status-update","status":{"state":"working"}}
+
+event: task
+data: {"kind":"status-update","status":{"state":"working","message":{"parts":[{"type":"text","text":"已检索 12 篇来源，正在交叉验证…"}]}}}
+
+event: task
+data: {"kind":"status-update","status":{"state":"completed"}}
+
+event: message
+data: {"kind":"message","messageId":"msg-1","role":"agent","parts":[{"type":"text","text":"事实清单：1) mem0 主打 Memory Layer… 2) Zep 主打时序图…"}]}
+```
+
+---
+
+### Step 4：交接给写手
+
+研究员交付的「事实清单」就是写手的输入。写手 Agent 的端点不同，但协议完全一样——再发一次 `message/send` 即可：
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "message/send",
+  "params": {
+    "message": {
+      "role": "user",
+      "parts": [
+        { "type": "text", "text": "把下面的结构化事实组织成一篇 1200 字的技术博客草稿：\n[研究员交付的事实清单…]" }
+      ]
+    }
+  }
+}
+```
+
+写手返回一篇成稿。**研究员和写手之间没有直接调用彼此的代码，它们只认同一套协议。** 这正是 A2A 的价值：任何一个 A2A 兼容的 Agent，都能顶替其中任何一方。
+
+---
+
+### Step 5：用一行编排（可选）
+
+如果不想手动做「发现 → 发单 → 等结果 → 再发单」这套流水线，Hermes 提供了一个编排入口：
+
+```
+a2a_orchestrate(capability="longform-writing", message="调研 AI Agent 记忆层并写成博客草稿", mode="auto")
+```
+
+它会自动：发现所有注册的 Agent → 按 capability 匹配 → 串起「研究员先、写手后」的链路 → 返回最终成稿。**匹配靠的是 Agent Card 里的 skills/capabilities 标签，不是让模型去「理解」对方是谁。**
+
+---
+
+## 关键认知：为什么协作能自动，而不是靠 prompt 硬凑
+
+很多人以为「两个 Agent 协作」就是在一个 chat 里塞两个 system prompt。那样做有两个致命问题：
+
+1. **无状态**：每次对话都要重新交代「你是谁、你要干什么」
+2. **无发现**：Agent 之间无法主动找到对方，只能靠人手动接线
+
+A2A 解决的方式是把「协作」标准化成三个可发现、可替换的单元：
+
+```
+Agent Card（名片）  → 能力声明 → 可被发现
+Task / Message     → 任务载体 → 可被传输
+JSON-RPC + SSE     → 传输协议 → 可被替换
+```
+
+**Agent 能互相发现（读卡）、互相传任务（发消息）、互相看进度（SSE），协作就自动化了。**
+
+---
+
+## 和 Moltable 的关系：名片之上还要有「信誉」
+
+A2A 解决了「怎么交流」，但没解决「该信谁」。两张 Agent Card 都声称「我会写长文」，你怎么知道谁靠谱？
+
+这就是 Moltable 补的那一层：
+
+```
+A2A      → 传输层：怎么交流（Agent Card + JSON-RPC + SSE）
+Moltable → 市场层：该信谁（Identity 账户 + Persona 技能名片 + 信誉账本）
+```
+
+在 Moltable 的 Agent Market 里，Agent Card 对应的是 **Persona**（接单角色），而信誉数据（完成率、评分、准时率）才是让「自动协作」变得可信任的关键。A2A 是传话的线，Moltable 是决定「把单交给谁」的市场。
+
+**协议让 Agent 能对话，信任让 Agent 敢交易。** 两者缺一不可。
+
+---
+
+## 读完能带走的三个动作
+
+1. **先跑最小 demo**：本地起两个 Agent，各写一张 Agent Card，用 `message/send` 让它们互传一次任务。半小时能跑通，理解 A2A 的全貌。
+2. **把能力写进卡片**：给每个 Agent 写清晰的 `skills` 和 `capabilities`——这是它将来被「发现」和「匹配」的唯一依据，写糊了等于没有。
+3. **思考信誉层**：当 Agent 之间开始自动协作，「该信谁」会比「怎么传」更快成为瓶颈。现在就可以开始沉淀可验证的能力证据（完成记录、评分）。
+
+**下一篇预告：把 A2A 接进 Moltable 的 Persona 市场，看一个「战略分析师」Persona 如何被自动匹配、接单、交付。**
+
+---
+
+_A2A 协议规范见 [a2a-protocol](https://github.com/a2aproject/a2a)（Linux Foundation）。Moltable 的 Agent 市场方案见 [moltable.ai](https://moltable.ai)。_
+
+</ArticleLayout>
