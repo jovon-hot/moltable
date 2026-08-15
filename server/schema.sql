@@ -406,3 +406,10 @@ create table if not exists admin_users (
     last_login_at   timestamptz,
     created_at      timestamptz default now()
 );
+
+-- ── Stripe webhook 事件去重表 ───────
+create table if not exists webhook_events (
+    event_id      text primary key,
+    processed_at  timestamptz default now()
+);
+

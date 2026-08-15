@@ -63,11 +63,13 @@ class TestStripeWebhook:
     def test_webhook_checkout_completed_activates_sub(self, client):
         mock_stripe = MagicMock()
         mock_stripe.Webhook.construct_event.return_value = {
+            "id": "evt_123",
             "type": "checkout.session.completed",
             "data": {"object": {
                 "metadata": {"user_id": "test-user-id", "plan": "pro"},
                 "customer": "cus_123",
                 "subscription": "sub_123",
+                "payment_status": "paid",
             }},
         }
         with patch("routes.billing.get_stripe", return_value=mock_stripe), \
@@ -85,6 +87,7 @@ class TestStripeWebhook:
                 "metadata": {"user_id": "test-user-id", "plan": "pro"},
                 "customer": "cus_123",
                 "subscription": "sub_123",
+                "payment_status": "paid",
             }},
         }
         failing_supabase = MagicMock()
@@ -100,6 +103,7 @@ class TestStripeWebhook:
     def test_webhook_subscription_deleted_downgrades(self, client):
         mock_stripe = MagicMock()
         mock_stripe.Webhook.construct_event.return_value = {
+            "id": "evt_456",
             "type": "customer.subscription.deleted",
             "data": {"object": {"id": "sub_123"}},
         }

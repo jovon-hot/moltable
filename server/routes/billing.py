@@ -58,6 +58,42 @@ PRICE_IDS = {
 }
 
 
+# ── 定价缓存(从 Stripe 拉取真实 USD 价格)────────────────
+_pricing_cache = None
+_pricing_cache_ts = 0.0
+_PRICING_TTL = 300  # 秒
+
+
+def get_pricing():
+    """从 Stripe 拉取真实价格(USD 分)。未配置或拉取失败返回 None。
+
+    价格源 = Stripe Price(唯一真相),通过 Stripe Dashboard 配置。
+    """
+    global _pricing_cache, _pricing_cache_ts
+    import time
+    stripe = get_stripe()
+    if stripe is None:
+        return None
+    now = time.time()
+    if _pricing_cache is not None and now - _pricing_cache_ts < _PRICING_TTL:
+        return _pricing_cache
+    try:
+        prices = {}
+        for (plan, period), pid in PRICE_IDS.items():
+            p = stripe.Price.retrieve(pid)
+            prices[f"{plan}_{period}"] = {
+                "amount": p.get("unit_amount", 0),
+                "currency": p.get("currency", "usd"),
+                "price_id": pid,
+            }
+        _pricing_cache = prices
+        _pricing_cache_ts = now
+        return prices
+    except Exception as e:
+        logger.error("Failed to fetch Stripe prices: %s", e)
+        return None
+
+
 class ActivateRequest(BaseModel):
     plan: str = Field(default="pro", pattern=r"^(pro|team)$")
     accept_terms: bool = Field(default=True)
@@ -158,11 +194,13 @@ async def get_subscription(request: Request, user_id: str = Depends(get_user)):
 @router.get("/plans")
 @limiter.limit("120/minute")
 def get_plans(request: Request):
-    """返回当前可用计划。Stripe 暂未接入，全部限时免费。"""
+    """返回当前可用计划。Stripe 已接入则返回真实 USD 价格，否则试用模式。"""
+    pricing = get_pricing()
     return {
-        "mode": "free_trial",
+        "mode": "paid" if pricing else "free_trial",
+        "currency": "usd" if pricing else None,
         "trial_days": TRIAL_DAYS,
-        "message": "Stripe 收款账户暂未开通。当前所有 Pro 功能限时免费体验。",
+        "message": None if pricing else "Stripe 收款账户暂未开通。当前所有 Pro 功能限时免费体验。",
         "free": {
             "name": "Free",
             "price_monthly": 0,
@@ -184,10 +222,10 @@ def get_plans(request: Request):
             },
         },
         "pro": {
-            "name": "Pro · 限时体验",
-            "price_monthly": 0,
-            "price_yearly": 0,
-            "badge": f"🔥 {TRIAL_DAYS}天免费",
+            "name": "Pro",
+            "price_monthly": pricing["pro_monthly"]["amount"] / 100 if pricing else 0,
+            "price_yearly": pricing["pro_yearly"]["amount"] / 100 if pricing else 0,
+            "badge": f"🔥 {TRIAL_DAYS}天免费试用",
             "features": [
                 "3 个 AI Agent 身份",
                 "10 个 Persona",
@@ -206,12 +244,12 @@ def get_plans(request: Request):
                 "api_calls_per_day": 500,
             },
             "trial_days": TRIAL_DAYS,
-            "note": "Stripe 接入后恢复 ¥19/月。早鸟用户有专属优惠。",
+            "note": None if pricing else "Stripe 接入后即可按 USD 订阅。",
         },
         "team": {
-            "name": "Team · 限时体验",
-            "price_monthly": 0,
-            "price_yearly": 0,
+            "name": "Team",
+            "price_monthly": pricing["team_monthly"]["amount"] / 100 if pricing else 0,
+            "price_yearly": pricing["team_yearly"]["amount"] / 100 if pricing else 0,
             "features": [
                 "10 个 AI Agent 身份",
                 "无限 Persona",
@@ -256,14 +294,27 @@ async def create_checkout(request: Request, body: CheckoutRequest, user_id: str 
 
     base = str(request.base_url).rstrip("/")
     try:
-        session = stripe.checkout.Session.create(
-            mode="subscription",
-            line_items=[{"price": price_id, "quantity": 1}],
-            success_url=f"{base}/dashboard/settings?checkout=success",
-            cancel_url=f"{base}/dashboard/settings?checkout=cancelled",
-            client_reference_id=user_id,
-            metadata={"user_id": user_id, "plan": body.plan, "period": body.period},
-        )
+        # 关联已有 Stripe Customer，避免重复订阅产生多个 customer 记录
+        customer_id = None
+        if supabase is not None and not _is_sqlite:
+            try:
+                row = supabase.table("users").select("stripe_customer_id").eq("id", user_id).single().execute()
+                customer_id = row.data.get("stripe_customer_id") if row.data else None
+            except Exception:
+                customer_id = None
+
+        session_kwargs = {
+            "mode": "subscription",
+            "line_items": [{"price": price_id, "quantity": 1}],
+            "success_url": f"{base}/dashboard/settings?checkout=success",
+            "cancel_url": f"{base}/dashboard/settings?checkout=cancelled",
+            "client_reference_id": user_id,
+            "metadata": {"user_id": user_id, "plan": body.plan, "period": body.period},
+        }
+        if customer_id:
+            session_kwargs["customer"] = customer_id
+
+        session = stripe.checkout.Session.create(**session_kwargs)
         return {"url": session.url}
     except Exception as e:
         logger.error("Checkout session creation failed: %s", e)
@@ -294,9 +345,25 @@ async def stripe_webhook(request: Request):
 
     # Stripe Event 是 StripeObject（非 dict），to_dict() 递归转成普通 dict 以支持 .get()
     event = event.to_dict() if hasattr(event, "to_dict") else event
+    event_id = event.get("id")
+
+    # 幂等去重：Stripe 会重试失败的 webhook，已处理过的事件直接跳过，
+    # 避免旧事件重放覆盖更新的订阅状态（如取消后被重新激活）。
+    if event_id and supabase is not None:
+        try:
+            dup = supabase.table("webhook_events").select("event_id").eq("event_id", event_id).execute()
+            if dup.data:
+                logger.info("Duplicate webhook event ignored: %s", event_id)
+                return {"received": True, "duplicate": True}
+        except Exception:
+            pass
 
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
+        # 仅当支付成功才激活订阅，避免首期付款失败也白嫖 pro
+        if session.get("payment_status") != "paid":
+            logger.info("Checkout not paid, skipping activation: %s", session.get("id"))
+            return {"received": True}
         user_id = session.get("metadata", {}).get("user_id")
         plan = session.get("metadata", {}).get("plan", "pro")
         customer_id = session.get("customer")
@@ -325,6 +392,13 @@ async def stripe_webhook(request: Request):
             except Exception as e:
                 logger.error("Failed to downgrade subscription: %s", e)
                 raise HTTPException(500, "Failed to persist subscription downgrade")
+
+    # 处理成功后记录 event_id（用于幂等去重）
+    if event_id and supabase is not None:
+        try:
+            supabase.table("webhook_events").insert({"event_id": event_id}).execute()
+        except Exception:
+            logger.warning("Failed to record webhook event: %s", event_id)
 
     return {"received": True}
 

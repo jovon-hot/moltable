@@ -22,7 +22,7 @@ export default function PricingPage() {
       name: p.pro.name,
       price: p.pro.priceMonthly,
       desc: p.pro.desc,
-      cta: lang === 'zh' ? 'Pro · 90天免费体验' : 'Pro · 90-Day Free Trial',
+      cta: lang === 'zh' ? 'Pro · 30天免费体验' : 'Pro · 90-Day Free Trial',
       badge: p.pro.badge,
       accent: true,
       href: '/register?plan=pro',

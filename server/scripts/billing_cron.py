@@ -2,7 +2,7 @@
 """
 billing_cron.py — Trial expiration cron job
 
-Scans for users whose 90-day free trial has expired and downgrades them
+Scans for users whose 30-day free trial has expired and downgrades them
 from pro/team → free. Safe to run repeatedly (idempotent).
 
 Usage:
@@ -28,7 +28,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ── Config ──────────────────────────────────────────────
-TRIAL_DAYS = int(os.getenv("MOLTABLE_TRIAL_DAYS", "90"))
+TRIAL_DAYS = int(os.getenv("MOLTABLE_TRIAL_DAYS", "30"))
 DRY_RUN = "--apply" not in sys.argv
 
 logging.basicConfig(
@@ -60,6 +60,7 @@ def main():
         FROM users
         WHERE plan IN ('pro', 'team')
           AND trial_activated_at IS NOT NULL
+          AND stripe_subscription_id IS NULL
     """)
     trial_users = cursor.fetchall()
 
@@ -152,7 +153,7 @@ def main():
             for u in expired:
                 try:
                     conn.execute(
-                        "UPDATE users SET plan = 'free' WHERE id = ?",
+                        "UPDATE users SET plan = 'free' WHERE id = ? AND stripe_subscription_id IS NULL",
                         (u["id"],)
                     )
                     conn.commit()

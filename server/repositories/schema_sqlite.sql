@@ -242,3 +242,10 @@ CREATE TABLE IF NOT EXISTS referrals (
     claimed_at TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_referrals_referrer ON referrals(referrer_id, status);
+
+-- ── Stripe webhook 事件去重表 ───────
+CREATE TABLE IF NOT EXISTS webhook_events (
+    event_id      TEXT PRIMARY KEY,
+    processed_at  TEXT DEFAULT (datetime('now'))
+);
+

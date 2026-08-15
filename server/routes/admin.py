@@ -243,3 +243,16 @@ class ToggleRequest(BaseModel):
 def toggle_account(request: Request, body: ToggleRequest, _admin=Depends(require_admin)):
     """Enable/disable an admin account (admin only)."""
     return toggle_admin_account(body.email, body.is_active)
+
+# ── 定价查看(Stripe 为唯一价格源)─────────────
+@router.get("/pricing")
+def admin_pricing(request: Request, _staff=Depends(require_staff)):
+    """查看当前 Stripe 定价(USD 分)。价格在 Stripe Dashboard 配置。"""
+    from routes.billing import get_pricing, PRICE_IDS
+    pricing = get_pricing()
+    return {
+        "currency": "usd",
+        "pricing": pricing,
+        "price_ids": {f"{p}_{q}": pid for (p, q), pid in PRICE_IDS.items()},
+    }
+

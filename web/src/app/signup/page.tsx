@@ -17,8 +17,8 @@ function SignupContent() {
       icon: Gift,
       title: zh ? '额外 30 天 Pro 试用' : 'Bonus 30-Day Pro Trial',
       desc: zh
-        ? '通过邀请链接注册，在 90 天试用的基础上额外获得 30 天 Pro 版全部功能'
-        : 'Sign up via invite link and get an extra 30 days of Pro features on top of the 90-day trial',
+        ? '通过邀请链接注册，在 30 天试用的基础上额外获得 30 天 Pro 版全部功能'
+        : 'Sign up via invite link and get an extra 30 days of Pro features on top of the 30-day trial',
     },
     {
       icon: Zap,
@@ -77,7 +77,7 @@ function SignupContent() {
         </Link>
 
         <p className="text-xs mb-12" style={{ color: '#6E6B80' }}>
-          {zh ? '无需信用卡 · 90 天免费试用' : 'No credit card · 90-day free trial'}
+          {zh ? '无需信用卡 · 30 天免费试用' : 'No credit card · 30-day free trial'}
         </p>
 
         {/* Benefits */}

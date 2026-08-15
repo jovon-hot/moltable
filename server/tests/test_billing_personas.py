@@ -6,16 +6,38 @@ class TestNoAuthEndpoints:
     """Endpoints that don't require authentication."""
 
     def test_plans_trial_mode(self):
-        """GET /api/billing/plans returns free_trial mode with ¥0 Pro."""
+        """GET /api/billing/plans 在 Stripe 未配置时返回 free_trial 模式。"""
         from main import app
+        from unittest.mock import patch
         client = TestClient(app)
-        resp = client.get("/api/billing/plans")
+        with patch("routes.billing.get_pricing", return_value=None):
+            resp = client.get("/api/billing/plans")
         assert resp.status_code == 200
         data = resp.json()
         assert data["mode"] == "free_trial"
         assert data["pro"]["price_monthly"] == 0
-        assert "限时" in data["pro"]["name"]
         assert data["free"]["price_monthly"] == 0
+
+    def test_plans_paid_mode(self):
+        """GET /api/billing/plans 在 Stripe 已配置时返回真实 USD 价格。"""
+        from main import app
+        from unittest.mock import patch
+        client = TestClient(app)
+        fake_pricing = {
+            "pro_monthly": {"amount": 300, "currency": "usd", "price_id": "price_x"},
+            "pro_yearly": {"amount": 2000, "currency": "usd", "price_id": "price_y"},
+            "team_monthly": {"amount": 600, "currency": "usd", "price_id": "price_z"},
+            "team_yearly": {"amount": 5500, "currency": "usd", "price_id": "price_w"},
+        }
+        with patch("routes.billing.get_pricing", return_value=fake_pricing):
+            resp = client.get("/api/billing/plans")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["mode"] == "paid"
+        assert data["currency"] == "usd"
+        assert data["pro"]["price_monthly"] == 3.0
+        assert data["pro"]["price_yearly"] == 20.0
+        assert data["team"]["price_monthly"] == 6.0
 
     def test_health(self):
         """GET /health returns ok."""

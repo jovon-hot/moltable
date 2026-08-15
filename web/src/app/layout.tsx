@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     template: '%s | Moltable.ai',
   },
   description:
-    'Cross-platform AI identity sync. Restore your full AI environment in 3 minutes. Supports Hermes, Claude, ChatGPT, Cursor. 90-day free trial.',
+    'Cross-platform AI identity sync. Restore your full AI environment in 3 minutes. Supports Hermes, Claude, ChatGPT, Cursor. 30-day free trial.',
   keywords: [
     'AI identity',
     'AI memory',

@@ -80,7 +80,7 @@ export default function DashboardPage() {
       setPlan({
         plan: 'trialing',
         trial_end: result.expires_at,
-        trial_days_left: 90,
+        trial_days_left: 30,
       })
       setShowBanner(false)
       // Reload stats to refresh

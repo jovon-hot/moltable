@@ -47,7 +47,7 @@ function RegisterForm() {
         <div className="text-center mb-8">
           <h1 className="text-2xl mb-1" style={{ fontWeight: 590, letterSpacing: '-0.3px', color: '#ffffff' }}>{a.registerTitle}</h1>
           <p className="text-sm" style={{ color: '#888888' }}>
-            {planParam === 'pro' ? 'Pro · 90天免费' : 'Moltable'}
+            {planParam === 'pro' ? 'Pro · 30天免费' : 'Moltable'}
           </p>
         </div>
 

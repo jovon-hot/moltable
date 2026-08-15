@@ -13,10 +13,14 @@ RESOURCE ∈ IDENTITIES/PERSONAS/MEMORIES/AGENTS/API_CALLS_PER_DAY）。
   MOLTABLE_QUOTA_PRO_MEMORIES=10000
 """
 
+import logging
 import os
 from datetime import datetime, timezone
+from typing import Optional
 
 from fastapi import HTTPException
+
+logger = logging.getLogger(__name__)
 
 _DEFAULT_PLAN_LIMITS = {
     "free": {
@@ -69,12 +73,6 @@ PLAN_NAMES = {
     "team": "Team",
 }
 
-PLAN_PRICES = {
-    "free": {"monthly": 0, "yearly": 0},
-    "pro": {"monthly": 19, "yearly": 149},
-    "team": {"monthly": 39, "yearly": 399},
-}
-
 PLAN_FEATURES = {
     "free": [
         "1 个 AI 身份",
@@ -109,7 +107,7 @@ def get_plan_limit(user_id: str, resource: str) -> int:
     return PLAN_LIMITS.get(plan, PLAN_LIMITS["free"]).get(resource, 0)
 
 
-def check_trial_expiry(user_id: str) -> str:
+def check_trial_expiry(user_id: str) -> Optional[str]:
     """
     检查试用是否过期；过期且未订阅则自动降级为 free。
 
@@ -131,8 +129,9 @@ def check_trial_expiry(user_id: str) -> str:
             .execute()
         )
         row = result.data[0] if result.data else {}
-    except Exception:
-        return "free"
+    except Exception as e:
+        logger.error("check_trial_expiry 查询失败 user=%s: %s", user_id, e)
+        return None
 
     plan = row.get("plan", "free")
     if plan not in ("pro", "team"):
@@ -154,10 +153,11 @@ def check_trial_expiry(user_id: str) -> str:
 
     if expires_at < datetime.now(timezone.utc):
         # 试用过期且未订阅 → 自动降级 free
+        # 加 stripe_subscription_id IS NULL 条件，避免竞态覆盖 webhook 刚写入的订阅
         try:
-            supabase.table("users").update({"plan": "free"}).eq("id", user_id).execute()
-        except Exception:
-            pass
+            supabase.table("users").update({"plan": "free"}).eq("id", user_id).is_("stripe_subscription_id", "null").execute()
+        except Exception as e:
+            logger.error("check_trial_expiry 降级写库失败 user=%s: %s", user_id, e)
         return "free"
 
     return plan
@@ -247,12 +247,9 @@ def _count(supabase, table: str, user_id: str, extra_field: str = None, extra_va
 
 
 def _get_user_plan(user_id: str) -> str:
-    return check_trial_expiry(user_id)
-    try:
-        result = supabase.table("users").select("plan").eq("id", user_id).execute()
-        return result.data[0].get("plan", "free") if result.data else "free"
-    except Exception:
-        return "free"
+    plan = check_trial_expiry(user_id)
+    # 查询失败（None）时 fail-open 返回 pro，避免瞬时故障把付费用户锁成 free 配额
+    return plan if plan is not None else "pro"
 
 
 def _empty_usage() -> dict:
