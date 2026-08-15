@@ -43,4 +43,4 @@ class TestNoAuthEndpoints:
         assert "free" in data
         assert "pro" in data
         assert "team" in data
-        assert data["trial_days"] == 90
+        assert data["trial_days"] == 30

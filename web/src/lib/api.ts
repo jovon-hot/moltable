@@ -63,3 +63,24 @@ export async function activateTrial(plan: 'pro' | 'team' = 'pro'): Promise<{acti
   }
   return res.json()
 }
+
+export async function createCheckout(plan: 'pro' | 'team' = 'pro', period: 'monthly' | 'yearly' = 'monthly'): Promise<{url: string}> {
+  const token = await getToken()
+  if (!token) throw new Error('Login required to subscribe')
+
+  const res = await fetch(`${API_BASE}/api/billing/checkout`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-API-Key': token,
+    },
+    body: JSON.stringify({ plan, period }),
+  })
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(`Checkout ${res.status}: ${text}`)
+  }
+  const data = await res.json()
+  window.location.href = data.url
+  return data
+}

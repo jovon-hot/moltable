@@ -111,9 +111,11 @@ def get_plan_limit(user_id: str, resource: str) -> int:
 
 def check_trial_expiry(user_id: str) -> str:
     """
-    检查试用是否过期；过期则自动降级为 free。
+    检查试用是否过期；过期且未订阅则自动降级为 free。
 
-    读取 users.expires_at，若试用已过期且当前为 pro 计划，自动降级为 free。
+    规则：
+    - 已订阅（stripe_subscription_id 存在）→ 保持付费 plan，不受试用期影响
+    - 未订阅（仅试用）→ expires_at 过期则降级 free
     返回降级后（或未降级）的生效 plan。
     """
     from app_state import supabase
@@ -122,14 +124,26 @@ def check_trial_expiry(user_id: str) -> str:
         return "free"
 
     try:
-        result = supabase.table("users").select("plan", "expires_at").eq("id", user_id).execute()
+        result = (
+            supabase.table("users")
+            .select("plan", "expires_at", "stripe_subscription_id")
+            .eq("id", user_id)
+            .execute()
+        )
         row = result.data[0] if result.data else {}
     except Exception:
         return "free"
 
     plan = row.get("plan", "free")
+    if plan not in ("pro", "team"):
+        return plan
+
+    # 已付费订阅：不受试用期限制，直接返回当前 plan
+    if row.get("stripe_subscription_id"):
+        return plan
+
     expires_at = row.get("expires_at")
-    if plan not in ("pro", "team") or not expires_at:
+    if not expires_at:
         return plan
 
     if isinstance(expires_at, str):
@@ -139,7 +153,7 @@ def check_trial_expiry(user_id: str) -> str:
             return plan
 
     if expires_at < datetime.now(timezone.utc):
-        # 试用过期 → 自动降级 free
+        # 试用过期且未订阅 → 自动降级 free
         try:
             supabase.table("users").update({"plan": "free"}).eq("id", user_id).execute()
         except Exception:

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useToast } from '@/contexts/ToastContext'
 import { useLang } from '@/contexts/LanguageContext'
-import { apiFetch, activateTrial } from '@/lib/api'
+import { apiFetch, createCheckout } from '@/lib/api'
 import { Loader2, Key, Copy, Check, Trash2, Shield, Plus, Eye, EyeOff, Brain, Crown, ArrowUp, RefreshCw } from 'lucide-react'
 
 interface ApiKey { id: string; name: string; key_prefix: string; created_at: string; last_used_at?: string; is_active: boolean }
@@ -90,8 +90,8 @@ export default function SettingsPage() {
 
   const handleUpgrade = async () => {
     setUpgrading(true)
-    try { await activateTrial('pro'); toast(lang === 'zh' ? 'Pro 体验已激活！90 天免费使用' : 'Pro trial activated! 90 days free.', 'success') }
-    catch (e: any) { toast(e.message || (lang === 'zh' ? '激活失败，请重试' : 'Activation failed, please retry'), 'error') }
+    try { await createCheckout('pro', 'monthly') }
+    catch (e: any) { toast(e.message || (lang === 'zh' ? '跳转支付失败，请重试' : 'Checkout failed, please retry'), 'error') }
     finally { setUpgrading(false) }
   }
 

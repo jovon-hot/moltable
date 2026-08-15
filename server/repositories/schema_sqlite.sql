@@ -14,6 +14,8 @@ CREATE TABLE IF NOT EXISTS users (
     last_active_at TEXT,
     trial_activated_at TEXT,
     expires_at TEXT,
+    stripe_customer_id TEXT,
+    stripe_subscription_id TEXT,
     created_at TEXT DEFAULT (datetime('now'))
 );
 

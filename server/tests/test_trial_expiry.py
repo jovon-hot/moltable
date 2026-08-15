@@ -88,6 +88,23 @@ class TestCheckTrialExpiry:
         assert result == "pro"
         users.update.assert_not_called()
 
+    def test_subscribed_pro_stays_pro_even_if_trial_expired(self):
+        """已订阅(stripe_subscription_id 存在)+ 试用过期 → 保持 pro，不降级。"""
+        from services import quota
+
+        past = _iso(datetime.now(timezone.utc) - timedelta(days=1))
+        users = MagicMock()
+        users.select.return_value = _make_mock_chain(
+            [{"plan": "pro", "expires_at": past, "stripe_subscription_id": "sub_123"}]
+        )
+        mock_supabase = _make_supabase(users)
+
+        with patch("app_state.supabase", mock_supabase):
+            result = quota.check_trial_expiry("user-1")
+
+        assert result == "pro"
+        users.update.assert_not_called()
+
     def test_free_plan_untouched(self):
         """plan=free → 原样返回 free，不做任何降级。"""
         from services import quota
@@ -177,7 +194,7 @@ class TestTrialActivation:
         return resp, users_mock
 
     def test_activate_persists_expires_at(self):
-        """首次激活：应同时持久化 trial_activated_at 与 expires_at(=+90天)。"""
+        """首次激活：应同时持久化 trial_activated_at 与 expires_at(=+30天)。"""
         users = MagicMock()
         users.select.return_value = _make_mock_chain([])  # 无既有试用
         users.update.return_value = _make_mock_chain([])
@@ -191,7 +208,7 @@ class TestTrialActivation:
         assert "expires_at" in update_kwargs
         ta = datetime.fromisoformat(update_kwargs["trial_activated_at"])
         ex = datetime.fromisoformat(update_kwargs["expires_at"])
-        assert (ex - ta).days == 90
+        assert (ex - ta).days == 30
 
     def test_activate_rejects_when_trial_active(self):
         """已有生效试用（trial_activated_at 存在且 expires_at 在未来）→ 409。"""

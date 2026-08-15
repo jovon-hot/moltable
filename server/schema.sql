@@ -18,6 +18,8 @@ create table users (
     last_active_at        timestamptz,
     trial_activated_at    timestamptz,
     expires_at            timestamptz,
+    stripe_customer_id     text,
+    stripe_subscription_id text,
     created_at    timestamptz default now(),
     updated_at    timestamptz default now()
 );
