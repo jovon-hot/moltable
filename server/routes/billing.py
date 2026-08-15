@@ -1,6 +1,6 @@
 """Billing routes — free trial activation (Stripe deferred).
 
-激活即获得 90 天 Pro 体验，无需支付信息。
+激活即获得 30 天 Pro 体验，无需支付信息。
 后续收费功能待 Stripe 账户开通后再接入。
 """
 
@@ -108,7 +108,7 @@ class ActivateRequest(BaseModel):
 @router.post("/activate")
 @limiter.limit("10/minute")
 async def activate_trial(request: Request, body: ActivateRequest, user_id: str = Depends(get_user)):
-    """激活 90 天 Pro/Team 免费试用。一次调用，即时生效。"""
+    """激活 30 天 Pro/Team 免费试用。一次调用，即时生效。"""
     if not TRIAL_ACTIVE:
         raise HTTPException(503, "Trial activation is currently disabled")
 
