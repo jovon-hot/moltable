@@ -109,7 +109,7 @@ class TestPush:
         rows = db.table("memories").select("*").eq("id", "mem-1").execute().data
         assert rows[0]["content"] == "v2 content"
         assert rows[0]["version"] == 2
-        assert rows[0]["base_content"] == "v1 content"
+        assert "v1 content" in rows[0]["base_content"]
 
     def test_push_persona(self, sync_env, auth_headers):
         client, db = sync_env
@@ -182,9 +182,9 @@ class TestConflict:
         conflict = body["conflicts"][0]
         assert conflict["id"] == "mem-2"
         assert conflict["type"] == "memory"
-        assert conflict["ours"] == "server v2 content"
-        assert conflict["base"] == "server v1 content"
-        assert conflict["theirs"] == "client edit"
+        assert "server v2 content" in conflict["ours"]
+        assert "server v1 content" in conflict["base"]
+        assert "client edit" in conflict["theirs"]
         assert conflict["ours_version"] == 2
         assert conflict["theirs_base_version"] == 1
         assert "<<< ours" in conflict["diff"]
@@ -225,7 +225,7 @@ class TestResolve:
         rows = db.table("memories").select("*").eq("id", "mem-2").execute().data
         assert rows[0]["content"] == "merged content"
         assert rows[0]["version"] == 3
-        assert rows[0]["base_content"] == "server v2 content"
+        assert "server v2 content" in rows[0]["base_content"]
 
     def test_resolve_missing_id_returns_404(self, sync_env, auth_headers):
         client, _db = sync_env
@@ -267,7 +267,7 @@ class TestPull:
         body = resp.json()
         assert len(body["memories"]) == 1
         assert body["memories"][0]["id"] == "mem-1"
-        assert body["memories"][0]["content"] == "m"
+        assert body["memories"][0]["content"]["content"] == "m"
         assert body["memories"][0]["version"] == 1
         assert body["personas"][0]["content"]["name"] == "Alice"
         assert body["projects"][0]["content"]["name"] == "Proj"
@@ -308,7 +308,7 @@ class TestExportImport:
         assert resp.status_code == 200
         body = resp.json()
         assert len(body["memories"]) == 1
-        assert body["memories"][0]["content"] == "m"
+        assert body["memories"][0]["content"]["content"] == "m"
         assert body["personas"][0]["content"]["name"] == "Alice"
         assert "exported_at" in body
         assert body["schema_version"] == 2
@@ -383,4 +383,4 @@ class TestExportImport:
         assert older.json() == {"imported": 0, "updated": 0, "skipped": 1}
 
         pull = client.post("/api/sync/pull", json={}, headers=auth_headers)
-        assert pull.json()["memories"][0]["content"] == "newer content"
+        assert pull.json()["memories"][0]["content"]["content"] == "newer content"

@@ -41,7 +41,11 @@ class ItemType:
 
 
 ITEM_REGISTRY: Dict[str, ItemType] = {
-    "memory": ItemType(table="memories", content_field="content"),
+    "memory": ItemType(
+        table="memories",
+        fields=("content", "category", "tags", "source", "confidence", "persona_id"),
+        json_fields=("tags",),
+    ),
     "persona": ItemType(
         table="personas",
         fields=("name", "description", "type", "system_prompt", "model_preference", "definition"),
@@ -173,6 +177,13 @@ class SyncService:
         fields: Dict[str, Any] = {"updated_at": updated_at}
         if spec.content_field:
             fields[spec.content_field] = content
+            return fields
+        # 兼容纯文本 content：类型有 content 字段但客户端传了字符串时，
+        # 写到 content 列并补必填的 category（NOT NULL）
+        if isinstance(content, str) and "content" in spec.fields:
+            fields["content"] = content
+            if "category" in spec.fields:
+                fields.setdefault("category", "fact")
             return fields
         data = content
         if isinstance(data, str):
