@@ -258,7 +258,7 @@ Content-Type: application/json`
             <div className="flex items-center gap-2">
               <Zap size={18} style={{ color: '#34d399' }} />
               <span className="text-sm" style={{ color: '#34d399', fontWeight: 510 }}>
-                {lang === 'zh' ? '✅ Pro 30天试用已激活 — 全部功能已解锁' : '✅ Pro 90-Day Trial Activated — All Features Unlocked'}
+                {lang === 'zh' ? '✅ Pro 30天试用已激活 — 全部功能已解锁' : '✅ Pro 30-Day Trial Activated — All Features Unlocked'}
               </span>
               <a
                 href={`/share?key=${apiKey}`}

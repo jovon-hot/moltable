@@ -84,3 +84,18 @@ export async function createCheckout(plan: 'pro' | 'team' = 'pro', period: 'mont
   window.location.href = data.url
   return data
 }
+
+// ── 定价(公开端点,无需认证)──────────────
+export interface PlansResponse {
+  mode: 'paid' | 'free_trial'
+  currency: string | null
+  trial_days: number
+  message: string | null
+  free: { name: string; price_monthly: number; price_yearly: number; features: string[]; limits: Record<string, number> }
+  pro: { name: string; price_monthly: number; price_yearly: number; badge?: string; features: string[]; limits: Record<string, number>; trial_days?: number; note?: string | null }
+  team: { name: string; price_monthly: number; price_yearly: number; features: string[]; limits: Record<string, number>; trial_days?: number; note?: string | null }
+}
+
+export async function getPlans(): Promise<PlansResponse> {
+  return apiFetch('/api/billing/plans')
+}

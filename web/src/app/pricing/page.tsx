@@ -1,18 +1,30 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Check } from 'lucide-react'
 import { useLang } from '@/contexts/LanguageContext'
+import { getPlans } from '@/lib/api'
 
 export default function PricingPage() {
   const { t, lang } = useLang()
   const p = t.pricing as any
   const pricingFeatures = p.features || {}
+  const [plansData, setPlans] = useState<any>(null)
+
+  useEffect(() => {
+    getPlans().then(setPlans).catch(() => {})
+  }, [])
+
+  // Stripe 已接入(mode=paid)时显示真实 USD 价格;未接入回退到静态文案
+  const paid = plansData?.mode === 'paid'
+  const fmtUsd = (amount: number) => `$${amount.toFixed(0)}/月`
+  const fmtYear = (amount: number) => `$${amount.toFixed(0)}/年`
 
   const plans = [
     {
       name: p.free.name,
-      price: p.free.price,
+      price: paid ? '$0' : p.free.price,
       desc: p.free.desc,
       cta: p.free.cta,
       href: '/register',
@@ -20,9 +32,9 @@ export default function PricingPage() {
     },
     {
       name: p.pro.name,
-      price: p.pro.priceMonthly,
-      desc: p.pro.desc,
-      cta: lang === 'zh' ? 'Pro · 30天免费体验' : 'Pro · 90-Day Free Trial',
+      price: paid ? fmtUsd(plansData.pro.price_monthly) : p.pro.priceMonthly,
+      desc: paid ? `${plansData.trial_days} 天免费试用 · 之后 ${fmtUsd(plansData.pro.price_monthly)} / ${fmtYear(plansData.pro.price_yearly)}` : p.pro.desc,
+      cta: lang === 'zh' ? 'Pro · 30天免费体验' : 'Pro · 30-Day Free Trial',
       badge: p.pro.badge,
       accent: true,
       href: '/register?plan=pro',
@@ -30,7 +42,7 @@ export default function PricingPage() {
     },
     {
       name: p.team.name,
-      price: p.team.price,
+      price: paid ? fmtUsd(plansData.team.price_monthly) : p.team.price,
       desc: p.team.descShort || p.team.desc,
       cta: p.team.cta,
       href: 'mailto:hi@moltable.ai',

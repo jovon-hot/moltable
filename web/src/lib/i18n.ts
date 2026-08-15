@@ -593,7 +593,7 @@ export const translations = {
       usage_personas: 'Personas',
       usage_agents: 'Agents',
       usage_identities: 'Identities',
-      trialBanner: '🔥 Activate Free 90-Day Pro Trial',
+      trialBanner: '🔥 Activate Free 30-Day Pro Trial',
       trialBannerSub: 'Unlock 10,000 memories, 10 personas, 5 agents, and all Pro features',
       trialBannerCta: 'Activate Now',
       trialActive: 'Pro Trial Active',
