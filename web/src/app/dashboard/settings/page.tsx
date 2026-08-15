@@ -29,6 +29,9 @@ export default function SettingsPage() {
   const [syncCode, setSyncCode] = useState<string | null>(null)
   const [syncCopied, setSyncCopied] = useState(false)
   const [syncLoading, setSyncLoading] = useState(false)
+  const [restoreCode, setRestoreCode] = useState('')
+  const [restoreLoading, setRestoreLoading] = useState(false)
+  const [restoreKey, setRestoreKey] = useState<string | null>(null)
 
   useEffect(() => { loadData() }, [])
 
@@ -86,6 +89,21 @@ export default function SettingsPage() {
 
   const copySyncCode = () => {
     if (syncCode) { navigator.clipboard.writeText(syncCode); setSyncCopied(true); setTimeout(() => setSyncCopied(false), 2000) }
+  }
+
+  const restoreFromSyncCode = async () => {
+    if (!restoreCode.trim()) { toast(lang === 'zh' ? '请输入同步码' : 'Enter a sync code', 'error'); return }
+    setRestoreLoading(true)
+    try {
+      const data = await apiFetch<{ api_key: string }>('/api/auth/sync', {
+        method: 'POST',
+        body: JSON.stringify({ sync_code: restoreCode.trim() }),
+      })
+      setRestoreKey(data.api_key)
+      toast(lang === 'zh' ? '恢复成功' : 'Restored', 'success')
+    } catch (err: any) {
+      toast(err.message || (lang === 'zh' ? '恢复失败' : 'Restore failed'), 'error')
+    } finally { setRestoreLoading(false) }
   }
 
   const handleUpgrade = async () => {
@@ -277,6 +295,29 @@ export default function SettingsPage() {
             {syncLoading ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
             {syncCode ? (d.syncCodeRegenerate || (lang === 'zh' ? '重新生成' : 'Regenerate')) : (d.syncCodeGenerate || (lang === 'zh' ? '生成同步码' : 'Generate Sync Code'))}
           </button>
+
+          <div className="p-5 rounded-[8px] mt-5" style={{ background: '#14141E', boxShadow: '0 0 0 1px rgba(255,255,255,0.06)' }}>
+            <h3 className="text-sm mb-2" style={{ fontWeight: 590, color: '#ffffff' }}>从同步码恢复</h3>
+            <p className="text-xs mb-3" style={{ color: '#888888', lineHeight: 1.6 }}>新电脑 / 新 Agent?输入同步码,恢复全部记忆与身份。</p>
+            <div className="flex gap-2 mb-3">
+              <input value={restoreCode} onChange={(e) => setRestoreCode(e.target.value)}
+                placeholder="molt_sync_xxx"
+                className="flex-1 text-sm py-2.5 px-4 rounded-[6px]"
+                style={{ background: 'rgba(255,255,255,0.04)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', fontFamily: 'monospace', outline: 'none' }} />
+              <button onClick={restoreFromSyncCode} disabled={restoreLoading}
+                className="px-4 py-2 rounded-[6px] text-xs font-medium transition-all hover:opacity-90 disabled:opacity-50"
+                style={{ background: '#4338CA', color: '#fff', fontWeight: 510 }}>
+                {restoreLoading ? <Loader2 size={16} className="animate-spin" /> : (lang === 'zh' ? '恢复' : 'Restore')}
+              </button>
+            </div>
+            {restoreKey && (
+              <div className="p-3 rounded-[6px]" style={{ background: 'rgba(34,197,94,0.08)' }}>
+                <p className="text-xs mb-1" style={{ color: '#22c55e' }}>✅ 恢复成功,你的新 API Key:</p>
+                <code className="block text-sm py-2 px-3 rounded-[4px]" style={{ background: 'rgba(0,0,0,0.3)', color: '#22c55e', fontFamily: 'monospace', wordBreak: 'break-all' }}>{restoreKey}</code>
+                <p className="text-xs mt-1" style={{ color: '#888888' }}>请复制保存,之后用它重新接入。</p>
+              </div>
+            )}
+          </div>
 
           <p className="text-xs mt-3 text-center" style={{ color: '#62666d' }}>
             {d.syncCodeGenerating || (lang === 'zh' ? '生成后请立即复制保存' : 'Copy and save immediately after generation')}

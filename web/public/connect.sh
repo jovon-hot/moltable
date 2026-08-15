@@ -33,26 +33,27 @@ if command -v hermes &> /dev/null; then
     echo "✓ 已备份 ~/.hermes/config.yaml"
   fi
 
-  # Configure Moltable tool
-  hermes config set moltable.api_key "$MOLTABLE_KEY"
-  hermes config set moltable.api_url "$MOLTABLE_API"
-  echo "✓ Moltable API 已配置"
+  # Configure Moltable MCP server (正确的 MCP 配置格式)
+  hermes config set mcp_servers.moltable.url "${MOLTABLE_API}/mcp"
+  hermes config set mcp_servers.moltable.headers.X-API-Key "$MOLTABLE_KEY"
+  echo "✓ Moltable MCP 已配置"
 
   if [ "$AUTO_ADD_SKILL" = "true" ]; then
-    if hermes skills install moltable/skills 2>/dev/null; then
-      echo "✓ Moltable Skill 已加载"
+    mkdir -p ~/.hermes/skills/moltable-sync
+    if curl -sL --max-time 20 "https://raw.githubusercontent.com/jovon-hot/moltable/main/skill/moltable-sync/SKILL.md" -o ~/.hermes/skills/moltable-sync/SKILL.md 2>/dev/null \
+       && grep -q "moltable-sync" ~/.hermes/skills/moltable-sync/SKILL.md 2>/dev/null; then
+      echo "✓ 同步 skill 已加载 (~/.hermes/skills/moltable-sync/)"
     else
-      echo "⚠  Skill 安装需要手动完成: hermes skills install moltable/skills"
+      echo "⚠  Skill 下载失败(网络?),稍后手动补装或重跑本脚本"
     fi
   fi
 else
   echo "⚠  Hermes 未检测到"
-  echo "   手动配置:"
-  echo "   export MOLTABLE_KEY='$MOLTABLE_KEY'"
-  echo "   安装: pip install moltable-connect  (即将发布)"
+  echo "   请先安装 Hermes,或使用其他 MCP 客户端(Claude/Cursor)"
+  echo "   接入指引: https://moltable.ai/connect"
 fi
 
 echo ""
 echo "  ✅ 完成！你的 AI 现在认识你了。"
-echo "  测试: hermes run 'who am i'"
+echo "  接下来对 Hermes 说一句: 同步"
 echo ""
