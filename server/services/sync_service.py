@@ -37,14 +37,15 @@ class ItemType:
     user_via_field: str | None = None     # 间接 user 关联列（credential.subject_did）
     content_field: str | None = None      # 直接存文本的列（memory.content）
     fields: tuple = ()                    # 需映射的普通列
-    json_fields: tuple = ()               # 需 JSON 序列化的列
+    json_fields: tuple = ()               # 需 JSON 序列化的列（jsonb）
+    list_fields: tuple = ()               # list 列（text[]，直接传 list，读时兼容 JSON 字符串）
 
 
 ITEM_REGISTRY: Dict[str, ItemType] = {
     "memory": ItemType(
         table="memories",
         fields=("content", "category", "tags", "source", "confidence", "persona_id"),
-        json_fields=("tags",),
+        list_fields=("tags",),
     ),
     "persona": ItemType(
         table="personas",
@@ -86,7 +87,7 @@ ITEM_REGISTRY: Dict[str, ItemType] = {
         json_fields=("education", "career", "values", "history"),
         conflict_strategy="lww",
         key_col="user_id",
-        user_scoped=False,  # 主键即 user_id，1:1，无需额外过滤
+        user_scoped=True,  # 1:1，按当前用户过滤（主键就是 user_id）
     ),
 }
 
@@ -211,7 +212,7 @@ class SyncService:
         for key in spec.fields:
             if row.get(key) is not None:
                 val = row.get(key)
-                if key in spec.json_fields and isinstance(val, str):
+                if (key in spec.json_fields or key in spec.list_fields) and isinstance(val, str):
                     try:
                         val = json.loads(val)
                     except (ValueError, TypeError):
