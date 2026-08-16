@@ -1,0 +1,143 @@
+export const meta = {
+  title: 'Self-Hosting Moltable: From Zero to Production (Docker + FastAPI + Postgres)',
+  date: '2026-08-16',
+  description: 'A complete self-hosting guide for Moltable: deploy the FastAPI backend with Docker, wire up Postgres + pgvector, secure your env vars, and verify end-to-end — from zero to production.',
+  tags: ['部署', '自托管', '安全', '教程', 'Docker', 'FastAPI'],
+  slug: 'moltable-self-host-deployment',
+}
+
+import ArticleLayout from '../_components/ArticleLayout'
+
+<ArticleLayout meta={meta}>
+
+# Moltable 自托管部署指南：从零到生产
+
+把 Moltable 跑在你自己可控的基础设施上，是很多团队接手前的第一道坎。这篇指南基于 Moltable 生产环境的真实架构（FastAPI + Next.js + Postgres/pgvector），带你从零走完一条可复现的部署路径，并重点讲清三个最容易被忽略、也最容易翻车的地方：**环境变量管理、安全加固、多租户隔离**。
+
+> 本文不是「点几下按钮」的托管教程，而是面向「我要自己掌控数据与运行环境」的自托管/私有化部署。文中所有配置均来自 Moltable 实际生产部署，可直接照抄。
+
+## 一、先看架构：三层各干各的
+
+Moltable 的部署是典型的三层拆分，好处是每层可以独立伸缩、独立换厂商：
+
+```
+Browser
+   │
+   ▼
+Next.js 前端（www.moltable.ai）      ← 静态页面 + SSR，Vercel 或自托管 Node
+   │  HTTP/JSON
+   ▼
+FastAPI 后端（api.moltable.ai）     ← 业务逻辑 + MCP Server，Docker + Uvicorn
+   │  service_role（仅后端持有）
+   ▼
+PostgreSQL + pgvector（Supabase）    ← 记忆、Persona、项目、向量检索
+```
+
+关键点：**浏览器永远拿不到 service_role key**。前端只持有 `anon` key（受 RLS 约束），写操作全部走后端 API。这是安全模型的地基，后面会展开。
+
+## 二、准备三样东西
+
+1. **一个 PostgreSQL 15 + pgvector 实例**。可以用 Supabase（Moltable 生产就在用），也可以自建 PG 再 `CREATE EXTENSION vector`。建库后按 `server/schema.sql` 初始化表结构。
+2. **两个域名**：前端 `www.` 和后端 `api.`。分开是为了让 CORS 白名单和 Cookie 作用域清晰可控。
+3. **一个能跑 Docker 的主机**（或 Railway/Fly 等 PaaS）。后端用官方 Dockerfile，前端用 Next.js 标准构建。
+
+## 三、后端：Docker 一把梭
+
+仓库根目录的 `Dockerfile` 已经封装好，直接构建：
+
+```dockerfile
+FROM python:3.11-slim
+WORKDIR /app
+COPY server/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY server/ .
+EXPOSE 8000
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+构建 + 运行：
+
+```bash
+docker build -t moltable-api .
+docker run -d --name moltable-api -p 8080:8000 \
+  -e SUPABASE_URL="https://your-project.supabase.co" \
+  -e SUPABASE_SERVICE_ROLE_KEY="eyJ..." \
+  -e API_KEY_PEPPER="<64位随机hex>" \
+  -e ALLOWED_ORIGINS="https://www.moltable.ai" \
+  moltable-api
+```
+
+> ⚠️ **端口坑**：容器内 uvicorn 监听 `PORT`（默认 8000），但宿主/PaaS 的**对外 Target Port 要设成 8080**。在 Railway 上把 Target Port 改成 80 会直接 502——这是最常见的部署翻车点，先写进你的检查清单。
+
+## 四、环境变量管理：一张表说清
+
+| 变量 | 谁持有 | 说明 |
+|------|--------|------|
+| `SUPABASE_URL` | 后端 | 数据库地址 |
+| `SUPABASE_SERVICE_ROLE_KEY` | **仅后端** | 绕过 RLS 的超级密钥，绝不进前端/浏览器 |
+| `SUPABASE_ANON_KEY` | 前端 | 受限的公开 key，可暴露给浏览器 |
+| `API_KEY_PEPPER` | 仅后端 | 密码哈希用的 pepper，64 位随机 hex，泄露即全部密码可离线爆破 |
+| `ALLOWED_ORIGINS` | 后端 | CORS 白名单，逗号分隔，只放自己的前端域名 |
+| `NEXT_PUBLIC_API_URL` | 前端 | 指向后端 API 的公开地址 |
+
+三个实操建议：
+
+1. **pepper 单独生成、单独存**，别和普通 env 混在一起：`openssl rand -hex 32`。
+2. **`NEXT_PUBLIC_*` 前缀的变量会被打进前端 bundle**，任何人都能读到——凡是带这个前缀的，默认它是公开的，别放密钥。
+3. **写 secret 时警惕尾部换行**：`echo $SECRET | railway variable set X --stdin` 会把末尾换行一起写进去，签名校验/密钥长度就会静默失效。要么 `tr -d '\n'`，要么用 `railway variable set X='值'` 的等号形式。
+
+## 五、安全加固：五条必做
+
+1. **密钥分级**：service_role 只进后端容器，anon 只进前端。这是「数据泄露最小化」的第一道闸。
+2. **CORS 白名单收敛**：`ALLOWED_ORIGINS` 只填生产域名，别图省事写 `*`。
+3. **安全响应头**：前端 `vercel.json` 已带 `X-Content-Type-Options: nosniff` 和 `X-Frame-Options: DENY`（防点击劫持），自托管时也要等价配置。
+4. **API Key 前缀校验**：Moltable 的密钥有固定前缀（`molt_`），服务端先校验前缀再查库，能快速挡掉大部分乱试的请求。
+5. **最小权限数据库角色**：应用连接用受限角色，DDL（建表/加列）只在迁移时用高权限执行——这也是为什么生产建表要单独走 psql pooler 而不是靠应用跑。
+
+## 六、多租户与数据隔离
+
+Moltable 用 **Persona + Project 两层做数据隔离**，而不是一个用户一张表：
+
+- **Project** 是环境容器，`knowledge_bases`、`tools` 都挂在 project 上——不同项目/不同客户的数据天然分桶。
+- **Persona** 是人格配置，一个用户可以有多个人格，跨 Agent 复用。
+- **Memory** 走 pgvector 检索，但检索范围始终被 project 边界约束，不会串到别的租户。
+
+自托管做多租户时，这条边界要在 API 层强制（而不是靠前端过滤），否则一个越权 ID 就能读到别人的记忆。
+
+## 七、端到端验证：四条命令闭环
+
+部署完成后按顺序跑一遍，任何一条失败都别上线：
+
+```bash
+# 1. 健康检查（要看到 db:true，光 ok 不够）
+curl https://api.moltable.ai/health
+
+# 2. 注册（真实写库）
+curl -X POST https://api.moltable.ai/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@moltable.ai","password":"Test2024!"}'
+
+# 3. MCP 工具列表（验证 MCP Server 在线）
+curl -X POST https://api.moltable.ai/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
+
+# 4. 前端可达
+curl -o /dev/null -w "%{http_code}" https://www.moltable.ai   # → 200
+```
+
+## 八、常见翻车排查表
+
+| 症状 | 根因 | 修复 |
+|------|------|------|
+| Railway 502 | Target Port 设成 80 | 改回 8080 |
+| 注册 500 | 某表缺列（如 `is_active`） | `ALTER TABLE ADD COLUMN` 补列 |
+| 前端连不上后端 | `NEXT_PUBLIC_API_URL` 未设 | 补环境变量 |
+| 构建超时 | 拉了 2GB 的 torch | 用精简依赖清单，别装 torch |
+| 部署后不生效 | 缓存旧构建 | 等 2–5 分钟或手动 Redeploy |
+
+---
+
+自托管的本质不是「把代码跑起来」，而是**把安全模型和隔离边界也一起接管过来**。把本文的第四、五、六节做扎实，你才算是真正拥有了自己的 Moltable，而不只是租了一个更贵的托管位。
+
+</ArticleLayout>

@@ -12,6 +12,15 @@ export interface BlogPost {
 
 const posts: BlogPost[] = [
   {
+    slug: 'moltable-self-host-deployment',
+    date: '2026-08-16',
+    title: 'Moltable 自托管部署指南：从零到生产',
+    titleEn: 'Self-Hosting Moltable: From Zero to Production (Docker + FastAPI + Postgres)',
+    excerpt:
+      '三层架构拆解 + 可照抄的 Docker 部署路径，重点讲清环境变量管理、安全加固、多租户隔离三个最容易翻车的点。从零到生产，四条命令端到端闭环验证。',
+    tags: ['部署', '自托管', '安全', '教程', 'Docker', 'FastAPI'],
+  },
+  {
     slug: 'a2a-agent-collaboration',
     date: '2026-08-15',
     title: 'Agent Protocol 实战：用 A2A 让两个 Agent 自动协作',
