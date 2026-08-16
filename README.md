@@ -69,7 +69,7 @@ No manual JSON editing. Auto-detects your config, backs it up, injects Moltable 
 
 ## Capabilities
 
-| | Free | Pro (90-day free trial) |
+| | Free | Pro (30-day free trial) |
 |---|---|---|
 | AI Identities | 1 | 3 |
 | Personas | 2 | 10 |

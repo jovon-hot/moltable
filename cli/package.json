@@ -12,6 +12,9 @@
     "index.js",
     "README.md"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "engines": {
     "node": ">=14"
   },
