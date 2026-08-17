@@ -12,6 +12,15 @@ export interface BlogPost {
 
 const posts: BlogPost[] = [
   {
+    slug: 'pinecone-vector-retrieval',
+    date: '2026-08-17',
+    title: 'Pinecone 实战：给 Moltable 加一层托管向量检索',
+    titleEn: 'Pinecone Hands-On: Adding Managed Vector Search to the Moltable Identity Layer',
+    excerpt:
+      '承接「记忆全家桶」的结论，这篇动手把 Pinecone 接进 Moltable：384 维对齐、namespace 租户硬隔离、metadata 过滤，身份图谱留 Postgres、语义检索下沉托管云。附四步可照抄代码与「什么时候该上 Pinecone」的诚实判断标准。',
+    tags: ['Pinecone', '向量检索', '教程', '集成', 'RAG', 'AI Memory'],
+  },
+  {
     slug: 'moltable-self-host-deployment',
     date: '2026-08-16',
     title: 'Moltable 自托管部署指南：从零到生产',
