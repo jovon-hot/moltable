@@ -22,5 +22,6 @@ HANDOFF.md
 *.db
 *.db-shm
 *.db-wal
+*.db.bak_*
 .sisyphus/
 web/tsconfig.tsbuildinfo

@@ -21,6 +21,10 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- 迁移：为旧库补充 expires_at 列（新库已在 CREATE TABLE 中定义）
 ALTER TABLE users ADD COLUMN expires_at TEXT;
+-- 迁移：为旧库补充 billing/language 列（新库已在 CREATE TABLE 中定义；重复列名会被 init_schema 捕获跳过）
+ALTER TABLE users ADD COLUMN language TEXT DEFAULT 'zh';
+ALTER TABLE users ADD COLUMN stripe_customer_id TEXT;
+ALTER TABLE users ADD COLUMN stripe_subscription_id TEXT;
 
 -- API 密钥 (legacy, deprecated)
 CREATE TABLE IF NOT EXISTS api_keys (
