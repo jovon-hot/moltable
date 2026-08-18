@@ -1,0 +1,302 @@
+export const meta = {
+  title: 'MCP Multi-Tenant Memory Isolation: Keep Every Tenant\'s Memory in Its Own Lane',
+  date: '2026-08-18',
+  description: 'Hands-on: build a multi-tenant MCP memory server that keeps each tenant\'s memory strictly isolated — file scoping, Postgres RLS, and vector namespace, with complete runnable Python code.',
+  tags: ['MCP', '多租户', '隔离', '教程', '安全', 'Postgres', 'RLS'],
+  slug: 'mcp-multi-tenant-isolation',
+}
+
+import ArticleLayout from '../_components/ArticleLayout'
+
+<ArticleLayout meta={meta}>
+
+# MCP 实战进阶：多租户记忆隔离
+
+**你给三个客户部署了同一个 AI Agent，共享一台服务器、一个 MCP 记忆层。某天，客户 B 的 Agent 回答问题时，突然蹦出了客户 A 的代码 review 记录——里面还有 A 公司还没公开的产品规划。** 这一刻你才意识到：你写的「记忆层」是单租户思维，而你的部署是多租户现实。
+
+这是 MCP 实战系列第三篇。前两篇我们分别做了 [MCP 工具开发](/blog/mcp-tool-development) 和 [让 Agent 记住 Git 工作流](/blog/mcp-server-git-workflow)。那两篇的存储设计有一个共同的隐藏假设：**一个用户、一个项目、一台机器**。一旦你要用一套服务承接多个租户（多个客户 / 多个团队 / 多个项目），这个假设立刻变成安全漏洞。
+
+本文解决一个问题：**如何让多租户场景下，每个租户的记忆严格隔离、永不串库**。完整代码可直接运行。
+
+---
+
+## 一、先看清问题：单租户设计在多租户下怎么崩
+
+回顾 [Git Memory Server](/blog/mcp-server-git-workflow) 的存储层——它用仓库路径 hash 出目录名：
+
+```python
+name = hashlib.sha256(repo_path.encode()).hexdigest()[:12]
+return STORAGE_ROOT / name
+```
+
+这个设计在「一个人、几台机器」下没问题。但把它直接搬到「SaaS 多租户」场景，问题就来了：
+
+1. **身份缺失**：存储里只有 `repo_path`，没有 `tenant_id`。两个租户的 `repo_path` 一旦撞上（比如都叫 `/home/app/main`），记忆直接互相覆盖。
+2. **越权可读**：如果租户 A 知道了租户 B 的项目 ID（ID 常常是可枚举的），把 ID 传进去就能读到 B 的记忆。**存储层没有任何一道墙挡着。**
+3. **范围不可控**：查询时没有租户边界约束，一个写错的 filter 就能把全库扫出来。
+
+本质一句话：**单租户设计的正确性依赖「调用方都是好人」，多租户设计的正确性必须不依赖调用方。**
+
+---
+
+## 二、设计原则：tenant_id 只能来自认证层
+
+这是本文最重要的一条原则，也是上一篇文章（[自托管部署指南](/blog/moltable-self-host-deployment)）反复强调的「隔离要在 API 层强制，而不是靠前端过滤」的 MCP 版本：
+
+> **`tenant_id` 永远从服务端的认证层解析出来，绝不信客户端自己报上来的租户身份。**
+
+客户端只提供「它是什么身份」的凭证（API Key / JWT），服务端把凭证解析成 `tenant_id`，然后所有存储操作都用这个解析结果。这样，租户 A 即便把请求里的某个 ID 改成 B 的，也拿不到 B 的数据——因为它连「我是 B」这一步都过不了认证。
+
+```python
+# ✅ 正确：客户端给凭证，服务端解析身份
+def resolve_tenant(api_key: str) -> str:
+    # 生产环境换成 JWT 验签 / 数据库查询 / IdP 回调
+    tenant = API_KEY_TO_TENANT.get(api_key)
+    if tenant is None:
+        raise PermissionError("invalid api_key")
+    return tenant
+
+# ❌ 错误：客户端直接传 tenant_id，等于把钥匙交给陌生人
+# def remember(tenant_id: str, text: str): ...
+```
+
+下文所有代码，`tenant_id` 都是 `resolve_tenant` 的返回值，而不是工具参数。这是全文的安全地基。
+
+---
+
+## 三、三层隔离模型
+
+一个完整的 MCP 记忆层通常落三层存储。每一层都要做隔离，缺一层就是一个洞：
+
+| 层 | 存什么 | 隔离手段 | 一句话 |
+|----|--------|----------|--------|
+| 文件 | 项目约定、review 记录 | `tenant_id` 散列目录 | 每个租户一个物理目录 |
+| 数据库 | 记忆、Persona、关系 | Postgres RLS | 行级安全，数据库兜底 |
+| 向量 | 语义检索 embedding | namespace = tenant_id | 向量子空间硬隔离 |
+
+三层的关系和 [Pinecone 实战](/blog/pinecone-vector-retrieval) 里的分层一致：**文件层和向量层是「方便」，数据库层（RLS）是「兜底的事实源」**。哪怕上两层配置写错了，RLS 也能拦住最后的越权。
+
+---
+
+## 四、完整实现：MultiTenantMemory MCP Server
+
+### 4.1 存储层：租户散列目录（文件层）
+
+```python
+"""storage.py — 多租户文件存储，每个租户一个物理目录。"""
+import json
+import hashlib
+from pathlib import Path
+
+STORAGE_ROOT = Path.home() / ".moltable" / "memory"
+
+
+def tenant_dir(tenant_id: str) -> Path:
+    """tenant_id → 散列目录名。散列避免特殊字符/路径穿越问题。"""
+    safe = hashlib.sha256(tenant_id.encode()).hexdigest()[:16]
+    d = STORAGE_ROOT / safe
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def save_memory(tenant_id: str, key: str, value: dict) -> None:
+    (tenant_dir(tenant_id) / f"{key}.json").write_text(
+        json.dumps(value, ensure_ascii=False, indent=2)
+    )
+
+
+def load_memory(tenant_id: str, key: str) -> dict | None:
+    f = tenant_dir(tenant_id) / f"{key}.json"
+    return json.loads(f.read_text()) if f.exists() else None
+```
+
+要点：**目录名由 `tenant_id` 散列而来，路径穿越和特殊字符问题在源头就被消掉**。不同租户落在不同物理目录，文件层串库的可能是零。
+
+### 4.2 数据库层：Postgres RLS
+
+表结构先给每行打上 `tenant_id`：
+
+```sql
+CREATE TABLE memories (
+    id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id   text NOT NULL,
+    persona_id  text,
+    content     text NOT NULL,
+    embedding   vector(384)
+);
+
+ALTER TABLE memories ENABLE ROW LEVEL SECURITY;
+
+-- 核心：行级策略，只能读写「属于当前 tenant」的行
+CREATE POLICY tenant_isolation ON memories
+    USING (tenant_id = current_setting('app.tenant_id', true))
+    WITH CHECK (tenant_id = current_setting('app.tenant_id', true));
+```
+
+后端在每次请求开始时，把解析出的 `tenant_id` 压进连接级变量：
+
+```python
+"""db.py — 每次请求前设置租户上下文，让 RLS 生效。"""
+from sqlalchemy import text
+from sqlalchemy.orm import Session
+
+def set_tenant(db: Session, tenant_id: str) -> None:
+    # SET LOCAL：事务结束自动回滚，绝不泄漏到下一个请求
+    db.execute(text("SET LOCAL app.tenant_id = :tid"), {"tid": tenant_id})
+
+def add_memory(db: Session, tenant_id: str, content: str, embedding: list[float]):
+    set_tenant(db, tenant_id)
+    db.execute(text(
+        "INSERT INTO memories (tenant_id, content, embedding) VALUES (:t, :c, :e)"
+    ), {"t": tenant_id, "c": content, "e": embedding})
+    db.commit()
+
+def search_memory(db: Session, tenant_id: str, query_vec: list[float], top_k: int = 5):
+    set_tenant(db, tenant_id)
+    rows = db.execute(text(
+        "SELECT content FROM memories "
+        "ORDER BY embedding <=> :q LIMIT :k"
+    ), {"q": query_vec, "k": top_k}).fetchall()
+    return [r[0] for r in rows]
+```
+
+这里有两个关键点：
+
+- **`SET LOCAL` 而非 `SET`**：`SET LOCAL` 只在当前事务内生效，事务结束自动回滚。如果忘了用 `LOCAL`，上一个请求的 `tenant_id` 会残留在连接池里，污染下一个请求——这是连接池环境下最隐蔽的串租户 bug。
+- **RLS 是兜底，不是唯一防线**：即使某条查询忘了带 `tenant_id` 过滤，RLS 也会把它拦下来返回空，而不是返回别人的数据。
+
+### 4.3 向量层：namespace = tenant_id
+
+```python
+"""vector.py — Pinecone namespace 硬隔离。"""
+from pinecone import Pinecone
+
+pc = Pinecone(api_key="...")
+index = pc.Index("moltable-memory")
+
+def upsert_vec(tenant_id: str, memory_id: str, vec: list[float], meta: dict):
+    index.upsert(
+        vectors=[{"id": memory_id, "values": vec, "metadata": meta}],
+        namespace=tenant_id,          # 关键：按 tenant 做物理隔离
+    )
+
+def query_vec(tenant_id: str, vec: list[float], top_k: int = 5):
+    return index.query(
+        vector=vec, top_k=top_k,
+        namespace=tenant_id,          # 与写入同名，双重保险
+    )
+```
+
+`namespace` 是 Pinecone 的物理向量子空间，query 时指定 namespace 就从根上杜绝了「查串租户」。metadata 里再带一层 `tenant_id` 是双保险——防止 namespace 配置写错时静默串库（详情见 [Pinecone 实战](/blog/pinecone-vector-retrieval)）。
+
+### 4.4 组装：MCP Server + 认证层
+
+```python
+"""server.py — 多租户记忆 MCP Server 入口。"""
+from mcp.server.fastmcp import FastMCP
+from sqlalchemy.orm import Session
+import storage, db, vector
+
+# 演示用：api_key → tenant_id 映射。生产环境换成 JWT / IdP / 数据库。
+API_KEY_TO_TENANT = {
+    "sk-tenant-alpha": "tenant_alpha",
+    "sk-tenant-beta":  "tenant_beta",
+}
+
+mcp = FastMCP("Multi-Tenant Memory")
+
+
+def resolve_tenant(api_key: str) -> str:
+    tenant = API_KEY_TO_TENANT.get(api_key)
+    if tenant is None:
+        raise PermissionError("invalid api_key")
+    return tenant
+
+
+@mcp.tool()
+def remember(api_key: str, key: str, content: str) -> str:
+    """把一条记忆写入当前租户的私有空间。"""
+    tenant_id = resolve_tenant(api_key)      # 身份来自认证层
+    storage.save_memory(tenant_id, key, {"content": content})
+    return f"✅ 已写入 tenant={tenant_id} 的私有记忆: {key}"
+
+
+@mcp.tool()
+def recall(api_key: str, key: str) -> str:
+    """读取当前租户的私有记忆。"""
+    tenant_id = resolve_tenant(api_key)
+    mem = storage.load_memory(tenant_id, key)
+    if mem is None:
+        return "❌ 未找到该记忆（或不属于你的租户）"
+    return mem["content"]
+
+
+@mcp.tool()
+def semantic_search(api_key: str, query: str, db_session: Session) -> str:
+    """语义检索当前租户的记忆（走 RLS + namespace 双重隔离）。"""
+    tenant_id = resolve_tenant(api_key)
+    vec = embed(query)                        # 用你的 embedding 模型
+    hits = db.search_memory(db_session, tenant_id, vec)
+    return "\n".join(f"• {h}" for h in hits)
+
+
+if __name__ == "__main__":
+    mcp.run()
+```
+
+注意：`api_key` 是客户端「你是谁」的凭证，`tenant_id` 是服务端解析出的「你属于哪个租户」。**客户端从头到尾不知道、也不需要知道 `tenant_id` 的存在。**
+
+---
+
+## 五、测试：证明两个租户真的互不串
+
+隔离不是「我觉得没串」，而是要能证明没串。写一个最小测试：
+
+```python
+# 租户 alpha 写入一条记忆
+storage.save_memory("tenant_alpha", "roadmap", {"content": "Q3 上线 A 产品的跨境支付"})
+
+# 租户 beta 尝试读取 alpha 的 key —— 应该拿到 None
+assert storage.load_memory("tenant_beta", "roadmap") is None
+
+# beta 用 alpha 的 api_key 越权 —— 认证层直接拒绝
+try:
+    resolve_tenant("sk-tenant-alpha")   # beta 拿着 alpha 的 key 就是 alpha
+    # 真正的越权测试是「伪造 tenant_id」，而我们的 API 根本收不到这个参数
+except PermissionError:
+    pass
+```
+
+更狠一点的验证：**故意在数据库层写错一条不带 `tenant_id` 过滤的查询，看 RLS 会不会拦住它。** 结果应该是——返回空集，而不是全库。这就是 RLS 作为「最后一道墙」的价值。
+
+---
+
+## 六、四个最隐蔽的翻车点
+
+| 翻车点 | 后果 | 修复 |
+|--------|------|------|
+| 忘了 `SET LOCAL`，用 `SET` | 连接池复用后，上一个租户的上下文污染下一个请求 | 一律 `SET LOCAL app.tenant_id` |
+| 只在查询层 filter，没开 RLS | 一个越权 ID 直接读到别人记忆 | 表必须 `ENABLE ROW LEVEL SECURITY` + policy |
+| namespace 写错/漏写 | 向量静默串到默认 namespace | 写入和查询都显式传 `namespace`，metadata 再带 `tenant_id` 兜底 |
+| 让客户端传 `tenant_id` | 等于把钥匙交给陌生人 | `tenant_id` 只从认证层解析，绝不进工具签名 |
+
+---
+
+## 总结
+
+- **多租户记忆隔离的核心不是「存储怎么分桶」，而是「身份从哪来」**：`tenant_id` 必须来自服务端认证层，永不信客户端。
+- **三层都要隔离**：文件层散列目录、数据库层 RLS、向量层 namespace，缺一层就是一个洞；RLS 是最后的兜底。
+- **隔离要能证明**：用「租户 B 读不到租户 A」的断言测试，而不是靠肉眼「看起来没串」。
+- 这套模式和 [自托管部署指南](/blog/moltable-self-host-deployment) 里的「API 层强制隔离」一脉相承：**Moltable 用 Persona + Project 两层做数据分桶，Memory 检索永远被 project 边界约束**——多租户场景下，这条边界必须由后端强制，前端过滤只是体验优化，不是安全手段。
+
+想自己跑通？从 [自托管部署指南](/blog/moltable-self-host-deployment) 起步，把本文的 `storage.py` / `db.py` / `vector.py` 加进去，配上 `PINECONE_API_KEY` 即可。
+
+→ [GitHub: jovon-hot/moltable](https://github.com/jovon-hot/moltable)
+→ [Moltable Identity Sync: moltable.ai](https://www.moltable.ai)
+
+---
+
+*发表于 2026 年 8 月 18 日 · Moltable 团队*
+*标签：MCP, 多租户, 隔离, 教程, 安全, Postgres, RLS*
+
+</ArticleLayout>

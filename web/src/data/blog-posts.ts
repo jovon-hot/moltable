@@ -12,6 +12,15 @@ export interface BlogPost {
 
 const posts: BlogPost[] = [
   {
+    slug: 'mcp-multi-tenant-isolation',
+    date: '2026-08-18',
+    title: 'MCP 实战进阶：多租户记忆隔离',
+    titleEn: "MCP Multi-Tenant Memory Isolation: Keep Every Tenant's Memory in Its Own Lane",
+    excerpt:
+      'MCP 实战系列第三篇：一套服务承接多个租户时，记忆如何严格隔离、永不串库。三层隔离模型（文件散列目录 + Postgres RLS + 向量 namespace）+ tenant_id 只来自认证层的安全原则，附完整可运行 Python 代码与「证明没串库」的测试。',
+    tags: ['MCP', '多租户', '隔离', '教程', '安全', 'Postgres', 'RLS'],
+  },
+  {
     slug: 'pinecone-vector-retrieval',
     date: '2026-08-17',
     title: 'Pinecone 实战：给 Moltable 加一层托管向量检索',
