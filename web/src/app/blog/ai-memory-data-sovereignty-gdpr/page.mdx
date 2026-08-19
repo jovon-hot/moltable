@@ -1,0 +1,229 @@
+export const meta = {
+  title: "AI Agent Memory & Data Sovereignty: A Practical GDPR Compliance Checklist",
+  date: '2026-08-19',
+  description: 'GDPR 实操清单：Agent 记忆的删除权、数据可携带与审计日志如何落地——级联删除、导出格式与自托管合规，附完整 Python 代码。',
+  tags: ['数据主权', 'GDPR', '合规', '自托管', '安全', '教程'],
+  slug: 'ai-memory-data-sovereignty-gdpr',
+}
+
+import ArticleLayout from '../_components/ArticleLayout'
+
+<ArticleLayout meta={meta}>
+
+# AI Agent 记忆的数据主权：GDPR 实操与自托管合规清单
+
+**用户给你的 AI Agent 发来一封邮件，引用了 GDPR 第 17 条——「被遗忘权」，要求你删除关于他的所有记忆。你满口答应，转身打开数据库，然后愣住了：他的记忆到底散落在多少个地方？** Postgres 里有一堆行，向量库里有一堆 embedding，文件系统里有一个散列目录，身份图谱里还有几十个节点和边。你要怎么证明自己「删干净了」？
+
+这不是假设题。2026 年，任何把用户数据喂给 Agent 记忆层的产品，都会在某个时刻撞上这道题——尤其是做欧洲客户、做企业级自托管部署的团队。
+
+前两篇我们讲了 [自托管部署](/blog/moltable-self-host-deployment) 和 [多租户记忆隔离](/blog/mcp-multi-tenant-isolation)，解决的是「怎么搭」和「怎么不串库」。这一篇补上最后一块：**怎么让记忆层在合规上站得住**。核心覆盖三件事——删除权、数据可携带、审计日志。
+
+---
+
+## 一、为什么 Agent 记忆是 GDPR 合规的「重灾区」
+
+传统 SaaS 的合规对象是「结构化业务数据」：用户表、订单表、支付记录，删一条 `DELETE FROM users WHERE id = ?` 基本就干净了。
+
+但 Agent 记忆层是另一个物种。一个用户的名字会同时出现在：
+
+1. **关系型存储**：Postgres 里的 identity 行、persona 行、fact 行
+2. **向量存储**：一堆 embedding，存的是「他偏好 TypeScript」「他在 Project X 的 review 模式」这类语义事实
+3. **图谱存储**：节点 + 边，连接着他和项目、团队、决策的关系
+4. **文件存储**：本地散列目录 / 对象存储里的持久化快照
+5. **缓存与日志**：MCP 工具调用日志、审计流、备份
+
+GDPR 的核心原则——**存储最小化、目的限制、可删除、可携带**——要求你能定位到「这个人」的所有痕迹，而不是某一张表的某一列。当记忆散落在五六个异构存储里，这五条原则每一条都会变成工程难题。
+
+这不是危言耸听。欧盟对 AI 数据的执法在 2025–2026 明显收紧，记忆层因为「删不干净」被罚的案例已经出现。而企业客户在采购自托管方案时，合规清单是采购清单的前置条件——**没有删除权实现方案，就没有合同**。
+
+---
+
+## 二、删除权：让「被遗忘」真的发生
+
+删除权的难点不在「删」，而在「删干净」和「能证明删干净了」。
+
+### 2.1 级联删除：先定位，再删除
+
+前提是，你的存储层要有一个**能跨存储定位到同一主体的锚点**。在 Moltable 的架构里，这个锚点是 `identity_id`——所有存储都把它作为主键或外键。没有这个统一锚点，删除权就无从谈起。
+
+以多租户记忆层为例，级联删除的落点：
+
+```python
+def delete_identity_complete(identity_id: str) -> dict:
+    """跨存储级联删除一个身份的所有记忆痕迹，返回删除统计作为审计证据。"""
+    deleted = {
+        "postgres_rows": 0,
+        "vector_vectors": 0,
+        "graph_nodes": 0,
+        "graph_edges": 0,
+        "file_snapshots": 0,
+    }
+
+    # 1. 关系型：identity + persona + facts 级联
+    #    外键 ON DELETE CASCADE 会自动带走子表，这里显式统计
+    deleted["postgres_rows"] = db.execute(
+        """
+        WITH del AS (
+            DELETE FROM identity WHERE id = %(id)s RETURNING id
+        )
+        SELECT count(*) FROM del
+        """,
+        {"id": identity_id},
+    ).scalar()
+
+    # 2. 向量：按 namespace + identity_id 过滤删除
+    #    Pinecone: delete by filter（metadata 里必须带 identity_id）
+    deleted["vector_vectors"] = vector_store.delete(
+        filter={"identity_id": {"$eq": identity_id}}
+    )
+
+    # 3. 图谱：先删边再删节点（避免悬挂边）
+    edges = graph.delete_edges(subject=identity_id)
+    nodes = graph.delete_node(identity_id)
+    deleted["graph_edges"] = edges
+    deleted["graph_nodes"] = nodes
+
+    # 4. 文件快照：按散列目录移除
+    snap_dir = snapshot_root / hashlib.sha256(identity_id.encode()).hexdigest()[:16]
+    if snap_dir.exists():
+        deleted["file_snapshots"] = sum(1 for _ in snap_dir.rglob("*"))
+        shutil.rmtree(snap_dir)
+
+    return deleted
+```
+
+**关键原则**：向量存储的删除靠 metadata 过滤，所以你在写入时就必须把 `identity_id` 打进 metadata——事后补是补不上的。这一步在 [Pinecone 实战](/blog/pinecone-vector-retrieval) 里已经埋好了伏笔：namespace 做租户隔离，metadata 里的 `identity_id` 做主体删除。
+
+### 2.2 删除的「硬骨头」：embedding、备份与缓存
+
+真正的坑在这三处：
+
+- **Embedding 无法「反推」**：向量一旦生成，你无法从向量反推它属于谁。所以**必须在向量侧保留 metadata 关联**，删除时靠 metadata，而不是靠内容匹配。这也是「数据最小化」的要求——不要把能直接识别人身份的自由文本（PII）原样塞进向量，只存语义特征，PII 留在可定位的关系库里。
+- **备份**：主库删了，昨天的 pg_dump 里还有。合规要求「备份也要在合理期限内清除」，实践中是「备份保留 N 天，删除请求触发后走备份轮换」，并在 SLA 里写明「删除在 N 天内完成（含备份）」。宣称「实时删干净」是不诚实的——**说清楚「备份窗口」比假装没有更重要**。
+- **LLM 缓存与日志**：如果记忆层做了上下文缓存，删了记忆但缓存里还留着，等于没删。缓存 key 要带 `identity_id`，删除时同步失效。
+
+### 2.3 证明「删干净了」：删除凭据
+
+删完了，用户问「你凭什么说删干净了」——你不能只说「我执行了」。返回一个**删除凭据（erasure receipt）**：
+
+```python
+receipt = {
+    "identity_id": identity_id,
+    "requested_at": "2026-08-19T09:00:00Z",
+    "completed_at": "2026-08-19T09:00:03Z",
+    "deleted": deleted,          # 上面那个统计 dict
+    "backup_rotation_eta": "2026-08-26T00:00:00Z",  # 备份窗口结束
+    "signature": sign_receipt(deleted),
+}
+```
+
+这个凭据就是你的审计证据：每个存储删了多少、什么时间删的、备份何时轮到。合规的本质不是「你做了」，而是「你能证明你做了」。
+
+---
+
+## 三、数据可携带：让用户能「带走自己」
+
+GDPR 第 20 条「数据可携带权」要求：用户有权以**结构化、通用、机器可读**的格式，获得他提供给控制者的个人数据，并有权将这些数据转移到另一个控制者。
+
+对记忆层来说，这天然是优势——**你的产品价值恰恰是「把身份带走到任何 Agent」**。Moltable 的 Identity Sync 就是为此而生的。但「可携带」要真正合规，导出格式必须满足三个条件：
+
+1. **结构化**：不是导出一段 markdown 总结，而是保留数据模型（identity / persona / facts / 关系）。
+2. **通用**：JSON / JSONL，而非私有二进制。
+3. **完整**：用户「提供给你的」数据 + 你「基于这些数据生成的」记忆，都要能导出（这包括从对话中提取出的偏好、决策、关系）。
+
+一个符合要求的导出：
+
+```python
+def export_identity(identity_id: str) -> dict:
+    """导出身份完整数据，JSON 结构化、机器可读、可迁移。"""
+    return {
+        "schema_version": "1.0",
+        "exported_at": "2026-08-19T09:00:00Z",
+        "identity": db.get_identity(identity_id),
+        "personas": db.get_personas(identity_id),
+        "facts": db.get_facts(identity_id),       # 提取出的偏好/决策
+        "graph": {
+            "nodes": graph.get_nodes(identity_id),
+            "edges": graph.get_edges(identity_id),
+        },
+        "temporal": db.get_timeline(identity_id),  # 时序记忆
+    }
+```
+
+注意导出里**不含 embedding**——向量是「派生数据」，且不可移植（换一个 embedding 模型维度就对不上了）。正确的做法是导出原始事实（facts），让目标系统重新向量化。这也是 [身份图谱 vs 向量搜索](/blog/identity-graph-vs-vector-search) 那篇论证过的一点：**事实是可携带的，向量不是**。把「源数据」和「派生数据」分开，可携带性就自动解决了。
+
+---
+
+## 四、审计日志：合规的「第三只眼」
+
+删除权和可携带权之外，GDPR 还要求**可问责（accountability）**——你得能回答「谁在什么时候、以什么目的、访问了谁的记忆」。
+
+对 Agent 记忆层，审计日志至少要有三类事件：
+
+| 事件 | 记录内容 | 合规用途 |
+|------|---------|---------|
+| `identity.read` | 哪个 Agent/租户读了哪个 identity 的哪些字段 | 访问权（第 15 条） |
+| `identity.write` | 谁写入了什么记忆、来源是什么 | 目的限制、可问责 |
+| `identity.erase` | 删除请求 + 删除凭据 | 被遗忘权（第 17 条） |
+
+一个关键设计：**审计日志本身不能是「可被用户删掉的记忆」**。它要独立存储、只追加（append-only）、带完整性校验，否则用户删了记忆，审计痕迹也跟着没了，你就失去了「我删过」的证据。
+
+```python
+def audit_log(event: str, identity_id: str, actor: str, detail: dict):
+    """只追加审计日志，独立于记忆存储，带链式哈希防篡改。"""
+    entry = {
+        "ts": datetime.now(timezone.utc).isoformat(),
+        "event": event,
+        "identity_id": identity_id,
+        "actor": actor,
+        "detail": detail,
+        "prev_hash": state.last_audit_hash,
+    }
+    entry["hash"] = hashlib.sha256(json.dumps(entry, sort_keys=True).encode()).hexdigest()
+    state.last_audit_hash = entry["hash"]
+    audit_store.append(entry)
+```
+
+这套「记忆可删、审计不可删」的分离，是自托管方案能通过企业安全审查的常见底线。
+
+---
+
+## 五、自托管合规清单（可直接抄）
+
+把前三节压缩成一张 checklist，做自托管记忆层的团队可以逐项核对：
+
+**删除权**
+- [ ] 所有存储层有统一主体锚点（identity_id），可跨层定位
+- [ ] 向量写入时 metadata 携带 identity_id，支持按 metadata 删除
+- [ ] 级联删除覆盖 Postgres / 向量 / 图谱 / 文件，并返回统计
+- [ ] 明确备份保留窗口，删除请求触发备份轮换
+- [ ] 输出删除凭据，作为审计证据
+
+**数据可携带**
+- [ ] 导出为结构化 JSON，含 schema 版本号
+- [ ] 覆盖身份、persona、facts、图谱、时序记忆
+- [ ] 源数据与派生数据（embedding）分离，导出源数据
+
+**审计与问责**
+- [ ] 审计日志独立存储、只追加、带完整性校验
+- [ ] 记录 read / write / erase 三类事件，含 actor 与时间
+- [ ] 访问控制与租户隔离（见多租户篇）落实到位
+
+**最小化与目的限制**
+- [ ] 不在向量层存可识别身份的自由文本 PII
+- [ ] 缓存 key 带 identity_id，删除时同步失效
+- [ ] 记忆保留有默认期限，超期自动清理
+
+---
+
+## 六、结语：数据主权是 Agent 记忆的下一个门槛
+
+记忆层行业过去一年在拼「记得多不多、检索准不准」。但下一个让企业用户拍板买不买的门槛，是「**记了之后，数据到底归谁、能不能删、能不能带走**」。
+
+Moltable 的立场很明确：**记忆是用户的，不是平台的**。这也是为什么我们坚持可自托管、坚持 Identity Sync 做跨平台携带、坚持用 identity_id 做全链路锚点。记忆层如果做不到「用户说了算」，那它记的越多，风险越大。
+
+数据主权不是合规部门的事后补丁，而是记忆层架构的原始约束。把它设计进存储模型的那一天，你就不用在收到删除邮件时发愣了。
+
+> 下一篇预告：Agent 协议经济深入——多 Agent 编排与任务市场 Swap 实战。
+
+</ArticleLayout>

@@ -12,6 +12,15 @@ export interface BlogPost {
 
 const posts: BlogPost[] = [
   {
+    slug: 'ai-memory-data-sovereignty-gdpr',
+    date: '2026-08-19',
+    title: 'AI Agent 记忆的数据主权：GDPR 实操与自托管合规清单',
+    titleEn: 'AI Agent Memory & Data Sovereignty: A Practical GDPR Compliance Checklist',
+    excerpt:
+      '承接自托管与多租户隔离，补上合规最后一块：删除权怎么跨层级联删干净、数据可携带怎么导出、审计日志怎么做到「记忆可删、审计不可删」。附完整 Python 代码与可直接抄的自托管合规清单。',
+    tags: ['数据主权', 'GDPR', '合规', '自托管', '安全', '教程'],
+  },
+  {
     slug: 'mcp-multi-tenant-isolation',
     date: '2026-08-18',
     title: 'MCP 实战进阶：多租户记忆隔离',
