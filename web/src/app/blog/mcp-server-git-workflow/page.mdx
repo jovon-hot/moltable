@@ -18,7 +18,7 @@ import ArticleLayout from '../_components/ArticleLayout'
 
 本文带你从零构建一个 Git-aware MCP Server。它不是一个通用工具——它是**专门为你的项目、你的团队、你的工作流**定制的记忆层。Agent 接入后，自动知道你在哪个分支、最近改了什么、项目的 commit 规范、上次 PR review 的结论。你不再需要每次对话都重新"教"它。
 
-**完整代码开源，可直接部署。** 读完这篇文章，你就能运行自己的 Git Memory MCP Server。
+**完整代码在文中给出，可直接部署。** 读完这篇文章，你就能运行自己的 Git Memory MCP Server。
 
 ---
 
@@ -606,8 +606,9 @@ Git Memory Server 解决的是"这个项目的 Git 上下文是什么"——但�
 
 ### 本地运行
 
+本文第二部分的代码（`storage.py`、`git_ops.py`、`server.py`）即完整实现，按「第一步：项目结构」保存到本地 `git-memory-mcp/` 目录，然后：
+
 ```bash
-git clone https://github.com/jovon-hot/git-memory-mcp.git
 cd git-memory-mcp
 pip install mcp
 python3 server.py
@@ -648,10 +649,10 @@ Cursor 和 Hermes 同样支持 MCP 协议。配置方式与 Claude Desktop 几�
 | Review 记忆 | `git_remember()` | 上次 review 的结论不会丢失 |
 | 零配置上手 | `git_context()` | 一个工具调用拿到全部信息 |
 
-**代码已开源，30 分钟部署到你的开发环境。** 从此之后，你的 AI Agent 不再是"每次对话都重新认识你"的陌生人——它知道你项目的一切。
+**完整代码已在上文给出，30 分钟部署到你的开发环境。** 从此之后，你的 AI Agent 不再是"每次对话都重新认识你"的陌生人——它知道你项目的一切。
 
-→ [GitHub: jovon-hot/git-memory-mcp](https://github.com/jovon-hot/git-memory-mcp)
 → [Moltable Identity Sync: moltable.ai](https://www.moltable.ai)
+→ [GitHub: jovon-hot/moltable](https://github.com/jovon-hot/moltable)
 
 ---
 
