@@ -219,10 +219,23 @@ def get_usage(user_id: str) -> dict:
         plan = _get_user_plan(user_id)
         limits = PLAN_LIMITS.get(plan, PLAN_LIMITS["free"])
 
+        # 备份源 + 存储用量（对齐「灵魂资产备份」新定位）
+        from pricing_config import build_plan
+        from services.backup_service import BackupService
+        backup_limits = build_plan(plan)["limits"]
+        backup_sources = _count(supabase, "backup_sources", user_id)
+        try:
+            storage_bytes = BackupService(supabase, user_id).get_storage_bytes()
+        except Exception:
+            storage_bytes = 0
+        storage_gb = round(storage_bytes / (1024 ** 3), 2)
+
         return {
             "plan": plan,
             "plan_name": PLAN_NAMES.get(plan, plan),
             "usage": {
+                "backup_sources": {"used": backup_sources, "limit": backup_limits["backup_sources"]},
+                "storage_gb": {"used": storage_gb, "limit": backup_limits["storage_gb"]},
                 "memories": {"used": memories, "limit": limits["memories"]},
                 "personas": {"used": personas, "limit": limits["personas"]},
                 "agents": {"used": agents, "limit": limits["agents"]},
@@ -254,10 +267,14 @@ def _get_user_plan(user_id: str) -> str:
 
 def _empty_usage() -> dict:
     free_limits = PLAN_LIMITS["free"]
+    from pricing_config import build_plan
+    backup_limits = build_plan("free")["limits"]
     return {
         "plan": "free",
         "plan_name": "免费版",
         "usage": {
+            "backup_sources": {"used": 0, "limit": backup_limits["backup_sources"]},
+            "storage_gb": {"used": 0, "limit": backup_limits["storage_gb"]},
             "memories": {"used": 0, "limit": free_limits["memories"]},
             "personas": {"used": 0, "limit": free_limits["personas"]},
             "agents": {"used": 0, "limit": free_limits["agents"]},

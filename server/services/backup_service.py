@@ -47,6 +47,10 @@ class BlobStore:
     def exists(self, key: str) -> bool:
         raise NotImplementedError
 
+    def total_size(self) -> int:
+        """返回该用户 blob 存储的总字节数（用于用量统计）。"""
+        raise NotImplementedError
+
 
 class MemoryBlobStore(BlobStore):
     """测试用内存存储。"""
@@ -62,6 +66,9 @@ class MemoryBlobStore(BlobStore):
 
     def exists(self, key: str) -> bool:
         return key in self._data
+
+    def total_size(self) -> int:
+        return sum(len(v) for v in self._data.values())
 
 
 class FileSystemBlobStore(BlobStore):
@@ -87,6 +94,17 @@ class FileSystemBlobStore(BlobStore):
 
     def exists(self, key: str) -> bool:
         return os.path.exists(self._path(key))
+
+    def total_size(self) -> int:
+        total = 0
+        try:
+            for fn in os.listdir(self._base_dir):
+                p = os.path.join(self._base_dir, fn)
+                if os.path.isfile(p):
+                    total += os.path.getsize(p)
+        except OSError:
+            pass
+        return total
 
 
 class SupabaseBlobStore(BlobStore):
@@ -117,6 +135,22 @@ class SupabaseBlobStore(BlobStore):
             return bool(res)
         except Exception:
             return False
+
+    def total_size(self) -> int:
+        """列出该用户前缀下所有 blob，求和字节数。"""
+        try:
+            res = self._client.storage.from_(BACKUP_BUCKET).list(self._user_id)
+            total = 0
+            for f in res or []:
+                meta = f.get("metadata") or {}
+                size = meta.get("size", f.get("size", 0))
+                try:
+                    total += int(size or 0)
+                except (TypeError, ValueError):
+                    pass
+            return total
+        except Exception:
+            return 0
 
 
 # ── 备份源服务 ──────────────────────────────────────────────
@@ -180,6 +214,13 @@ class BackupService:
         except Exception:
             rows = []
         return rows or []
+
+    def get_storage_bytes(self) -> int:
+        """返回该用户 blob 存储的总字节数（去重后）。"""
+        try:
+            return self._store().total_size()
+        except Exception:
+            return 0
 
     def _get_source(self, source_id: str) -> Optional[dict]:
         rows = (

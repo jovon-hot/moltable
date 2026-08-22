@@ -7,7 +7,7 @@ import { apiFetch, createCheckout, createPortal, getSubscription } from '@/lib/a
 import { Loader2, Key, Copy, Check, Trash2, Shield, Plus, Eye, EyeOff, Brain, Crown, ArrowUp, RefreshCw, CreditCard } from 'lucide-react'
 
 interface ApiKey { id: string; name: string; key_prefix: string; created_at: string; last_used_at?: string; is_active: boolean }
-interface UsageStats { memories: { used: number; limit: number }; personas: { used: number; limit: number }; agents: { used: number; limit: number }; identities: { used: number; limit: number }; api_keys: { used: number; limit: number } }
+interface UsageStats { backup_sources: { used: number; limit: number }; storage_gb: { used: number; limit: number }; memories: { used: number; limit: number }; personas: { used: number; limit: number }; agents: { used: number; limit: number }; identities: { used: number; limit: number }; api_keys: { used: number; limit: number } }
 interface UserProfile { id: string; email: string; name: string; plan: string; plan_name: string; created_at: string; usage?: { plan: string; plan_name: string; usage: UsageStats } }
 
 const PLAN_COLORS: Record<string, string> = { free: '#888888', pro: '#4338CA', team: '#22c55e' }
@@ -142,7 +142,7 @@ export default function SettingsPage() {
       <div className="mb-3">
         <div className="flex justify-between text-xs mb-1" style={{ color: '#cccccc' }}>
           <span>{label}</span>
-          <span style={{ color: isNearLimit ? '#fbbf24' : '#888888' }}>{used} / {limit >= 999999 ? '∞' : limit}</span>
+          <span style={{ color: isNearLimit ? '#fbbf24' : '#888888' }}>{used} / {limit < 0 || limit >= 999999 ? '∞' : limit}</span>
         </div>
         <div className="h-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.06)' }}>
           <div className="h-full rounded-full transition-all duration-300" style={{ width: `${pct}%`, background: isNearLimit ? '#fbbf24' : color }} />
@@ -155,7 +155,7 @@ export default function SettingsPage() {
     return <div className="flex items-center justify-center min-h-[60vh]"><Loader2 className="w-6 h-6 animate-spin" style={{ color: '#4338CA' }} /></div>
   }
 
-  const usage: UsageStats = user?.usage?.usage || { memories: { used: 0, limit: 100 }, personas: { used: 0, limit: 2 }, agents: { used: 0, limit: 1 }, identities: { used: 1, limit: 1 }, api_keys: { used: 0, limit: 10 } }
+  const usage: UsageStats = user?.usage?.usage || { backup_sources: { used: 0, limit: 10 }, storage_gb: { used: 0, limit: 2 }, memories: { used: 0, limit: 100 }, personas: { used: 0, limit: 2 }, agents: { used: 0, limit: 1 }, identities: { used: 1, limit: 1 }, api_keys: { used: 0, limit: 10 } }
   const isFree = (user?.plan || 'free') === 'free'
   const planColor = PLAN_COLORS[user?.plan || 'free'] || '#888888'
   const proFeatures = [d.proFeature1, d.proFeature2, d.proFeature3, d.proFeature4, d.proFeature5, d.proFeature6]
@@ -201,10 +201,8 @@ export default function SettingsPage() {
               )}
             </div>
             <div className="space-y-0.5">
-              {renderProgress(d.usage_memories, usage.memories.used, usage.memories.limit, planColor)}
-              {renderProgress(d.usage_personas, usage.personas.used, usage.personas.limit, planColor)}
-              {renderProgress(d.usage_agents, usage.agents.used, usage.agents.limit, planColor)}
-              {renderProgress(d.usage_identities, usage.identities.used, usage.identities.limit, planColor)}
+              {renderProgress(d.usage_backup_sources, usage.backup_sources.used, usage.backup_sources.limit, planColor)}
+              {renderProgress(d.usage_storage, usage.storage_gb.used, usage.storage_gb.limit, planColor)}
             </div>
           </div>
 
