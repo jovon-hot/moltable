@@ -30,7 +30,7 @@ logger = logging.getLogger("moltable")
 
 # ── Issuer 配置 ─────────────────────────────────────────────
 # Issuer DID 的域名部分，从环境变量读取，默认 moltable.io
-_MOLTABLE_DOMAIN = os.getenv("MOLTABLE_DOMAIN", "moltable.io")
+_MOLTABLE_DOMAIN = os.getenv("MOLTABLE_DOMAIN", "moltable.ai")
 # Issuer 的完整 DID
 ISSUER_DID = os.getenv("MOLTABLE_ISSUER_DID", f"did:web:{_MOLTABLE_DOMAIN}:issuer")
 _KEY_FILE = os.getenv("MOLTABLE_ISSUER_KEY_FILE", os.path.join(os.path.dirname(__file__), "..", ".moltable_issuer_key"))
@@ -161,7 +161,7 @@ class IssuerService:
             "vc": {
                 "@context": [
                     "https://www.w3.org/2018/credentials/v1",
-                    "https://moltable.io/credentials/v1",
+                    f"https://{_MOLTABLE_DOMAIN}/credentials/v1",
                 ],
                 "type": [
                     "VerifiableCredential",
@@ -212,7 +212,7 @@ class IssuerService:
             "vc": {
                 "@context": [
                     "https://www.w3.org/2018/credentials/v1",
-                    "https://moltable.io/credentials/v1",
+                    f"https://{_MOLTABLE_DOMAIN}/credentials/v1",
                 ],
                 "type": [
                     "VerifiableCredential",

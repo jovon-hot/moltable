@@ -84,7 +84,7 @@ class MoltableAPI:
 
         # 生成 DID
         short_id = uuid.uuid4().hex[:8]
-        did = f"did:web:moltable.io:agent:{short_id}"
+        did = f"did:web:moltable.ai:agent:{short_id}"
         self.dids[did] = {
             "user_id": user_id,
             "public_key": public_key,
@@ -211,7 +211,7 @@ class MoltableAPI:
 
         # 生成新 DID + VC
         short_id = uuid.uuid4().hex[:8]
-        new_did = f"did:web:moltable.io:agent:{short_id}"
+        new_did = f"did:web:moltable.ai:agent:{short_id}"
         self.dids[new_did] = {
             "user_id": user_id,
             "public_key": public_key,
