@@ -344,6 +344,27 @@ def _validate_email(email: str) -> bool:
     return bool(re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email))
 
 
+# 一次性/测试邮箱域名黑名单 —— 防批量注册第一道防线。
+# 8月1日 51 个测试账号全是 test.com/t.com/example.com 这类域名。
+_DISPOSABLE_EMAIL_DOMAINS = {
+    # 明显测试占位
+    "test.com", "t.com", "example.com", "example.org", "example.net",
+    "test.org", "test.net", "localhost", "localhost.localdomain",
+    "test.moltable.ai", "moltable-test.com", "test.moltable.com",
+    # 一次性邮箱服务
+    "mailinator.com", "10minutemail.com", "guerrillamail.com",
+    "temp-mail.org", "tempmail.com", "yopmail.com", "throwawaymail.com",
+    "sharklasers.com", "dispostable.com", "maildrop.cc", "getnada.com",
+    "trashmail.com", "tempinbox.com", "moakt.com", "mailnesia.com",
+}
+
+
+def _is_disposable_email(email: str) -> bool:
+    """判断邮箱域名是否为一次性/测试域名。"""
+    domain = email.rsplit("@", 1)[-1].lower() if "@" in email else ""
+    return domain in _DISPOSABLE_EMAIL_DOMAINS
+
+
 def _hash_password(password: str) -> str:
     """使用 scrypt 进行密码哈希（抗 GPU 暴力破解）。"""
     salt = _API_KEY_PEPPER.encode()[:16]
@@ -377,6 +398,10 @@ def local_register(request: Request, body: RegisterRequest):
     # 邮箱格式验证
     if not _validate_email(email):
         raise HTTPException(400, "邮箱格式无效")
+
+    # 防批量注册：拒绝一次性/测试邮箱域名
+    if _is_disposable_email(email):
+        raise HTTPException(400, "请使用真实邮箱注册")
 
     # 检查 email 是否已存在
     existing = supabase.table("users").select("id").eq("email", email).execute()
