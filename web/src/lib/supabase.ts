@@ -59,7 +59,7 @@ export async function localRegister(email: string, password: string, name?: stri
     // FastAPI returns detail as array of objects or string — extract first human-readable message
     let msg = '注册失败'
     if (Array.isArray(data.detail) && data.detail.length > 0) {
-      msg = data.detail[0].msg || '注册失败'
+      msg = translatePydanticError(data.detail[0].msg) || '注册失败'
     } else if (typeof data.detail === 'string') {
       msg = data.detail
     }
@@ -68,6 +68,19 @@ export async function localRegister(email: string, password: string, name?: stri
   const data = await res.json()
   if (data.key) setLocalKey(data.key)
   return data
+}
+
+/** 把 FastAPI/Pydantic 校验错误转成中文可读信息 */
+function translatePydanticError(msg: string): string {
+  const m = (msg || '').toLowerCase()
+  if (m.includes('at least') && m.includes('character')) return '密码至少需要 8 个字符'
+  if (m.includes('email address') || m.includes('valid email')) return '请输入有效的邮箱地址'
+  if (m.includes('already registered') || m.includes('already exists') || m.includes('already')) return '该邮箱已注册'
+  if (m.includes('disposable') || m.includes('请使用真实邮箱')) return '请使用真实邮箱注册'
+  if (m.includes('field required') || m.includes('missing')) return '请填写必填项'
+  if (m.includes('too long') || m.includes('too short')) return '输入长度不符合要求'
+  // 已经是中文或无法识别时原样返回
+  return msg
 }
 
 /** 本地登录 */

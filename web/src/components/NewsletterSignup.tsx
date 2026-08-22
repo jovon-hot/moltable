@@ -26,7 +26,7 @@ export default function NewsletterSignup({ variant = 'card', className = '' }: N
 
     setStatus('loading')
     try {
-      const res = await fetch('/api/newsletter/subscribe', {
+      const res = await fetch('https://api.moltable.ai/api/newsletter/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, source: variant === 'inline' ? 'inline' : 'landing' }),
@@ -89,11 +89,11 @@ export default function NewsletterSignup({ variant = 'card', className = '' }: N
       style={{ background: '#14141E', border: '1px solid rgba(99,102,241,0.15)', boxShadow: '0 4px 30px rgba(67,56,202,0.08)' }}>
       <div className="text-3xl mb-3">📬</div>
       <h3 className="text-lg font-bold mb-2">
-        {isEn ? 'Get AI Identity insights weekly' : '每周获取 AI Identity 深度内容'}
+        {isEn ? 'Get agent soul & backup insights weekly' : '每周获取 Agent 灵魂资产深度内容'}
       </h3>
       <p className="text-sm mb-5 max-w-md mx-auto" style={{ color: '#85829E' }}>
         {isEn
-          ? 'Deep dives into AI identity, MCP protocol, and agent infrastructure — delivered to your inbox. No spam.'
+          ? 'Deep dives into agent soul backup, MCP protocol, and cross-framework migration — delivered to your inbox. No spam.'
           : 'Agent 灵魂资产、MCP 协议、跨框架迁移的深度内容，每周五推送。不打扰，可随时退订。'}
       </p>
       <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">

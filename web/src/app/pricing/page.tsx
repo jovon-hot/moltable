@@ -18,35 +18,35 @@ export default function PricingPage() {
 
   // Stripe 已接入(mode=paid)时显示真实 USD 价格;未接入回退到静态文案
   const paid = plansData?.mode === 'paid'
-  const fmtUsd = (amount: number) => `$${amount.toFixed(0)}/月`
-  const fmtYear = (amount: number) => `$${amount.toFixed(0)}/年`
+  const fmtUsd = (amount: number) => (lang === 'zh' ? `$${amount.toFixed(0)}/月` : `$${amount.toFixed(0)}/mo`)
+  const fmtYear = (amount: number) => (lang === 'zh' ? `$${amount.toFixed(0)}/年` : `$${amount.toFixed(0)}/yr`)
 
   const plans = [
     {
-      name: p.free.name,
+      name: plansData?.free?.name || p.free.name,
       price: paid ? '$0' : p.free.price,
       desc: p.free.desc,
       cta: p.free.cta,
       href: '/register',
-      features: pricingFeatures.free || [],
+      features: plansData?.free?.features || pricingFeatures.free || [],
     },
     {
-      name: p.pro.name,
+      name: plansData?.pro?.name || p.pro.name,
       price: paid ? fmtUsd(plansData.pro.price_monthly) : p.pro.priceMonthly,
       desc: paid ? `${plansData.trial_days} 天免费试用 · 之后 ${fmtUsd(plansData.pro.price_monthly)} / ${fmtYear(plansData.pro.price_yearly)}` : p.pro.desc,
-      cta: lang === 'zh' ? 'Pro · 30天免费体验' : 'Pro · 30-Day Free Trial',
+      cta: p.pro.cta,
       badge: p.pro.badge,
       accent: true,
       href: '/register?plan=pro',
-      features: pricingFeatures.pro || [],
+      features: plansData?.pro?.features || pricingFeatures.pro || [],
     },
     {
-      name: p.team.name,
+      name: plansData?.team?.name || p.team.name,
       price: paid ? fmtUsd(plansData.team.price_monthly) : p.team.price,
       desc: p.team.descShort || p.team.desc,
       cta: p.team.cta,
       href: 'mailto:hi@moltable.ai',
-      features: pricingFeatures.team || [],
+      features: plansData?.team?.features || pricingFeatures.team || [],
     },
   ]
 

@@ -14,38 +14,27 @@ from pydantic import BaseModel, Field
 from app_state import _is_sqlite, limiter, supabase
 from routes.auth import get_user
 from services.stripe_service import get_stripe, stripe_available
+from pricing_config import (
+    TRIAL_DAYS,
+    TRIAL_ACTIVE,
+    build_plan,
+)
 
 logger = logging.getLogger("moltable.billing")
 
 router = APIRouter(prefix="/api/billing", tags=["billing"])
 
-# ── 免费试用配置 ───────────────────────────────
-TRIAL_DAYS = int(os.getenv("MOLTABLE_TRIAL_DAYS", "30"))
-TRIAL_ACTIVE = os.getenv("MOLTABLE_TRIAL_ACTIVE", "true").lower() in ("1", "true", "yes")
-
-# ── 用户计划元数据 ───────────────────────────────
+# ── 用户计划元数据（配额来自 pricing_config，后台可配置）────────────────
 TRIAL_PLANS = {
     "pro": {
         "plan": "pro",
-        "plan_name": "Pro (限时体验)",
-        "limits": {
-            "identities": 3,
-            "personas": 10,
-            "memories": 10000,
-            "agents": 5,
-            "api_calls_per_day": 500,
-        },
+        "plan_name": "Pro",
+        "limits": build_plan("pro")["limits"],
     },
     "team": {
         "plan": "team",
-        "plan_name": "Team (限时体验)",
-        "limits": {
-            "identities": 10,
-            "personas": -1,
-            "memories": 50000,
-            "agents": -1,
-            "api_calls_per_day": 2000,
-        },
+        "plan_name": "Team",
+        "limits": build_plan("team")["limits"],
     },
 }
 
@@ -195,8 +184,14 @@ async def get_subscription(request: Request, user_id: str = Depends(get_user)):
 @router.get("/plans")
 @limiter.limit("120/minute")
 def get_plans(request: Request):
-    """返回当前可用计划。Stripe 已接入则返回真实 USD 价格，否则试用模式。"""
+    """返回当前可用计划。Stripe 已接入则返回真实 USD 价格，否则试用模式。
+
+    配额（备份源/存储）来自 pricing_config，后台环境变量可配置。
+    """
     pricing = get_pricing()
+    free_plan = build_plan("free")
+    pro_plan = build_plan("pro")
+    team_plan = build_plan("team")
     return {
         "mode": "paid" if pricing else "free_trial",
         "currency": "usd" if pricing else None,
@@ -206,44 +201,16 @@ def get_plans(request: Request):
             "name": "Free",
             "price_monthly": 0,
             "price_yearly": 0,
-            "features": [
-                "1 个 AI Agent 身份",
-                "2 个 Persona",
-                "100 条记忆",
-                "项目环境地图",
-                "MCP 工具 (8 个)",
-                "基础 API 访问 (50/天)",
-            ],
-            "limits": {
-                "identities": 1,
-                "personas": 2,
-                "memories": 100,
-                "agents": 1,
-                "api_calls_per_day": 50,
-            },
+            "features": free_plan["features"],
+            "limits": free_plan["limits"],
         },
         "pro": {
             "name": "Pro",
             "price_monthly": pricing["pro_monthly"]["amount"] / 100 if pricing else 0,
             "price_yearly": pricing["pro_yearly"]["amount"] / 100 if pricing else 0,
             "badge": f"🔥 {TRIAL_DAYS}天免费试用",
-            "features": [
-                "3 个 AI Agent 身份",
-                "10 个 Persona",
-                "10,000 条记忆",
-                "Agent 自动发现",
-                "Skills 内容同步",
-                "MCP 密钥加密存储",
-                "记忆离线缓存",
-                "完整 API 访问 (500/天)",
-            ],
-            "limits": {
-                "identities": 3,
-                "personas": 10,
-                "memories": 10000,
-                "agents": 5,
-                "api_calls_per_day": 500,
-            },
+            "features": pro_plan["features"],
+            "limits": pro_plan["limits"],
             "trial_days": TRIAL_DAYS,
             "note": None if pricing else "Stripe 接入后即可按 USD 订阅。",
         },
@@ -251,21 +218,8 @@ def get_plans(request: Request):
             "name": "Team",
             "price_monthly": pricing["team_monthly"]["amount"] / 100 if pricing else 0,
             "price_yearly": pricing["team_yearly"]["amount"] / 100 if pricing else 0,
-            "features": [
-                "10 个 AI Agent 身份",
-                "无限 Persona",
-                "50,000 条记忆",
-                "团队共享记忆库",
-                "优先支持",
-                "完整 API 访问 (2000/天)",
-            ],
-            "limits": {
-                "identities": 10,
-                "personas": -1,
-                "memories": 50000,
-                "agents": -1,
-                "api_calls_per_day": 2000,
-            },
+            "features": team_plan["features"],
+            "limits": team_plan["limits"],
             "trial_days": TRIAL_DAYS,
             "note": "联系 hi@moltable.ai 开通团队试用",
         },

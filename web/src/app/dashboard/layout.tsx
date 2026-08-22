@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient, getLocalKey, clearLocalKey } from '@/lib/supabase'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Loader2, Menu, X, LayoutDashboard, Brain, User, Settings, Eye, Bell, Search, Shield, Gift } from 'lucide-react'
+import { Loader2, Menu, X, LayoutDashboard, Brain, User, Settings, Eye, Shield, Gift } from 'lucide-react'
 import { useLang } from '@/contexts/LanguageContext'
 import { apiFetch } from '@/lib/api'
 
@@ -152,22 +152,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </Link>
         </div>
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ln-tertiary" />
-            <input
-              placeholder={d.search_placeholder}
-              className="w-44 pl-9 pr-3 py-1.5 rounded-btn bg-ln-surface text-ln-text text-xs font-body shadow-border focus:shadow-border-accent outline-none transition-all placeholder:text-ln-tertiary"
-              aria-label={t.common.search}
-            />
-          </div>
           <button
             onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')}
             className="text-xs px-2 py-1 rounded-btn border border-ln-border text-ln-tertiary hover:text-ln-secondary transition-colors duration-150"
           >
             {lang === 'zh' ? 'EN' : '中文'}
-          </button>
-          <button className="p-1.5 rounded-btn text-ln-tertiary hover:text-ln-text hover:bg-ln-hover transition-all duration-150" aria-label={d.notifications}>
-            <Bell size={16} />
           </button>
           {isDemo ? (
             <Link href="/login" className="text-xs px-3 py-1.5 rounded-btn bg-ln-accent text-white font-ui hover:bg-ln-accent-hover transition-all duration-150">
