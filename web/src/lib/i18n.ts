@@ -51,7 +51,7 @@ export const translations = {
     how: {
       title: '三步开始',
       steps: [
-        { title: '安装 CLI', desc: '一行命令安装 Moltable 备份工具，生成配置文件。' },
+        { title: '安装 CLI', desc: 'curl -sL moltable.ai/install.sh | bash —— 一行命令安装备份工具。' },
         { title: '备份灵魂', desc: 'moltable backup push —— 打包上传你的 Agent 灵魂资产。' },
         { title: '换机 / 换框架', desc: 'moltable backup pull 还原，或用你自己的 LLM 跨框架迁移。' },
       ],
@@ -77,8 +77,8 @@ export const translations = {
         cta: '联系咨询',
       },
       features: {
-        free: ['3 个备份源', '500MB 存储', '灵魂备份', '版本管理', '基础 MCP 工具'],
-        pro: ['10 个备份源', '10GB 存储', '引用同步', '跨框架迁移（即将推出）', 'DID+VC（即将推出）'],
+        free: ['10 个备份源', '2GB 存储', '灵魂备份', '版本管理', '基础 MCP 工具'],
+        pro: ['100 个备份源', '50GB 存储', '引用同步', '跨框架迁移（即将推出）', 'DID+VC（即将推出）'],
         team: ['无限备份源', '无限存储', '团队共享灵魂', '管理面板', '优先支持'],
       },
     },
@@ -378,7 +378,7 @@ export const translations = {
     how: {
       title: 'Get Started in 3 Steps',
       steps: [
-        { title: 'Install CLI', desc: 'One command installs the Moltable backup tool and generates a config file.' },
+        { title: 'Install CLI', desc: 'curl -sL moltable.ai/install.sh | bash — one command installs the backup tool.' },
         { title: 'Back Up Your Soul', desc: 'moltable backup push — pack and upload your Agent soul assets.' },
         { title: 'Switch Machine / Framework', desc: 'moltable backup pull to restore, or use your own LLM to migrate across frameworks.' },
       ],
@@ -404,8 +404,8 @@ export const translations = {
         cta: 'Contact Us',
       },
       features: {
-        free: ['3 Backup Sources', '500MB Storage', 'Soul Backup', 'Versioning', 'Basic MCP Tools'],
-        pro: ['10 Backup Sources', '10GB Storage', 'Reference Sync', 'Cross-Framework Migration (Soon)', 'DID+VC (Soon)'],
+        free: ['10 Backup Sources', '2GB Storage', 'Soul Backup', 'Versioning', 'Basic MCP Tools'],
+        pro: ['100 Backup Sources', '50GB Storage', 'Reference Sync', 'Cross-Framework Migration (Soon)', 'DID+VC (Soon)'],
         team: ['Unlimited Sources', 'Unlimited Storage', 'Team Soul Sharing', 'Admin Panel', 'Priority Support'],
       },
     },

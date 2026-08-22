@@ -395,7 +395,7 @@ const faqItems: FAQItem[] = [
   },
   {
     q: '免费版有什么限制？',
-    a: '免费版包含：3 个备份源、500MB 存储、灵魂备份、版本管理和基础 MCP 工具。Pro 版解锁 10 个备份源、10GB 存储和引用同步，后续将上线跨框架迁移与 DID+VC 可验证身份。',
+    a: '免费版包含：10 个备份源、2GB 存储、灵魂备份、版本管理和基础 MCP 工具。Pro 版解锁 100 个备份源、50GB 存储和引用同步，后续将上线跨框架迁移与 DID+VC 可验证身份。',
   },
   {
     q: '如何贡献代码？',
@@ -679,8 +679,19 @@ export default function DocsPage() {
             <h2 className="text-2xl font-heading tracking-[-0.3px] text-ln-text mb-6">安装与配置</h2>
 
             <div className="space-y-6 text-base leading-relaxed text-ln-secondary font-body">
-              <h3 className="text-lg font-ui text-ln-text">后端依赖</h3>
-              <p>Moltable 后端使用 Python + FastAPI。推荐使用 Python 3.10+：</p>
+              <h3 className="text-lg font-ui text-ln-text">安装备份 CLI（推荐）</h3>
+              <p>一行命令安装 Moltable 备份工具（纯 Python stdlib，无第三方依赖）：</p>
+              <CodeBlock label="curl 安装" code={`curl -sL https://moltable.ai/install.sh | bash`} />
+              <p>安装后重开终端（或 <code className="text-ln-accent-hover bg-ln-raised px-1.5 py-0.5 rounded text-[13px] font-mono">source ~/.zshrc</code>），即可使用：</p>
+              <CodeBlock label="moltable backup" code={`moltable backup init          # 生成配置 ~/.moltable/backup.json
+moltable backup push          # 扫描灵魂资产 → 上传快照
+moltable backup pull          # 下载快照 → 还原
+moltable backup sources       # 列出备份源`} />
+
+              <SectionSeparator />
+
+              <h3 className="text-lg font-ui text-ln-text">自托管后端（可选）</h3>
+              <p>如需自建 Moltable 后端服务，使用 Python 3.10+ FastAPI：</p>
               <CodeBlock label="pip 安装" code={`pip install -r requirements.txt
 
 # 或直接安装核心依赖:
