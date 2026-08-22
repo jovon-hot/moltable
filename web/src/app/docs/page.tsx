@@ -627,7 +627,7 @@ export default function DocsPage() {
           <section data-section="quickstart">
             <h1 className="text-3xl font-heading tracking-[-0.4px] text-ln-text mb-6">快速开始</h1>
             <div className="space-y-6 text-base leading-relaxed text-ln-secondary font-body">
-              <p className="text-ln-text font-ui text-lg">三步完成 Moltable 接入，在任何 AI 中加载你的身份。</p>
+              <p className="text-ln-text font-ui text-lg">三步备份你的 Agent 灵魂资产。</p>
 
               <div className="space-y-5">
                 <div className="flex gap-4">
@@ -649,21 +649,21 @@ export default function DocsPage() {
                 <div className="flex gap-4">
                   <span className="flex-shrink-0 w-8 h-8 rounded-full bg-ln-accent-muted text-ln-accent-hover flex items-center justify-center text-sm font-ui">3</span>
                   <div>
-                    <h3 className="font-ui text-ln-text mb-1">配置 AI Agent 并调用 auto_provision</h3>
-                    <p>将 API Key 配置到你的 AI Agent 中，首次连接时调用 <code className="text-ln-accent-hover bg-ln-raised px-1.5 py-0.5 rounded text-[13px] font-mono">auto_provision</code> 工具，AI 自动加载你的身份、Persona 和记忆。</p>
+                    <h3 className="font-ui text-ln-text mb-1">备份灵魂资产</h3>
+                    <p>运行 <code className="text-ln-accent-hover bg-ln-raised px-1.5 py-0.5 rounded text-[13px] font-mono">moltable backup push</code>，打包上传你的 SOUL、Skills、MCP 配置和记忆。详见下方「备份同步」章节。</p>
                   </div>
                 </div>
               </div>
 
               <SectionSeparator />
 
-              <h2 className="text-xl font-heading text-ln-text tracking-[-0.3px]">尝试验证：调用 auto_provision</h2>
-              <p>以下 curl 命令演示如何通过 MCP JSON-RPC 协议调用 auto_provision：</p>
+              <h2 className="text-xl font-heading text-ln-text tracking-[-0.3px]">MCP 接入：调用 auto_provision</h2>
+              <p>以下 curl 命令演示如何通过 MCP JSON-RPC 协议调用 auto_provision 加载你的完整上下文：</p>
               <CodeBlock
                 label="curl — auto_provision"
                 code={`curl -X POST ${API_HOST}/mcp \\
   -H "Content-Type: application/json" \\
-  -H "X-API-Key: YOUR_API_KEY" \\
+  -H "X-API-Key: *** \\
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"auto_provision","arguments":{}}}'`}
               />
               <p>成功时返回用户画像、行为规则、Persona 列表、活跃项目等完整上下文。</p>

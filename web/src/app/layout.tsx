@@ -108,12 +108,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        {/* Umami Analytics */}
-        <script
-          defer
-          src="https://umami.moltable.ai/script.js"
-          data-website-id={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID || 'moltable'}
-        />
       </head>
       <body className="antialiased bg-ln-bg text-ln-text">
         <LanguageProvider>

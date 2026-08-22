@@ -47,8 +47,7 @@ export default function LandingPage() {
 
         <h1 className="relative text-5xl md:text-6xl font-extrabold mb-5 leading-tight" 
           style={{ letterSpacing: '-1.5px', fontWeight: 800 }}>
-          <span style={{ color: '#F5F4F8' }}>AI meets </span>
-          <span style={{ color: '#FB6B4B' }}>Identity</span>
+          {t.hero.title}
         </h1>
         <p className="relative text-lg mb-2" style={{ color: '#A8A5B8' }}>
           {t.hero.subtitle}

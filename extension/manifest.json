@@ -17,7 +17,7 @@
     "http://localhost:8642/*",
     "https://moltable.ai/*",
     "https://www.moltable.ai/*",
-    "https://moltable-production-15ad.up.railway.app/*"
+    "https://api.moltable.ai/*"
   ],
   "action": {
     "default_popup": "popup.html",

@@ -1,22 +1,22 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'AI Agent 记忆与身份平台对比 2026：Moltable vs mem0 vs Zep',
+  title: 'Agent 灵魂资产备份平台对比 2026：Moltable vs mem0 vs Zep',
   description:
-    '从架构、功能、定价、生态、开源五个维度全面对比 Moltable、mem0、Zep 三大 AI Agent 记忆/身份基础设施平台。帮助开发者和团队做出最佳技术选型。',
+    '从定位、功能、定价、架构四个维度对比 Moltable（灵魂资产备份）与 mem0、Zep（记忆层）。帮助开发者和团队理解两者的本质区别。',
   keywords: [
     'Moltable vs mem0',
-    'AI Agent 记忆对比',
+    'Agent soul backup',
     'mem0 alternative',
     'Zep alternative',
-    'AI Identity 平台',
-    'Agent memory comparison',
+    '灵魂资产备份',
+    'Agent 备份对比',
     'MCP 工具对比',
   ],
   openGraph: {
-    title: 'AI Agent 记忆与身份平台对比 2026：Moltable vs mem0 vs Zep',
+    title: 'Agent 灵魂资产备份平台对比 2026：Moltable vs mem0 vs Zep',
     description:
-      '从架构、功能、定价、生态、开源五个维度全面对比三大平台。含详细功能对比表、架构分析、定价对比和选型建议。',
+      'Moltable 做灵魂资产备份，mem0/Zep 做记忆层。含功能对比表、架构分析、定价对比和选型建议。',
     url: 'https://www.moltable.ai/compare',
     siteName: 'Moltable.ai',
     locale: 'zh_CN',
@@ -32,9 +32,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AI Agent 记忆与身份平台对比 2026',
+    title: 'Agent 灵魂资产备份平台对比 2026',
     description:
-      'Moltable vs mem0 vs Zep — 全面对比三大 AI Agent 基础设施平台',
+      'Moltable vs mem0 vs Zep — 灵魂资产备份 vs 记忆层',
     images: ['/logo-horizontal.svg'],
   },
   alternates: {

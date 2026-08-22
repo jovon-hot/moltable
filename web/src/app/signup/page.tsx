@@ -15,24 +15,24 @@ function SignupContent() {
   const benefits = [
     {
       icon: Gift,
-      title: zh ? '额外 30 天 Pro 试用' : 'Bonus 30-Day Pro Trial',
+      title: zh ? '引用同步' : 'Reference Sync',
       desc: zh
-        ? '通过邀请链接注册，在 30 天试用的基础上额外获得 30 天 Pro 版全部功能'
-        : 'Sign up via invite link and get an extra 30 days of Pro features on top of the 30-day trial',
+        ? '你引用的知识库、内容来源一并备份，换机完整还原工作环境'
+        : 'Knowledge bases and content sources you reference are backed up too',
     },
     {
       icon: Zap,
-      title: zh ? '3 分钟恢复 AI 环境' : 'Restore AI Environment in 3 Min',
+      title: zh ? '一条命令备份' : 'One-Command Backup',
       desc: zh
-        ? '换电脑、换设备都不怕，Moltable 同步你的 AI 记忆与偏好'
-        : 'Switch devices freely — Moltable syncs your AI memory and preferences across all agents',
+        ? 'moltable backup push —— 打包上传你的 SOUL、Skills、MCP 配置和记忆'
+        : 'moltable backup push — pack and upload your SOUL, Skills, MCP configs, and memories',
     },
     {
       icon: Shield,
-      title: zh ? '加密存储，数据自主' : 'Encrypted & Self-Sovereign',
+      title: zh ? '版本管理，可回滚' : 'Versioned & Rollback',
       desc: zh
-        ? '你的记忆数据加密存储，随时可导出或删除，完全由你掌控'
-        : 'Your memory data is encrypted at rest, exportable anytime, fully under your control',
+        ? '每个备份源独立版本库，快照 + 版本号，改坏了随时回滚'
+        : 'Each source has its own version history — roll back to any point anytime',
     },
   ]
 
@@ -53,18 +53,18 @@ function SignupContent() {
         )}
 
         <h1 className="text-3xl md:text-4xl font-extrabold mb-3 leading-tight" style={{ letterSpacing: '-1px' }}>
-          {zh ? '你的 AI 终于' : 'Your AI finally'}{' '}
-          <span style={{ color: '#FB6B4B' }}>{zh ? '认识你' : 'knows you'}</span>
+          {zh ? '换 Agent，' : 'Switch agents, '}
+          <span style={{ color: '#FB6B4B' }}>{zh ? '不换灵魂' : 'keep your soul'}</span>
         </h1>
         <p className="text-base mb-2" style={{ color: '#A8A5B8' }}>
           {zh
-            ? '一个账户，所有 AI Agent 共享记忆与偏好'
-            : 'One account, all AI agents share your memory and preferences'}
+            ? '备份你的 Agent 灵魂资产，换框架、换电脑都不丢失'
+            : 'Back up your agent soul — never lose your tuning when you switch frameworks or machines'}
         </p>
         <p className="text-sm mb-10" style={{ color: '#85829E' }}>
           {zh
-            ? '支持 Hermes、Claude、ChatGPT、Cursor 及所有 MCP 兼容 Agent'
-            : 'Works with Hermes, Claude, ChatGPT, Cursor, and all MCP-compatible agents'}
+            ? '支持 Hermes、OpenClaw、Claude、Codex 及所有 MCP 兼容 Agent'
+            : 'Works with Hermes, OpenClaw, Claude, Codex, and all MCP-compatible agents'}
         </p>
 
         {/* CTA */}
@@ -77,7 +77,7 @@ function SignupContent() {
         </Link>
 
         <p className="text-xs mb-12" style={{ color: '#6E6B80' }}>
-          {zh ? '无需信用卡 · 30 天免费试用' : 'No credit card · 30-day free trial'}
+          {zh ? '无需信用卡 · 免费开始' : 'No credit card · Start free'}
         </p>
 
         {/* Benefits */}
@@ -97,14 +97,8 @@ function SignupContent() {
         {/* Social proof */}
         <div className="mt-10 pt-8" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
           <p className="text-xs mb-3" style={{ color: '#6E6B80' }}>
-            {zh ? '已有 1,000+ 开发者和 AI 用户加入' : 'Trusted by 1,000+ developers and AI users'}
+            {zh ? '开源 MIT · 你的数据永远属于你' : 'Open source MIT · your data always belongs to you'}
           </p>
-          <div className="flex items-center justify-center gap-1">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <span key={i} style={{ color: '#6366F1', fontSize: 12 }}>★</span>
-            ))}
-            <span className="text-xs ml-1" style={{ color: '#85829E' }}>4.9</span>
-          </div>
         </div>
       </div>
     </div>

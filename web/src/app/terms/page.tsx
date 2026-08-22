@@ -17,8 +17,8 @@ export default function TermsPage() {
             {lang === 'zh' ? '1. 服务描述' : '1. Service Description'}
           </h2>
           <p>{lang === 'zh'
-            ? 'Moltable 是一个 AI 身份层服务（DID+VC），提供跨平台 AI 身份同步、多 Persona 管理、渐进记忆和 Agent 自动配置功能。'
-            : 'Moltable is an AI identity layer service (DID+VC) providing cross-platform AI identity sync, multi-Persona management, progressive memory, and Agent auto-provisioning.'
+            ? 'Moltable 是一个 Agent 灵魂资产版本仓库，提供灵魂资产备份（SOUL、Skills、MCP 配置、记忆）、版本管理和跨框架迁移功能。'
+            : 'Moltable is an Agent soul asset repository providing soul asset backup (SOUL, Skills, MCP configs, memories), versioning, and cross-framework migration.'
           }</p>
         </section>
 
@@ -37,8 +37,8 @@ export default function TermsPage() {
             {lang === 'zh' ? '3. 使用限制' : '3. Usage Limits'}
           </h2>
           <p>{lang === 'zh'
-            ? '各套餐有明确的使用配额（Free: 100 条记忆, Pro: 10,000 条, Team: 50,000 条）。超出配额可能导致服务降级。禁止滥用 API、反向工程或非法用途。'
-            : 'Each plan has defined usage quotas (Free: 100 memories, Pro: 10,000, Team: 50,000). Exceeding quotas may result in service degradation. API abuse, reverse engineering, or illegal use is prohibited.'
+            ? '各套餐有明确的使用配额（Free: 3 个备份源 + 500MB 存储, Pro: 10 个备份源 + 10GB 存储）。超出配额可能导致服务降级。禁止滥用 API、反向工程或非法用途。'
+            : 'Each plan has defined usage quotas (Free: 3 backup sources + 500MB storage, Pro: 10 sources + 10GB). Exceeding quotas may result in service degradation. API abuse, reverse engineering, or illegal use is prohibited.'
           }</p>
         </section>
 
@@ -57,8 +57,8 @@ export default function TermsPage() {
             {lang === 'zh' ? '5. 知识产权' : '5. Intellectual Property'}
           </h2>
           <p>{lang === 'zh'
-            ? '您保留您创建的所有数据（Persona、记忆）的完全所有权。Moltable 平台代码以 MIT 协议开源。'
-            : 'You retain full ownership of all data you create (Personas, memories). The Moltable platform code is open source under the MIT license.'
+            ? '您保留您创建的所有数据（灵魂资产、备份）的完全所有权。Moltable 平台代码以 MIT 协议开源。'
+            : 'You retain full ownership of all data you create (soul assets, backups). The Moltable platform code is open source under the MIT license.'
           }</p>
         </section>
 

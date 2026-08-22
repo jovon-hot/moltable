@@ -28,7 +28,7 @@ export default function SocialProof() {
 
       // Fetch GitHub stars
       try {
-        const ghRes = await fetch('https://api.github.com/repos/moltable/moltable', {
+        const ghRes = await fetch('https://api.github.com/repos/jovon-hot/moltable', {
           headers: { Accept: 'application/vnd.github.v3+json' },
         })
         if (ghRes.ok) {
