@@ -1,20 +1,16 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useToast } from '@/contexts/ToastContext'
 import { useLang } from '@/contexts/LanguageContext'
-import { apiFetch, activateTrial } from '@/lib/api'
+import { apiFetch } from '@/lib/api'
 import Link from 'next/link'
-import { Loader2, Brain, User, ArrowRight, Zap, Sparkles, Clock, Layers, AlertTriangle, RefreshCw } from 'lucide-react'
+import { Loader2, Brain, User, ArrowRight, Zap, Clock, Layers, AlertTriangle, RefreshCw } from 'lucide-react'
 
 interface PlanInfo {
-  plan: 'free' | 'pro' | 'trialing' | 'expired'
-  trial_end?: string
-  trial_days_left?: number
+  plan: 'free' | 'pro'
 }
 
 export default function DashboardPage() {
-  const { toast } = useToast()
   const { t, lang } = useLang()
   const d = t.dashboard as any
   const ui = t.dashboard_ui as any
@@ -22,8 +18,6 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
   const [plan, setPlan] = useState<PlanInfo>({ plan: 'free' })
-  const [activating, setActivating] = useState(false)
-  const [showBanner, setShowBanner] = useState(true)
 
   useEffect(() => {
     loadData()
@@ -55,40 +49,13 @@ export default function DashboardPage() {
       // Parse plan info from user
       if (userInfo) {
         const userPlan = userInfo.plan || 'free'
-        setPlan({
-          plan: userPlan as PlanInfo['plan'],
-          trial_end: userInfo.trial_end,
-          trial_days_left: userInfo.trial_days_left,
-        })
-        if (userPlan === 'pro' || userPlan === 'trialing') {
-          setShowBanner(false)
-        }
+        setPlan({ plan: userPlan as PlanInfo['plan'] })
       }
     } catch (err: any) {
       setError(true)
       setStats({ total_memories: 0, total_personas: 0, total_projects: 0 })
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleActivate = async () => {
-    setActivating(true)
-    try {
-      const result = await activateTrial('pro')
-      toast(ui.trialActivated as string, 'success')
-      setPlan({
-        plan: 'trialing',
-        trial_end: result.expires_at,
-        trial_days_left: 30,
-      })
-      setShowBanner(false)
-      // Reload stats to refresh
-      await loadData()
-    } catch (err: any) {
-      toast(err?.message || 'Activation failed', 'error')
-    } finally {
-      setActivating(false)
     }
   }
 
@@ -99,7 +66,7 @@ export default function DashboardPage() {
   ]
 
   const planCard = {
-    icon: plan.plan === 'free' ? Clock : plan.plan === 'trialing' ? Sparkles : Zap,
+    icon: plan.plan === 'free' ? Clock : Zap,
     color: plan.plan === 'free' ? '#888888' : '#4338CA',
   }
 
@@ -107,74 +74,18 @@ export default function DashboardPage() {
     switch (plan.plan) {
       case 'free': return ui.planFree as string
       case 'pro': return ui.planPro as string
-      case 'trialing': return ui.planTrialing as string
-      case 'expired': return ui.planExpired as string
       default: return plan.plan
     }
   }
 
   const getPlanSubLabel = (): string => {
-    if (plan.plan === 'trialing' && plan.trial_days_left !== undefined) {
-      return (ui.trialDaysLeft as string).replace('{days}', String(plan.trial_days_left))
-    }
-    if (plan.plan === 'free') return ui.activatePro as string
+    if (plan.plan === 'free') return ui.upgradePro as string
     if (plan.plan === 'pro') return ui.planPro as string
     return ''
   }
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-10">
-      {/* Trial Activation Banner */}
-      {!error && !loading && plan.plan === 'free' && showBanner && (
-        <div className="mb-8 p-5 rounded-panel bg-ln-surface shadow-accent-glow border border-ln-accent/30 animate-in">
-          <div className="flex items-start gap-4">
-            <div className="flex-shrink-0 mt-0.5 w-10 h-10 rounded-full bg-gradient-to-br from-ln-accent to-ln-accent-hover flex items-center justify-center">
-              <Sparkles size={20} className="text-white" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-base font-heading text-ln-text mb-1">{ui.trialBanner as string}</h3>
-              <p className="text-sm text-ln-secondary mb-3 font-body">
-                {ui.trialBannerSub as string}
-              </p>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleActivate}
-                  disabled={activating}
-                  className="inline-flex items-center gap-2 px-5 py-2 rounded-btn text-sm font-ui bg-ln-accent text-white hover:bg-ln-accent-hover transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {activating ? <Loader2 size={14} className="animate-spin" /> : <Zap size={14} />}
-                  {activating ? (ui.trialActivating as string) : (ui.trialBannerCta as string)}
-                </button>
-                <button
-                  onClick={() => setShowBanner(false)}
-                  className="text-xs text-ln-tertiary hover:text-ln-secondary transition-colors font-body"
-                >
-                  {ui.cancelBtn as string}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Active trial banner */}
-      {!error && !loading && plan.plan === 'trialing' && plan.trial_days_left !== undefined && (
-        <div className="mb-8 px-4 py-3 rounded-card bg-ln-accent-muted text-ln-accent-hover text-sm font-body shadow-border-accent animate-in flex items-center gap-2">
-          <Sparkles size={16} />
-          <span>{ui.trialActive as string}</span>
-          <span className="text-ln-secondary">·</span>
-          <span>{(ui.trialDaysLeft as string).replace('{days}', String(plan.trial_days_left))}</span>
-        </div>
-      )}
-
-      {/* Expired trial banner */}
-      {!error && !loading && plan.plan === 'expired' && (
-        <div className="mb-8 px-4 py-3 rounded-card bg-ln-warning/10 text-ln-warning text-sm font-body shadow-[0_0_0_1px_rgba(234,179,8,0.2)] animate-in flex items-center gap-2">
-          <Clock size={16} />
-          <span>{ui.trialExpired as string}</span>
-        </div>
-      )}
-
       {/* Error state */}
       {error && (
         <div className="mb-8 p-5 rounded-card bg-ln-warning/10 shadow-[0_0_0_1px_rgba(234,179,8,0.2)]">
@@ -202,7 +113,7 @@ export default function DashboardPage() {
           {lang === 'zh' ? '欢迎回来' : 'Welcome Back'}
         </h1>
         <p className="text-sm text-ln-tertiary font-body">
-          {lang === 'zh' ? '管理你的 AI 身份、记忆和 Persona' : 'Manage your AI identity, memories and personas'}
+          {lang === 'zh' ? '管理你的 Agent 灵魂资产与备份源' : 'Manage your Agent soul assets and backup sources'}
         </p>
       </div>
 

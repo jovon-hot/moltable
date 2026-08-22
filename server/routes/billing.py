@@ -1,12 +1,8 @@
-"""Billing routes — free trial activation (Stripe deferred).
-
-激活即获得 30 天 Pro 体验，无需支付信息。
-后续收费功能待 Stripe 账户开通后再接入。
-"""
+"""Billing routes — Stripe subscriptions (直接付费,无免费试用)."""
 
 import logging
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
@@ -15,28 +11,12 @@ from app_state import _is_sqlite, limiter, supabase
 from routes.auth import get_user
 from services.stripe_service import get_stripe, stripe_available
 from pricing_config import (
-    TRIAL_DAYS,
-    TRIAL_ACTIVE,
     build_plan,
 )
 
 logger = logging.getLogger("moltable.billing")
 
 router = APIRouter(prefix="/api/billing", tags=["billing"])
-
-# ── 用户计划元数据（配额来自 pricing_config，后台可配置）────────────────
-TRIAL_PLANS = {
-    "pro": {
-        "plan": "pro",
-        "plan_name": "Pro",
-        "limits": build_plan("pro")["limits"],
-    },
-    "team": {
-        "plan": "team",
-        "plan_name": "Team",
-        "limits": build_plan("team")["limits"],
-    },
-}
 
 # ── Stripe Price ID 映射（可用环境变量覆盖）────────────────────
 PRICE_IDS = {
@@ -84,72 +64,6 @@ def get_pricing():
         return None
 
 
-class ActivateRequest(BaseModel):
-    plan: str = Field(default="pro", pattern=r"^(pro|team)$")
-    accept_terms: bool = Field(default=True)
-
-
-# ═══════════════════════════════════════════════════
-#  激活免费试用
-# ═══════════════════════════════════════════════════
-
-
-@router.post("/activate")
-@limiter.limit("10/minute")
-async def activate_trial(request: Request, body: ActivateRequest, user_id: str = Depends(get_user)):
-    """激活 30 天 Pro/Team 免费试用。一次调用，即时生效。"""
-    if not TRIAL_ACTIVE:
-        raise HTTPException(503, "Trial activation is currently disabled")
-
-    plan_info = TRIAL_PLANS.get(body.plan, TRIAL_PLANS["pro"])
-    now = datetime.now(timezone.utc)
-    expires_at = now + timedelta(days=TRIAL_DAYS)
-
-    if supabase is not None:
-        # 拒绝重复激活：已有生效中的试用（trial_activated_at 存在且 expires_at 在未来）
-        try:
-            existing = (
-                supabase.table("users")
-                .select("trial_activated_at", "expires_at")
-                .eq("id", user_id)
-                .execute()
-            )
-            row = existing.data[0] if existing.data else {}
-            if row.get("trial_activated_at") and row.get("expires_at"):
-                existing_exp = row["expires_at"]
-                if isinstance(existing_exp, str):
-                    existing_exp = datetime.fromisoformat(existing_exp.replace("Z", "+00:00"))
-                if existing_exp > now:
-                    raise HTTPException(409, "Trial already active — cannot re-activate")
-        except HTTPException:
-            raise
-        except Exception as e:
-            logger.warning("Trial status check failed (non-fatal): %s", e)
-
-        try:
-            # 更新 users.plan + trial_activated_at + expires_at
-            supabase.table("users").update(
-                {
-                    "plan": plan_info["plan"],
-                    "trial_activated_at": now.isoformat(),
-                    "expires_at": expires_at.isoformat(),
-                }
-            ).eq("id", user_id).execute()
-            logger.info("Trial activated: user=%s plan=%s", user_id, body.plan)
-        except Exception as e:
-            logger.warning("Trial activation DB update failed (non-fatal): %s", e)
-
-    return {
-        "activated": True,
-        "plan": plan_info["plan"],
-        "plan_name": plan_info["plan_name"],
-        "trial_days": TRIAL_DAYS,
-        "expires_at": expires_at.isoformat(),
-        "limits": plan_info["limits"],
-        "message": f"Pro 体验已激活，{TRIAL_DAYS} 天有效。尽情使用！",
-    }
-
-
 # ═══════════════════════════════════════════════════
 #  订阅状态查询
 # ═══════════════════════════════════════════════════
@@ -158,7 +72,7 @@ async def activate_trial(request: Request, body: ActivateRequest, user_id: str =
 @router.get("/subscription")
 @limiter.limit("60/minute")
 async def get_subscription(request: Request, user_id: str = Depends(get_user)):
-    """返回当前用户的订阅状态（含试用过期时间）"""
+    """返回当前用户的订阅状态"""
     if supabase is None or _is_sqlite:
         return {"plan": "free", "status": "active"}
 
@@ -168,8 +82,8 @@ async def get_subscription(request: Request, user_id: str = Depends(get_user)):
             plan = resp.data.get("plan", "free")
             return {
                 "plan": plan,
-                "plan_name": "Pro 体验中" if plan == "pro" else "Free",
-                "status": "trialing" if plan == "pro" else "active",
+                "plan_name": "Pro" if plan == "pro" else "Free",
+                "status": "active",
             }
     except Exception:
         pass
@@ -184,7 +98,7 @@ async def get_subscription(request: Request, user_id: str = Depends(get_user)):
 @router.get("/plans")
 @limiter.limit("120/minute")
 def get_plans(request: Request):
-    """返回当前可用计划。Stripe 已接入则返回真实 USD 价格，否则试用模式。
+    """返回当前可用计划。Stripe 已接入则返回真实 USD 价格，否则订阅暂不可用。
 
     配额（备份源/存储）来自 pricing_config，后台环境变量可配置。
     """
@@ -193,10 +107,9 @@ def get_plans(request: Request):
     pro_plan = build_plan("pro")
     team_plan = build_plan("team")
     return {
-        "mode": "paid" if pricing else "free_trial",
+        "mode": "paid" if pricing else "unavailable",
         "currency": "usd" if pricing else None,
-        "trial_days": TRIAL_DAYS,
-        "message": None if pricing else "Stripe 收款账户暂未开通。当前所有 Pro 功能限时免费体验。",
+        "message": None if pricing else "Stripe 收款账户暂未开通。Pro 订阅暂不可用。",
         "free": {
             "name": "Free",
             "price_monthly": 0,
@@ -208,10 +121,9 @@ def get_plans(request: Request):
             "name": "Pro",
             "price_monthly": pricing["pro_monthly"]["amount"] / 100 if pricing else 0,
             "price_yearly": pricing["pro_yearly"]["amount"] / 100 if pricing else 0,
-            "badge": None if pricing else f"🔥 {TRIAL_DAYS}天免费试用",
+            "badge": None,
             "features": pro_plan["features"],
             "limits": pro_plan["limits"],
-            "trial_days": TRIAL_DAYS,
             "note": None if pricing else "Stripe 接入后即可按 USD 订阅。",
         },
         "team": {
@@ -220,8 +132,7 @@ def get_plans(request: Request):
             "price_yearly": pricing["team_yearly"]["amount"] / 100 if pricing else 0,
             "features": team_plan["features"],
             "limits": team_plan["limits"],
-            "trial_days": TRIAL_DAYS,
-            "note": "联系 hi@moltable.ai 开通团队试用",
+            "note": "联系 hi@moltable.ai 开通团队订阅",
         },
     }
 

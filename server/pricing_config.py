@@ -10,8 +10,7 @@
   MOLTABLE_PRO_STORAGE_GB    Pro 存储空间 GB（默认 50）
   MOLTABLE_TEAM_SOURCES      Team 备份源数量（默认 -1 = 无限）
   MOLTABLE_TEAM_STORAGE_GB   Team 存储空间 GB（默认 -1 = 无限）
-  MOLTABLE_TRIAL_DAYS        试用天数（默认 30）
-  MOLTABLE_TRIAL_ACTIVE      是否开启试用（默认 true）
+  MOLTABLE_TRIAL_DAYS        试用天数（默认 30，仅历史清理用）
 """
 
 import os
@@ -32,9 +31,8 @@ PRO_STORAGE_GB = _int("MOLTABLE_PRO_STORAGE_GB", 50)
 TEAM_SOURCES = _int("MOLTABLE_TEAM_SOURCES", -1)   # -1 = 无限
 TEAM_STORAGE_GB = _int("MOLTABLE_TEAM_STORAGE_GB", -1)
 
-# ── 试用（后台可配置）──────────────────────────────
+# ── 试用天数（仅 billing_cron 历史清理用）──────────────
 TRIAL_DAYS = _int("MOLTABLE_TRIAL_DAYS", 30)
-TRIAL_ACTIVE = os.getenv("MOLTABLE_TRIAL_ACTIVE", "true").lower() in ("1", "true", "yes")
 
 
 def _fmt_sources(n: int) -> str:

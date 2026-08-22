@@ -189,7 +189,7 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <p className="text-sm" style={{ fontWeight: 590, color: '#ffffff' }}>{user?.plan_name || d.freePlan}</p>
-                  <p className="text-xs" style={{ color: '#888888' }}>{isFree ? d.onTrial : d.proPlan}</p>
+                  <p className="text-xs" style={{ color: '#888888' }}>{isFree ? d.subscriptionUpgradeDesc : d.proPlan}</p>
                 </div>
               </div>
               {isFree && (
@@ -370,7 +370,7 @@ export default function SettingsPage() {
                       <p className="text-xs" style={{ color: '#888888' }}>
                         {isFree
                           ? d.subscriptionUpgradeDesc
-                          : (sub?.status === 'trialing' ? d.trialActive : d.proPlan)}
+                          : d.proPlan}
                       </p>
                     </div>
                   </div>

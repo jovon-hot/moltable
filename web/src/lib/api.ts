@@ -45,25 +45,6 @@ export async function apiFetch<T = any>(
   return res.json()
 }
 
-export async function activateTrial(plan: 'pro' | 'team' = 'pro'): Promise<{activated: boolean; message: string; expires_at?: string}> {
-  const token = await getToken()
-  if (!token) throw new Error('Login required to activate trial')
-
-  const res = await fetch(`${API_BASE}/api/billing/activate`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-API-Key': token,
-    },
-    body: JSON.stringify({ plan, accept_terms: true }),
-  })
-  if (!res.ok) {
-    const text = await res.text().catch(() => '')
-    throw new Error(`Activation ${res.status}: ${text}`)
-  }
-  return res.json()
-}
-
 export async function createCheckout(plan: 'pro' | 'team' = 'pro', period: 'monthly' | 'yearly' = 'monthly'): Promise<{url: string}> {
   const token = await getToken()
   if (!token) throw new Error('Login required to subscribe')
@@ -111,13 +92,12 @@ export async function getSubscription(): Promise<{ plan: string; plan_name?: str
 
 // ── 定价(公开端点,无需认证)──────────────
 export interface PlansResponse {
-  mode: 'paid' | 'free_trial'
+  mode: 'paid' | 'unavailable'
   currency: string | null
-  trial_days: number
   message: string | null
   free: { name: string; price_monthly: number; price_yearly: number; features: string[]; limits: Record<string, number> }
-  pro: { name: string; price_monthly: number; price_yearly: number; badge?: string; features: string[]; limits: Record<string, number>; trial_days?: number; note?: string | null }
-  team: { name: string; price_monthly: number; price_yearly: number; features: string[]; limits: Record<string, number>; trial_days?: number; note?: string | null }
+  pro: { name: string; price_monthly: number; price_yearly: number; badge?: string; features: string[]; limits: Record<string, number>; note?: string | null }
+  team: { name: string; price_monthly: number; price_yearly: number; features: string[]; limits: Record<string, number>; note?: string | null }
 }
 
 export async function getPlans(): Promise<PlansResponse> {

@@ -581,8 +581,8 @@ class TestSubscriptionEndpoint:
         assert resp.status_code == 200
         assert resp.json() == {"plan": "free", "status": "active"}
 
-    def test_subscription_pro_trialing(self, client):
-        """plan=pro → status=trialing。"""
+    def test_subscription_pro_active(self, client):
+        """plan=pro → status=active。"""
         mock_supabase = MagicMock()
         resp_obj = MagicMock()
         resp_obj.data = {"plan": "pro"}
@@ -592,7 +592,7 @@ class TestSubscriptionEndpoint:
             resp = client.get("/api/billing/subscription")
         assert resp.status_code == 200
         assert resp.json()["plan"] == "pro"
-        assert resp.json()["status"] == "trialing"
+        assert resp.json()["status"] == "active"
 
     def test_subscription_supabase_error_falls_back_free(self, client):
         """Supabase 查询异常 → 兜底 free/active,不 500。"""

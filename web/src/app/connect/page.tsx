@@ -26,18 +26,6 @@ export default function OnboardingPage() {
   const isNewUser = searchParams.get('new') === 'true'
   const planFromUrl = searchParams.get('plan') || ''
 
-  // ── Auto-activate trial for Pro signups ──
-  const activateTrialIfPro = async (key: string) => {
-    if (planFromUrl !== 'pro') return
-    try {
-      await fetch(`${API_BASE}/api/billing/activate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-API-Key': key },
-        body: JSON.stringify({ plan: 'pro', accept_terms: true }),
-      })
-    } catch { /* silent */ }
-  }
-
   // ── API Key validation (also callable from useEffect) ──
   const validateKeyStatic = useCallback(async (key: string) => {
     const controller = new AbortController()
@@ -65,7 +53,6 @@ export default function OnboardingPage() {
     if (key) {
       setApiKey(key)
       validateKeyStatic(key)
-      activateTrialIfPro(key)
       // Clean up after read — one-time use
       if (sessionKey) sessionStorage.removeItem('moltable_new_key')
     }
