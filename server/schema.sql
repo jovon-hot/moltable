@@ -20,6 +20,8 @@ create table users (
     expires_at            timestamptz,
     stripe_customer_id     text,
     stripe_subscription_id text,
+    email_verified         boolean default false,
+    email_verify_token     text,
     created_at    timestamptz default now(),
     updated_at    timestamptz default now()
 );

@@ -224,32 +224,14 @@ Content-Type: application/json`
               <Sparkles size={22} style={{ color: '#4338CA', marginTop: 2 }} />
               <div>
                 <h2 className="text-lg mb-1" style={{ fontWeight: 600, color: '#ffffff' }}>
-                  {lang === 'zh' ? '🎉 注册成功！你的 AI 即将认识你' : '🎉 Registered! Your AI Is About to Know You'}
+                  {lang === 'zh' ? '🎉 注册成功！请验证你的邮箱' : '🎉 Registered! Please Verify Your Email'}
                 </h2>
                 <p className="text-sm mb-0" style={{ color: '#888888', lineHeight: 1.6 }}>
                   {lang === 'zh'
-                    ? '下方是你的专属 API Key，已自动填入。复制配置 → 粘贴到 AI 工具 → 你的 AI 就能获取你的偏好和记忆。全程 30 秒。'
-                    : 'Your API key is filled in below. Copy the config → paste into your AI tool → your AI will know your preferences and memories. Takes 30 seconds.'}
+                    ? '我们已向你的邮箱发送验证链接，请点击确认。下方是你的专属 API Key，可立即开始备份你的 Agent 灵魂。'
+                    : 'We sent a verification link to your email — click it to confirm. Your API key is below, ready to start backing up your Agent soul.'}
                 </p>
               </div>
-            </div>
-          </div>
-        )}
-        {/* Pro trial banner */}
-        {planFromUrl === 'pro' && isNewUser && (
-          <div className="mb-8 p-4 rounded-xl" style={{ background: 'linear-gradient(135deg, rgba(52,211,153,0.1), rgba(52,211,153,0.02))', boxShadow: '0 0 0 1px rgba(52,211,153,0.25)' }}>
-            <div className="flex items-center gap-2">
-              <Zap size={18} style={{ color: '#34d399' }} />
-              <span className="text-sm" style={{ color: '#34d399', fontWeight: 510 }}>
-                {lang === 'zh' ? '✅ Pro 30天试用已激活 — 全部功能已解锁' : '✅ Pro 30-Day Trial Activated — All Features Unlocked'}
-              </span>
-              <a
-                href={`/share?key=${apiKey}`}
-                className="ml-auto text-xs px-3 py-1 rounded-md transition-all"
-                style={{ background: 'rgba(52,211,153,0.15)', color: '#34d399', fontWeight: 510, textDecoration: 'none' }}
-              >
-                🔥 {lang === 'zh' ? '炫耀一下' : 'Share'}
-              </a>
             </div>
           </div>
         )}

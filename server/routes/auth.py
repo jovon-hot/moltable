@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
 from app_state import limiter, supabase
@@ -239,7 +240,7 @@ def get_me(request: Request, user_id: str = Depends(get_user)):
     try:
         resp = (
             supabase.table("users")
-            .select("id,email,name,timezone,language,plan,created_at")
+            .select("id,email,name,timezone,language,plan,created_at,email_verified")
             .eq("id", user_id)
             .execute()
         )
@@ -410,6 +411,7 @@ def local_register(request: Request, body: RegisterRequest):
 
     user_id = str(_uuid.uuid4())
     pw_hash = _hash_password(body.password)
+    verify_token = secrets.token_urlsafe(32)
 
     # 创建用户 — email UNIQUE 约束在并发场景提供原子性保证
     try:
@@ -420,6 +422,8 @@ def local_register(request: Request, body: RegisterRequest):
                 "name": name,
                 "password_hash": pw_hash,
                 "plan": "free",
+                "email_verified": False,
+                "email_verify_token": verify_token,
             }
         ).execute()
     except Exception as e:
@@ -446,11 +450,11 @@ def local_register(request: Request, body: RegisterRequest):
 
     logging.getLogger("moltable").info("新用户注册: %s (%s)", email, user_id)
 
-    # 发送欢迎邮件（如果配置了 Resend API Key）
+    # 发送邮箱验证邮件（如果配置了 Resend API Key）
     try:
-        from email_utils import send_welcome_email
+        from email_utils import send_verification_email
 
-        send_welcome_email(email, raw_key)
+        send_verification_email(email, verify_token)
     except Exception:
         pass
 
@@ -459,8 +463,61 @@ def local_register(request: Request, body: RegisterRequest):
         "key": raw_key,
         "email": email,
         "name": name,
-        "message": "注册成功！请保存你的 API Key，它不会再次显示。",
+        "email_verified": False,
+        "message": "注册成功！我们已发送验证邮件，请点击邮件中的链接确认邮箱。",
     }
+
+
+def _verify_page(success: bool, title: str, sub: str) -> str:
+    color = "#22c55e" if success else "#ef4444"
+    icon = "✅" if success else "❌"
+    return f"""<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>{title}</title></head>
+<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#08090a;color:#f7f8f8;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;">
+<div style="max-width:420px;background:#0f1011;border-radius:12px;padding:40px 32px;box-shadow:0 0 0 1px rgba(255,255,255,0.06);text-align:center;">
+  <div style="font-size:48px;margin-bottom:16px;">{icon}</div>
+  <h1 style="font-size:20px;font-weight:600;margin:0 0 8px;">{title}</h1>
+  <p style="font-size:14px;line-height:1.7;color:#8a8f98;margin:0 0 24px;">{sub}</p>
+  <a href="https://moltable.ai/login" style="display:inline-block;background:#7170ff;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:510;">前往登录 →</a>
+</div>
+</body>
+</html>"""
+
+
+@router.get("/verify-email")
+@limiter.limit("30/minute")
+def verify_email(request: Request, token: str = ""):
+    """验证邮箱 — 用户点击验证邮件中的链接后调用，返回 HTML 结果页。"""
+    if not token:
+        return HTMLResponse(_verify_page(False, "验证失败", "缺少验证 token。"), status_code=400)
+
+    try:
+        result = (
+            supabase.table("users")
+            .select("id, email_verified")
+            .eq("email_verify_token", token)
+            .execute()
+        )
+    except Exception:
+        return HTMLResponse(_verify_page(False, "验证失败", "服务暂时不可用，请稍后重试。"), status_code=500)
+
+    if not result.data:
+        return HTMLResponse(_verify_page(False, "验证链接无效", "链接已失效或已被使用，请重新注册或请求新的验证邮件。"), status_code=400)
+
+    user = result.data[0]
+    if user.get("email_verified"):
+        return HTMLResponse(_verify_page(True, "邮箱已验证", "你的邮箱已验证过，可以直接登录使用了。"))
+
+    try:
+        supabase.table("users").update(
+            {"email_verified": True, "email_verify_token": None}
+        ).eq("id", user["id"]).execute()
+    except Exception:
+        return HTMLResponse(_verify_page(False, "验证失败", "服务暂时不可用，请稍后重试。"), status_code=500)
+
+    logging.getLogger("moltable").info("邮箱验证成功: user=%s", user["id"])
+    return HTMLResponse(_verify_page(True, "验证成功！", "你的邮箱已验证，现在可以登录 Moltable 开始备份你的 Agent 灵魂。"))
 
 
 @router.post("/login")

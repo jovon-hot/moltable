@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS users (
     expires_at TEXT,
     stripe_customer_id TEXT,
     stripe_subscription_id TEXT,
+    email_verified INTEGER DEFAULT 0,
+    email_verify_token TEXT,
     created_at TEXT DEFAULT (datetime('now'))
 );
 
@@ -25,6 +27,9 @@ ALTER TABLE users ADD COLUMN expires_at TEXT;
 ALTER TABLE users ADD COLUMN language TEXT DEFAULT 'zh';
 ALTER TABLE users ADD COLUMN stripe_customer_id TEXT;
 ALTER TABLE users ADD COLUMN stripe_subscription_id TEXT;
+-- 迁移：邮箱验证列
+ALTER TABLE users ADD COLUMN email_verified INTEGER DEFAULT 0;
+ALTER TABLE users ADD COLUMN email_verify_token TEXT;
 
 -- API 密钥 (legacy, deprecated)
 CREATE TABLE IF NOT EXISTS api_keys (
