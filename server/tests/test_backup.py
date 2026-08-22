@@ -45,6 +45,10 @@ class FakeTable:
         self._update_payload = payload
         return self
 
+    def delete(self):
+        self._mode = "delete"
+        return self
+
     def execute(self):
         if self._mode == "insert":
             row = dict(self._insert_payload)
@@ -56,6 +60,12 @@ class FakeTable:
                 for r in list(self.db._ensure(self.name).values()):
                     if r.get(col) == val:
                         r.update(dict(self._update_payload))
+            return FakeResp([])
+        if self._mode == "delete":
+            for col, val in self._eqs:
+                self.db.tables[self.name] = {
+                    k: v for k, v in self.db._ensure(self.name).items() if v.get(col) != val
+                }
             return FakeResp([])
         if self._mode == "select":
             rows = list(self.db._ensure(self.name).values())
@@ -207,3 +217,57 @@ def test_manifest_only_endpoint():
     got = svc.get_manifest(src["id"])
     assert got["version"] == 1
     assert got["manifest"] == m
+
+
+def test_list_snapshots_returns_newest_first():
+    """版本历史：新→旧，含 file_count。"""
+    svc, db, _ = make_service()
+    src = svc.create_source("hermes", "hermes-mac-pro")
+    c1 = b"v1"
+    m1 = {"self/SOUL.md": sha256_bytes(c1)}
+    svc.push(src["id"], m1, {m1["self/SOUL.md"]: c1})
+    c2 = b"v2 soul"
+    m2 = {"self/SOUL.md": sha256_bytes(c2), "self/AGENTS.md": sha256_bytes(b"agents")}
+    svc.push(src["id"], m2, {m2["self/SOUL.md"]: c2, m2["self/AGENTS.md"]: b"agents"})
+
+    snaps = svc.list_snapshots(src["id"])
+    assert len(snaps) == 2
+    assert snaps[0]["version"] == 2  # 新→旧
+    assert snaps[0]["file_count"] == 2
+    assert snaps[1]["version"] == 1
+    assert snaps[1]["file_count"] == 1
+
+
+def test_list_snapshots_unauthorized():
+    svc, db, _ = make_service()
+    other_svc = BackupService(db, "user-2", blob_store=MemoryBlobStore())
+    src = other_svc.create_source("hermes", "other-source")
+    try:
+        svc.list_snapshots(src["id"])
+        assert False, "should raise"
+    except ValueError:
+        pass
+
+
+def test_delete_source_removes_source_and_snapshots():
+    svc, db, _ = make_service()
+    src = svc.create_source("hermes", "hermes-mac-pro")
+    c = b"v1"
+    m = {"self/SOUL.md": sha256_bytes(c)}
+    svc.push(src["id"], m, {m["self/SOUL.md"]: c})
+
+    svc.delete_source(src["id"])
+    assert svc.list_sources() == []
+    # 快照也应被删
+    assert db.tables.get("snapshots", {}) == {}
+
+
+def test_delete_source_unauthorized():
+    svc, db, _ = make_service()
+    other_svc = BackupService(db, "user-2", blob_store=MemoryBlobStore())
+    src = other_svc.create_source("hermes", "other-source")
+    try:
+        svc.delete_source(src["id"])
+        assert False, "should raise"
+    except ValueError:
+        pass

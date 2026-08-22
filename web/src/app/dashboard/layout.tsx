@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient, getLocalKey, clearLocalKey } from '@/lib/supabase'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Loader2, Menu, X, LayoutDashboard, Brain, User, Settings, Eye, Shield, Gift } from 'lucide-react'
+import { Loader2, Menu, X, LayoutDashboard, Brain, User, Settings, Eye, Shield, Gift, Bot } from 'lucide-react'
 import { useLang } from '@/contexts/LanguageContext'
 import { apiFetch } from '@/lib/api'
 
@@ -60,6 +60,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const navLinks = [
     { href: '/dashboard', label: d.overview, icon: LayoutDashboard },
+    { href: '/dashboard/agents', label: d.agentsTitle, icon: Bot },
     { href: '/dashboard/memories', label: t.dashboard.stats.memories, icon: Brain },
     { href: '/dashboard/personas', label: t.dashboard.stats.personas, icon: User },
     { href: '/dashboard/referrals', label: lang === 'zh' ? '邀请好友' : 'Referrals', icon: Gift },

@@ -292,3 +292,51 @@ class BackupService:
         if isinstance(manifest, str):
             manifest = json.loads(manifest)
         return {"version": target, "manifest": manifest}
+
+    # ── 版本历史 + 删除（个人中心 agent 管理）────────────────
+
+    def list_snapshots(self, source_id: str) -> list:
+        """返回备份源的版本历史（新→旧），供 dashboard 展示。"""
+        source = self._get_source(source_id)
+        if source is None:
+            raise ValueError(f"source {source_id} not found or not owned by user")
+        try:
+            rows = (
+                self.db.table(TABLE_SNAPSHOTS)
+                .select("*")
+                .eq("source_id", source_id)
+                .order("version")
+                .execute()
+                .data
+            )
+        except Exception:
+            rows = []
+        result = []
+        for r in rows or []:
+            manifest = r.get("manifest") or {}
+            if isinstance(manifest, str):
+                try:
+                    manifest = json.loads(manifest)
+                except (json.JSONDecodeError, TypeError):
+                    manifest = {}
+            result.append({
+                "version": r.get("version"),
+                "file_count": len(manifest) if isinstance(manifest, dict) else 0,
+                "created_at": r.get("created_at"),
+            })
+        # 新→旧
+        result.reverse()
+        return result
+
+    def delete_source(self, source_id: str) -> None:
+        """删除备份源及其所有快照。blob 内容寻址存储暂不物理清理（可能被其他源复用）。"""
+        source = self._get_source(source_id)
+        if source is None:
+            raise ValueError(f"source {source_id} not found or not owned by user")
+        # 删除快照
+        try:
+            self.db.table(TABLE_SNAPSHOTS).delete().eq("source_id", source_id).execute()
+        except Exception:
+            pass
+        # 删除备份源
+        self.db.table(TABLE_SOURCES).delete().eq("id", source_id).eq("user_id", self.user_id).execute()

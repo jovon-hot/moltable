@@ -56,6 +56,37 @@ def list_sources(user_id: str = Depends(get_user)):
     return {"sources": BackupService(supabase, user_id).list_sources()}
 
 
+@router.get("/sources/{source_id}")
+def get_source_detail(source_id: str, user_id: str = Depends(get_user)):
+    """备份源详情：基本信息 + 版本历史。"""
+    svc = BackupService(supabase, user_id)
+    try:
+        source = svc._get_source(source_id)
+    except Exception:
+        source = None
+    if source is None:
+        raise HTTPException(status_code=404, detail="source not found or not owned by user")
+    snapshots = svc.list_snapshots(source_id)
+    return {
+        "id": source.get("id"),
+        "agent_type": source.get("agent_type"),
+        "name": source.get("name"),
+        "latest_version": source.get("latest_version"),
+        "created_at": source.get("created_at"),
+        "snapshots": snapshots,
+    }
+
+
+@router.delete("/sources/{source_id}")
+def delete_source(source_id: str, user_id: str = Depends(get_user)):
+    """删除备份源及其所有快照（不可恢复）。"""
+    try:
+        BackupService(supabase, user_id).delete_source(source_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    return {"deleted": True, "source_id": source_id}
+
+
 @router.post("/push")
 def push(body: PushRequest, user_id: str = Depends(get_user)):
     blobs: Dict[str, bytes] = {}
