@@ -13,11 +13,6 @@ COPY server/ .
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
 
-# ── 非 root 用户运行 ──
-RUN useradd --create-home --shell /bin/bash moltable \
-    && chown -R moltable:moltable /app
-USER moltable
-
 EXPOSE 8000
 
 ENV PYTHONUNBUFFERED=1
