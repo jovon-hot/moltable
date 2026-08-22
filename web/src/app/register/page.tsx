@@ -22,6 +22,7 @@ function RegisterForm() {
   const [altchaPayload, setAltchaPayload] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [registered, setRegistered] = useState(false)
   const widgetRef = useRef<any>(null)
 
   useEffect(() => {
@@ -53,25 +54,38 @@ function RegisterForm() {
     setLoading(true)
     setError('')
     try {
-      const data = await localRegister(email, password, undefined, altchaPayload)
-      if (data.key) {
-        // Store key and referral code in sessionStorage
-        sessionStorage.setItem('moltable_new_key', data.key)
-        if (refParam) {
-          sessionStorage.setItem('moltable_ref_code', refParam)
-        }
-        const params = new URLSearchParams({ new: 'true' })
-        if (planParam === 'pro') params.set('plan', 'pro')
-        window.location.href = `/connect?${params.toString()}`
-      } else {
-        window.location.href = '/dashboard'
-      }
+      await localRegister(email, password, undefined, altchaPayload)
+      // 方案 A：注册不发放 key，引导用户查收验证邮件
+      if (refParam) sessionStorage.setItem('moltable_ref_code', refParam)
+      setRegistered(true)
     } catch (err: any) {
       setError(err.message || a.registerFailed)
       // 验证失败后重置 widget，避免旧的 payload 被复用
       setAltchaPayload('')
     }
     setLoading(false)
+  }
+
+  if (registered) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0D0D14' }}>
+        <div className="w-full max-w-sm text-center">
+          <div className="text-5xl mb-4">📬</div>
+          <h1 className="text-2xl mb-3" style={{ fontWeight: 590, color: '#ffffff' }}>验证你的邮箱</h1>
+          <p className="text-sm mb-6" style={{ color: '#888888', lineHeight: 1.7 }}>
+            注册成功！我们已向 <span style={{ color: '#fff' }}>{email}</span> 发送验证链接（30 分钟内有效）。
+            点击邮件里的链接完成验证，然后登录即可获取你的 API Key。
+          </p>
+          <a href="/login" className="inline-block w-full py-2.5 rounded-[6px] text-sm font-medium transition-all hover:opacity-90"
+            style={{ background: '#4338CA', color: '#fff', fontWeight: 510, textDecoration: 'none' }}>
+            前往登录 →
+          </a>
+          <p className="text-xs mt-4" style={{ color: '#5a5f68' }}>
+            没收到邮件？检查垃圾箱，或稍后重新注册获取新链接。
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (

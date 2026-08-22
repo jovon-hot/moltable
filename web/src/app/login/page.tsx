@@ -17,8 +17,13 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
     try {
-      await localLogin(email, password)
-      window.location.href = '/dashboard'
+      const data = await localLogin(email, password)
+      // 首次登录（验证邮箱后）会拿到 api_key → 跳 connect 展示 key
+      if (data.api_key) {
+        window.location.href = '/connect?new=true'
+      } else {
+        window.location.href = '/dashboard'
+      }
     } catch (err: any) {
       setError(err.message || a.loginFailed)
     }

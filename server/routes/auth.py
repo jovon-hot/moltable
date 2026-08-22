@@ -469,22 +469,7 @@ def local_register(request: Request, body: RegisterRequest):
             raise HTTPException(409, "该邮箱已注册")
         raise
 
-    # 自动生成 API Key (使用相同的 PBKDF2 哈希)
-    raw_key = "molt_" + secrets.token_urlsafe(24)
-    key_hash = hash_api_key(raw_key)
-    key_id = str(_uuid.uuid4())
-
-    supabase.table("api_keys").insert(
-        {
-            "id": key_id,
-            "user_id": user_id,
-            "name": "默认密钥",
-            "key_hash": key_hash,
-            "key_prefix": raw_key[:12],
-            "is_active": True,
-        }
-    ).execute()
-
+    # 注意：注册时不发放 API Key。用户验证邮箱后，首次登录时才生成并返回 key。
     logging.getLogger("moltable").info("新用户注册: %s (%s)", email, user_id)
 
     # 发送邮箱验证邮件（如果配置了 Resend API Key）
@@ -497,11 +482,10 @@ def local_register(request: Request, body: RegisterRequest):
 
     return {
         "user_id": user_id,
-        "key": raw_key,
         "email": email,
         "name": name,
         "email_verified": False,
-        "message": "注册成功！我们已发送验证邮件，请点击邮件中的链接确认邮箱。",
+        "message": "注册成功！我们已发送验证邮件，请点击邮件中的链接确认邮箱。验证后登录即可获取 API Key。",
     }
 
 
@@ -615,7 +599,7 @@ def local_login(request: Request, body: LoginRequest):
 
     result = (
         supabase.table("users")
-        .select("id, email, name, password_hash")
+        .select("id, email, name, password_hash, email_verified")
         .eq("email", email)
         .execute()
     )
@@ -628,6 +612,10 @@ def local_login(request: Request, body: LoginRequest):
 
     if user.get("password_hash") != expected_hash:
         raise HTTPException(401, "邮箱或密码错误")
+
+    # 邮箱未验证 → 拦截登录（方案 A：验证邮箱后才发放 key / 使用账号）
+    if not user.get("email_verified"):
+        raise HTTPException(403, "请先验证邮箱，再登录使用")
 
     user_id = user["id"]
 
@@ -645,6 +633,22 @@ def local_login(request: Request, body: LoginRequest):
     )
 
     has_existing_key = keys_result.data and len(keys_result.data) > 0
+
+    # 首次登录（邮箱已验证但还没有 key）→ 生成并返回 API Key
+    raw_key = None
+    if not has_existing_key:
+        raw_key = "molt_" + secrets.token_urlsafe(24)
+        supabase.table("api_keys").insert(
+            {
+                "id": str(_uuid.uuid4()),
+                "user_id": user_id,
+                "name": "默认密钥",
+                "key_hash": hash_api_key(raw_key),
+                "key_prefix": raw_key[:12],
+                "is_active": True,
+            }
+        ).execute()
+        has_existing_key = True
 
     # 创建临时 session token（7 天有效，用于前端登录态）
     import uuid as _ses_uuid
@@ -669,6 +673,7 @@ def local_login(request: Request, body: LoginRequest):
     return {
         "user_id": user_id,
         "has_api_key": has_existing_key,
+        "api_key": raw_key,
         "session_token": session_token,
         "email": user["email"],
         "name": user.get("name", ""),

@@ -98,5 +98,9 @@ export async function localLogin(email: string, password: string) {
   const data = await res.json()
   // 存储 session token（MCP 端点通过 X-API-Key header 接受 mol_ 前缀的 session token）
   if (data.session_token) setLocalKey(data.session_token)
+  // 首次登录（验证邮箱后）会返回 api_key —— 存 sessionStorage 供 connect 页一次性读取
+  if (data.api_key && typeof window !== 'undefined') {
+    sessionStorage.setItem('moltable_new_key', data.api_key)
+  }
   return data
 }

@@ -140,3 +140,48 @@ class TestEmailVerifyHardening:
         resp = client.post("/api/auth/resend-verification", json={"email": "nobody@gmail.com"})
         assert resp.status_code == 200
         assert "如果该邮箱已注册" in resp.json()["message"]
+
+    def test_login_before_verify_rejected(self, tmp_path, monkeypatch):
+        """未验证邮箱 → 登录被拦截。"""
+        client, _ = self._make_client(tmp_path, monkeypatch)
+        client.post("/api/auth/register", json={
+            "email": "login-unverified@gmail.com",
+            "password": "TestPass2026!",
+            "name": "Login",
+            "altcha": _make_altcha_payload(),
+        })
+        resp = client.post("/api/auth/login", json={
+            "email": "login-unverified@gmail.com",
+            "password": "TestPass2026!",
+        })
+        assert resp.status_code == 403
+        assert "验证邮箱" in resp.json()["detail"]
+
+    def test_login_after_verify_returns_key(self, tmp_path, monkeypatch):
+        """验证邮箱后首次登录 → 生成并返回 API key；再次登录不重复返回。"""
+        client, db = self._make_client(tmp_path, monkeypatch)
+        client.post("/api/auth/register", json={
+            "email": "login-verified@gmail.com",
+            "password": "TestPass2026!",
+            "name": "Login",
+            "altcha": _make_altcha_payload(),
+        })
+        rows = db.table("users").select("email_verify_token").eq("email", "login-verified@gmail.com").execute().data
+        token = rows[0]["email_verify_token"]
+        verify = client.get(f"/api/auth/verify-email?token={token}")
+        assert verify.status_code == 200
+        # 首次登录 → 返回 key
+        resp = client.post("/api/auth/login", json={
+            "email": "login-verified@gmail.com",
+            "password": "TestPass2026!",
+        })
+        assert resp.status_code == 200, resp.text
+        assert resp.json()["api_key"].startswith("molt_")
+        # 第二次登录 → 已有 key，不再返回
+        resp2 = client.post("/api/auth/login", json={
+            "email": "login-verified@gmail.com",
+            "password": "TestPass2026!",
+        })
+        assert resp2.status_code == 200
+        assert resp2.json()["api_key"] is None
+        assert resp2.json()["has_api_key"] is True

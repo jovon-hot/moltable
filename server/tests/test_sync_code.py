@@ -226,7 +226,7 @@ class TestSyncCodeRealSQLite:
     def test_full_sync_flow(self, tmp_path, monkeypatch) -> None:
         client, db = self._make_client(tmp_path, monkeypatch)
 
-        # 1. 注册（拿到账号 key）
+        # 1. 注册（不返回 key）
         reg = client.post("/api/auth/register", json={
             "email": "sync-test@moltable.ai",
             "password": "TestPass2026!",
@@ -234,7 +234,22 @@ class TestSyncCodeRealSQLite:
             "altcha": _make_altcha_payload(),
         })
         assert reg.status_code == 200, reg.text
-        account_key = reg.json()["key"]
+        assert "key" not in reg.json(), "注册不应返回 API key"
+
+        # 1.5 验证邮箱（模拟点击验证链接）
+        rows = db.table("users").select("email_verify_token").eq("email", "sync-test@moltable.ai").execute().data
+        token = rows[0]["email_verify_token"]
+        verify = client.get(f"/api/auth/verify-email?token={token}")
+        assert verify.status_code == 200, verify.text
+
+        # 1.6 首次登录 → 生成并返回 API key
+        login = client.post("/api/auth/login", json={
+            "email": "sync-test@moltable.ai",
+            "password": "TestPass2026!",
+        })
+        assert login.status_code == 200, login.text
+        account_key = login.json()["api_key"]
+        assert account_key.startswith("molt_")
 
         # 2. 生成同步码（需认证）
         gen = client.get("/api/auth/sync-code", headers={"X-API-Key": account_key})
