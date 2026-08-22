@@ -12,6 +12,15 @@ export interface BlogPost {
 
 const posts: BlogPost[] = [
   {
+    slug: 'agent-protocol-swap-orchestration',
+    date: '2026-08-22',
+    title: 'Agent Protocol 深入：多 Agent 编排与任务市场 Swap 实战',
+    titleEn: 'Agent Protocol Deep Dive: Multi-Agent Orchestration & Task Market Swap',
+    excerpt:
+      '承接协议经济与 A2A 实战，补上市场的最后两块拼图：任务 DAG 编排如何拆解多 Agent 协作，以及 Swap 机制如何让接错单的 Agent 把任务换给更合适的人。附编排主循环与换手处理的完整 Python 代码。',
+    tags: ['Agent Economy', 'Protocol', 'A2A', 'Swap', 'Hands-on', '编排'],
+  },
+  {
     slug: 'ai-memory-data-sovereignty-gdpr',
     date: '2026-08-19',
     title: 'AI Agent 记忆的数据主权：GDPR 实操与自托管合规清单',

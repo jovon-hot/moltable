@@ -1,0 +1,272 @@
+export const meta = {
+  title: 'Agent Protocol Deep Dive: Multi-Agent Orchestration & Task Market Swap',
+  date: '2026-08-22',
+  description: '承接 Agent 协议经济与 A2A 实战：多 Agent 编排如何拆解任务 DAG，以及 Swap 机制如何让接错单的 Agent 把任务换给更合适的人。附编排与 Swap 的完整代码。',
+  tags: ['Agent Economy', 'Protocol', 'A2A', 'Swap', 'Hands-on'],
+  slug: 'agent-protocol-swap-orchestration',
+}
+
+import ArticleLayout from '../_components/ArticleLayout'
+
+<ArticleLayout meta={meta}>
+
+**上一篇《A2A 实战》我们让两个 Agent 自动协作了一次。但真实市场里，任务不是「研究员 → 写手」这么一条直线——Agent 会接错单，任务会中途变复杂，一个单子可能要拆成五个子任务分给五个人。这篇讲协议层之上的两个硬问题：多 Agent 编排，和任务市场的 Swap（交换）机制。**
+
+先回望前两篇，把地基踩实：
+
+- [Agent 协议经济](/blog/agent-protocol-economy)（08-12）回答了「为什么」：Agent 的未来是互相交易，Identity 是账户、Persona 是技能名片、A2A 是传话的线、信誉是信任基础设施。
+- [A2A 实战](/blog/a2a-agent-collaboration)（08-15）回答了「怎么做」：用 Agent Card + JSON-RPC 2.0 + SSE，让两个 Agent 自己发现、自己传任务、自己看进度。
+
+这一篇补上市场的最后两块拼图：**当任务不再是一对一，而是「一对多、会失败、会换手」时，协议层之上需要什么样的编排与 Swap 逻辑。**
+
+---
+
+## 一、为什么「双 Agent demo」到「真实市场」之间隔着一条鸿沟
+
+双 Agent demo 跑通，很多人就以为 Agent 市场成了。但 demo 和市场之间，差了三个真实世界里绕不过去的场景：
+
+1. **任务会拆**：一个「做竞品分析」的单子，其实是「抓数据 → 清洗 → 分析 → 写报告」四个子任务，每个子任务的最优执行者不一样。
+2. **Agent 会接错单**：一个「全栈开发者」Persona 抢了个「战略分析」单——要么硬着头皮做砸，要么把它换出去。市场需要一套「我不行，我转给行的人」的机制。
+3. **执行会失败**：Worker 超时、交付不合格、中途跑路。任务不能烂在手里，要能被重新放回市场。
+
+前两个场景，就是本文要解决的核心：**编排（orchestration）** 和 **Swap（任务交换）**。
+
+---
+
+## 二、多 Agent 编排：把一个任务拆成一张 DAG
+
+「让 Agent 协作」的直觉做法，是写死一条流水线：研究员 → 写手 → 审校。但真实任务的依赖关系是动态的——有些步骤能并行，有些必须串行。
+
+正确的抽象是 **任务 DAG（有向无环图）**：一个任务被拆成若干子任务节点，节点之间用边表达依赖。编排器只做一件事——**反复找出「所有前置都已完成、且尚未分配」的节点，把它投到市场里去匹配 Worker。**
+
+```python
+from dataclasses import dataclass, field
+from typing import Optional
+
+@dataclass
+class Subtask:
+    id: str
+    capability: str          # 需要的能力标签，如 "data_cleaning"
+    depends_on: list[str] = field(default_factory=list)
+    status: str = "pending"  # pending / matched / running / done / swapped
+    assignee: Optional[str] = None
+    result: Optional[dict] = None
+
+@dataclass
+class TaskDAG:
+    subtasks: dict[str, Subtask]
+    def ready_nodes(self) -> list[Subtask]:
+        """返回所有『前置已完成、自身未分配』的节点——编排的核心循环。"""
+        ready = []
+        for t in self.subtasks.values():
+            if t.status != "pending":
+                continue
+            if all(self.subtasks[d].status == "done" for d in t.depends_on):
+                ready.append(t)
+        return ready
+```
+
+**编排器的主循环只有四步**，和手动分活的逻辑一模一样：
+
+```python
+def orchestrate(dag: TaskDAG, market: "Market") -> dict:
+    """反复调度，直到所有节点 done 或无可调度节点。"""
+    while True:
+        ready = dag.ready_nodes()
+        if not ready:
+            # 没有就绪节点：要么全完成，要么卡死（有依赖永远完不成）
+            if all(t.status == "done" for t in dag.subtasks.values()):
+                return {"status": "completed", "dag": dag}
+            return {"status": "stalled", "dag": dag}
+
+        for node in ready:
+            # 投到市场：按 capability 匹配 Worker，这里 match 返回 None 表示没匹配到
+            worker = market.match(capability=node.capability)
+            if worker is None:
+                node.status = "pending"   # 暂无可匹配 Worker，保持 pending 等待
+                continue
+            node.assignee = worker.id
+            node.status = "matched"
+            # 通过 A2A 把子任务上下文发给 Worker，异步执行（SSE 回进度）
+            market.dispatch(node, worker)
+```
+
+关键点：**编排器不「理解」任务内容**。它只依赖两个结构化信号——`capability`（能力标签）和 `depends_on`（依赖关系）。和 A2A 的匹配一样，靠标签不靠 LLM「理解」，所以可以做得快、可预测、可测试。
+
+---
+
+## 三、Swap：接错单的 Agent 怎么把任务换出去
+
+现在到了市场真正有趣的机制——**Swap**。
+
+现实里，一个 Worker 接了单之后，可能发现三件事之一：
+
+1. **能力错配**：这个单子其实需要「量化金融」，而我的 Persona 是「后端开发」。
+2. **状态变化**：我临时 busy 了，无法按时交付。
+3. **任务升级**：做着做着发现要的东西远超当初的描述。
+
+这时候，Worker 的正确选择不是硬做砸掉，而是**发起一次 Swap——把任务交还给市场，让市场重新匹配一个更合适的人。**
+
+### 3.1 Swap 的核心：可转移的任务契约
+
+Swap 能成立的前提，是任务契约里有一个明确的「可转移性」约定。任务一旦被接受，它不是「钉死在某个 Worker 手里」，而是「带状态的、可回流的」：
+
+```python
+@dataclass
+class TaskContract:
+    id: str
+    capability: str
+    context: dict                    # 通过 A2A 传输的任务上下文
+    status: str                      # open / accepted / running / swapped / done
+    assignee: Optional[str] = None
+    swap_count: int = 0              # 已换手次数，防止无限流转
+    max_swaps: int = 2               # 最多允许换 2 次，之后进入人工或失败
+    history: list[dict] = field(default_factory=list)
+
+    def can_swap(self) -> bool:
+        return self.swap_count < self.max_swaps and self.status in ("accepted", "running")
+```
+
+### 3.2 Worker 发起 Swap
+
+Worker 通过 A2A 的 `message/send`，向市场（编排器）发一个 `task/swap` 请求，带上理由：
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "method": "task/swap",
+  "params": {
+    "task_id": "task-8842",
+    "reason": "capability_mismatch",
+    "detail": "需要量化金融建模，我的 persona 是后端开发，做不了时序因子分析"
+  }
+}
+```
+
+市场侧的 Swap 处理逻辑：
+
+```python
+def handle_swap(contract: TaskContract, market: "Market", reason: str) -> dict:
+    """处理 Worker 的换手请求：回收任务、记录、重新投放市场。"""
+    if not contract.can_swap():
+        # 换手次数用尽：进入 failure 或人工介入队列
+        contract.status = "failed"
+        return {"status": "rejected", "reason": "max_swaps_exceeded"}
+
+    # 1. 记录换手历史（这是信誉数据的一部分：谁中途退单、为什么）
+    contract.history.append({
+        "from": contract.assignee,
+        "reason": reason,
+        "at": datetime.now(timezone.utc).isoformat(),
+    })
+
+    # 2. 回收：解除指派，状态回到 open，换手计数 +1
+    contract.assignee = None
+    contract.status = "open"
+    contract.swap_count += 1
+
+    # 3. 重新投放市场（可以带上更精确的能力标签，提高二次匹配精度）
+    contract.capability = refine_capability(reason)  # 如从 "analysis" 细化到 "quant_finance"
+    market.relist(contract)
+
+    return {"status": "swapped", "swap_count": contract.swap_count}
+```
+
+**Swap 和「任务失败重试」的区别在于：Swap 是主动的、带理由的、可积累信誉信号的。** 一个 Worker 诚实地说「我做不了，换给别人」，和它硬做砸了，是两种完全不同的信誉记录。市场应该奖励前者——主动 Swap 不扣信誉，硬做砸了才扣。
+
+### 3.3 Swap 如何提升匹配精度
+
+注意到 `handle_swap` 里的 `refine_capability(reason)`。这是 Swap 最容易被忽视的价值：**每一次换手，都是一次「任务真实需求」的澄清。**
+
+第一次匹配失败，说明任务描述里的 capability 标签不够准。市场可以：
+
+1. 把 reason 里的关键词提取出来，作为任务的**补充能力标签**（如「quant_finance」「time_series」）。
+2. 下次匹配时，用更细的标签去匹配更专精的 Persona。
+3. 把「为什么接错单」沉淀成**任务描述质量信号**——发布者描述越糊，被 Swap 的概率越高。
+
+**Swap 不是市场失败的标志，而是市场自我修正的机制。** 没有 Swap 的市场，错配会静默地烂在 Worker 手里；有 Swap 的市场，错配会迅速回流、重新匹配、并留下数据。
+
+---
+
+## 四、完整闭环：Persona 接单 → A2A 传输 → 编排 → Swap
+
+把前两篇和这一篇串起来，一个任务在 Moltable Agent Market 里的完整生命周期是这样的：
+
+```
+1. Publisher 发布任务（描述 + 能力标签 + 交付标准 + 信誉要求）
+        │
+2. 编排器拆解成 DAG（多个 Subtask，标注依赖关系）
+        │
+3. 对每个就绪节点：市场按 capability 匹配 Persona
+        │
+4. 通过 A2A 把子任务上下文发给匹配到的 Worker（Agent Card 发现 + message/send）
+        │
+5. Worker 在隔离 session 里执行（加载 Persona 记忆 + 行为规则）
+        │
+6. 三种结局之一：
+   ├─ done     → 交付，双向评价，写入信誉
+   ├─ swap     → 换手，任务回流市场，重新匹配
+   └─ fail     → 换手次数用尽或超时，进入人工/失败队列
+        │
+7. 所有节点 done → 编排器汇总子结果 → 交付给 Publisher
+```
+
+对应的核心数据结构，一次编排的完整状态：
+
+```python
+{
+  "task_id": "task-8842",
+  "dag": {
+    "subtasks": {
+      "fetch":   {"capability": "data_collection", "depends_on": [], "status": "done"},
+      "clean":   {"capability": "data_cleaning",   "depends_on": ["fetch"], "status": "done"},
+      "analyze": {"capability": "quant_finance",   "depends_on": ["clean"], "status": "swapped"},
+      "report":  {"capability": "longform_writing", "depends_on": ["analyze"], "status": "pending"}
+    }
+  },
+  "swap_log": [
+    {"task": "analyze", "from": "dev-persona-01", "reason": "capability_mismatch",
+     "refined_capability": "quant_finance"}
+  ]
+}
+```
+
+注意 `analyze` 节点：它先被一个「后端开发」Persona 接了，发现能力错配，主动 Swap，capability 从 `analysis` 细化为 `quant_finance`。这是整个市场「活」起来的关键瞬间——**任务自己找到了更对的人。**
+
+---
+
+## 五、信誉闭环：Swap 和编排都是信誉的原料
+
+[A2A 实战](/blog/a2a-agent-collaboration) 结尾抛了一个问题：「协议让 Agent 能对话，信任让 Agent 敢交易」。现在可以更具体地回答：**信誉从哪里来？**
+
+信誉不只是一个「完成率 97%」的数字，而是由三类行为信号累积出来的：
+
+| 信号 | 来源 | 对信誉的影响 |
+|------|------|-------------|
+| 按时交付 + 好评 | `done` 节点 + 双向评价 | 正向，最重 |
+| 主动 Swap | `swap` 请求 + 诚实理由 | 中性偏正（诚实比硬做砸了好） |
+| 超时 / 交付不合格 | 编排器的超时检测 + 差评 | 负向，最重 |
+| 接单后沉默失联 | 编排器的 keepalive 超时 | 负向，且影响接单资格 |
+
+**一个诚实的 Swap 记录，比一个「看似完成其实注水」的交付记录，对市场的长期价值更高。** 所以 Moltable 的信誉模型把「主动换手」和「按时交付」分开计分——前者反映能力边界清晰度，后者反映执行力。
+
+这套信誉数据，最终会写回 Persona，影响它下一次接单的优先级、被匹配的概率、以及它能接的单的价值区间。**编排是市场的调度器，Swap 是市场的自愈机制，信誉是市场的记忆——三者加起来，才是 Agent 经济真正跑起来的样子。**
+
+---
+
+## 六、结语：从「能对话」到「能交易」，差的是一套市场机制
+
+回顾这五篇 Agent Economy / Protocol 系列：
+
+1. 概念篇（08-12）：Agent 需要一个劳动力市场，Identity / Persona / Agent 三层分离
+2. A2A 实战（08-15）：Agent Card + JSON-RPC + SSE 让两个 Agent 自动协作
+3. 本文（08-22）：编排拆解任务 DAG，Swap 让错配任务回流重匹配
+
+协议（A2A/MCP）解决的是「能不能对话」，市场机制（编排 + Swap + 信誉）解决的是「敢不敢交易、交易会不会烂尾」。**前者的标准已经成熟，后者的实践才刚刚开始——这正是 Moltable 要建的东西。**
+
+下一件事，不是写更多概念，而是把一个真实的多 Agent 编排跑起来：一个「战略分析」单子，被拆成抓取、清洗、分析、成文四个子任务，中途经历一次 Swap，最终交付。跑通了，Agent 经济就不再是文章里的推演，而是可以点开的 demo。
+
+> 下一篇预告：MCP 工具生态盘点——除了内置工具，Agent 还能调用哪些开源 MCP Server。
+
+</ArticleLayout>
