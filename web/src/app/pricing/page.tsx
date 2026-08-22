@@ -33,7 +33,7 @@ export default function PricingPage() {
     {
       name: plansData?.pro?.name || p.pro.name,
       price: paid ? fmtUsd(plansData.pro.price_monthly) : p.pro.priceMonthly,
-      desc: paid ? `${plansData.trial_days} 天免费试用 · 之后 ${fmtUsd(plansData.pro.price_monthly)} / ${fmtYear(plansData.pro.price_yearly)}` : p.pro.desc,
+      desc: paid ? `${fmtUsd(plansData.pro.price_monthly)} · 年付 ${fmtYear(plansData.pro.price_yearly)}` : p.pro.desc,
       cta: p.pro.cta,
       badge: p.pro.badge,
       accent: true,

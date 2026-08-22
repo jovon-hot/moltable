@@ -208,7 +208,7 @@ def get_plans(request: Request):
             "name": "Pro",
             "price_monthly": pricing["pro_monthly"]["amount"] / 100 if pricing else 0,
             "price_yearly": pricing["pro_yearly"]["amount"] / 100 if pricing else 0,
-            "badge": f"🔥 {TRIAL_DAYS}天免费试用",
+            "badge": None if pricing else f"🔥 {TRIAL_DAYS}天免费试用",
             "features": pro_plan["features"],
             "limits": pro_plan["limits"],
             "trial_days": TRIAL_DAYS,
