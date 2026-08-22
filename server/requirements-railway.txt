@@ -2,6 +2,7 @@
 # 精简生产依赖：只装运行时必需的包，不装本地开发/ML 栈（torch 等）。
 # 版本与 server/.venv 实测验证版本一致。
 # embedding 无 sentence-transformers 时自动降级 trigram hash，功能可工作。
+altcha==2.1.0
 fastapi==0.141.1
 uvicorn[standard]==0.52.1
 supabase==2.31.0

@@ -6,6 +6,7 @@
 
 ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified boolean default false;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verify_token text;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verify_token_expires timestamptz;
 
 -- 已有用户视为已验证（避免历史用户被误标未验证）
 UPDATE users SET email_verified = true WHERE email_verified IS NULL;

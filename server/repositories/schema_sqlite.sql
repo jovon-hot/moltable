@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS users (
     stripe_subscription_id TEXT,
     email_verified INTEGER DEFAULT 0,
     email_verify_token TEXT,
+    email_verify_token_expires TEXT,
     created_at TEXT DEFAULT (datetime('now'))
 );
 
@@ -30,6 +31,7 @@ ALTER TABLE users ADD COLUMN stripe_subscription_id TEXT;
 -- 迁移：邮箱验证列
 ALTER TABLE users ADD COLUMN email_verified INTEGER DEFAULT 0;
 ALTER TABLE users ADD COLUMN email_verify_token TEXT;
+ALTER TABLE users ADD COLUMN email_verify_token_expires TEXT;
 
 -- API 密钥 (legacy, deprecated)
 CREATE TABLE IF NOT EXISTS api_keys (

@@ -5,8 +5,9 @@ import hashlib
 import logging
 import os
 import secrets
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
+from altcha import create_challenge, verify_solution
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
@@ -331,6 +332,10 @@ import uuid as _uuid
 
 _API_KEY_PEPPER = os.getenv("API_KEY_PEPPER", "moltable-local-dev-pepper")
 
+# ── Altcha 人机验证（PoW）HMAC 密钥 ──
+# 生产环境必须通过 ALTCHA_HMAC_SECRET 环境变量覆盖此默认值。
+_ALTCHA_HMAC_SECRET = os.getenv("ALTCHA_HMAC_SECRET", "moltable-local-dev-altcha-secret")
+
 # ── XSS 防护 ────────────────────────────────────────
 _HTML_TAG_RE = re.compile(r"<[^>]*>")
 
@@ -381,6 +386,7 @@ class RegisterRequest(BaseModel):
     email: str = Field(..., max_length=254)
     password: str = Field(..., min_length=8, max_length=128)
     name: str = Field(default="", max_length=200)
+    altcha: str = Field(default="", max_length=8192, description="Altcha PoW base64 payload")
 
 
 class LoginRequest(BaseModel):
@@ -388,10 +394,39 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class ResendVerificationRequest(BaseModel):
+    email: str = Field(..., max_length=254)
+
+
+@router.get("/challenge")
+@limiter.limit("60/minute")
+def get_altcha_challenge(request: Request):
+    """返回 Altcha PoW challenge（人机验证），前端 widget 解算后随注册表单提交。"""
+    challenge = create_challenge(
+        algorithm="PBKDF2/SHA-256",
+        cost=5_000,
+        hmac_secret=_ALTCHA_HMAC_SECRET,
+        expires_at=datetime.now(timezone.utc) + timedelta(minutes=5),
+    )
+    return challenge.to_dict()
+
+
 @router.post("/register")
 @limiter.limit("10/hour")
 def local_register(request: Request, body: RegisterRequest):
     """本地注册 — SQLite 模式，不依赖 Supabase。"""
+    # 人机验证：Altcha PoW（防机器人批量注册）
+    if not body.altcha:
+        raise HTTPException(400, "请完成人机验证")
+    try:
+        vresult = verify_solution(body.altcha, _ALTCHA_HMAC_SECRET)
+    except Exception:
+        raise HTTPException(400, "验证码无效，请刷新重试")
+    if not vresult.verified:
+        raise HTTPException(400, "验证码验证失败，请重试")
+    if vresult.expired:
+        raise HTTPException(400, "验证码已过期，请刷新页面重试")
+
     # XSS 防护：清理 HTML 标签
     email = _sanitize(body.email).strip().lower()
     name = _sanitize(body.name or body.email.split("@")[0]).strip()[:200]
@@ -412,6 +447,7 @@ def local_register(request: Request, body: RegisterRequest):
     user_id = str(_uuid.uuid4())
     pw_hash = _hash_password(body.password)
     verify_token = secrets.token_urlsafe(32)
+    verify_token_expires = (datetime.now(timezone.utc) + timedelta(minutes=30)).isoformat()
 
     # 创建用户 — email UNIQUE 约束在并发场景提供原子性保证
     try:
@@ -424,6 +460,7 @@ def local_register(request: Request, body: RegisterRequest):
                 "plan": "free",
                 "email_verified": False,
                 "email_verify_token": verify_token,
+                "email_verify_token_expires": verify_token_expires,
             }
         ).execute()
     except Exception as e:
@@ -495,7 +532,7 @@ def verify_email(request: Request, token: str = ""):
     try:
         result = (
             supabase.table("users")
-            .select("id, email_verified")
+            .select("id, email_verified, email_verify_token_expires")
             .eq("email_verify_token", token)
             .execute()
         )
@@ -509,15 +546,65 @@ def verify_email(request: Request, token: str = ""):
     if user.get("email_verified"):
         return HTMLResponse(_verify_page(True, "邮箱已验证", "你的邮箱已验证过，可以直接登录使用了。"))
 
+    # 检查验证链接是否过期（30 分钟有效期）
+    _exp = _parse_expiry(user.get("email_verify_token_expires"))
+    if _exp and _exp < datetime.now(timezone.utc):
+        return HTMLResponse(
+            _verify_page(False, "验证链接已过期", "链接已过期（有效期 30 分钟），请重新请求验证邮件。"),
+            status_code=400,
+        )
+
     try:
         supabase.table("users").update(
-            {"email_verified": True, "email_verify_token": None}
+            {"email_verified": True, "email_verify_token": None, "email_verify_token_expires": None}
         ).eq("id", user["id"]).execute()
     except Exception:
         return HTMLResponse(_verify_page(False, "验证失败", "服务暂时不可用，请稍后重试。"), status_code=500)
 
     logging.getLogger("moltable").info("邮箱验证成功: user=%s", user["id"])
     return HTMLResponse(_verify_page(True, "验证成功！", "你的邮箱已验证，现在可以登录 Moltable 开始备份你的 Agent 灵魂。"))
+
+
+@router.post("/resend-verification")
+@limiter.limit("3/hour")
+def resend_verification(request: Request, body: ResendVerificationRequest):
+    """重新发送验证邮件 — 带频率限制，防刷邮件。"""
+    email = _sanitize(body.email).strip().lower()
+
+    result = (
+        supabase.table("users")
+        .select("id, email_verified, email_verify_token_expires")
+        .eq("email", email)
+        .execute()
+    )
+    if not result.data:
+        # 不泄露邮箱是否已注册（防枚举）
+        return {"message": "如果该邮箱已注册且未验证，验证邮件已重新发送，请查收。"}
+
+    user = result.data[0]
+    if user.get("email_verified"):
+        return {"message": "该邮箱已验证，无需重新发送。"}
+
+    # 数据库级频率限制：token 过期时间还剩 >25 分钟（即 5 分钟内发过），拒绝频繁重发
+    _exp = _parse_expiry(user.get("email_verify_token_expires"))
+    if _exp and _exp > datetime.now(timezone.utc) + timedelta(minutes=25):
+        raise HTTPException(429, "验证邮件刚已发送，请检查收件箱（含垃圾邮件）。如未收到请 5 分钟后再试。")
+
+    new_token = secrets.token_urlsafe(32)
+    new_expires = (datetime.now(timezone.utc) + timedelta(minutes=30)).isoformat()
+    supabase.table("users").update(
+        {"email_verify_token": new_token, "email_verify_token_expires": new_expires}
+    ).eq("id", user["id"]).execute()
+
+    try:
+        from email_utils import send_verification_email
+
+        send_verification_email(email, new_token)
+    except Exception:
+        pass
+
+    logging.getLogger("moltable").info("重发验证邮件: %s (%s)", email, user["id"])
+    return {"message": "验证邮件已重新发送，请查收（30 分钟内有效）。"}
 
 
 @router.post("/login")

@@ -1,10 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { localRegister } from '@/lib/supabase'
 import { useLang } from '@/contexts/LanguageContext'
 import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
+
+// Altcha 官方 React 类型声明（React 19 兼容的 JSX IntrinsicElements）
+import type {} from 'altcha/types/react'
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.moltable.ai'
 
 function RegisterForm() {
   const { t } = useLang()
@@ -14,15 +19,41 @@ function RegisterForm() {
   const a = t.auth
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [altchaPayload, setAltchaPayload] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const widgetRef = useRef<any>(null)
+
+  useEffect(() => {
+    // 动态加载 Altcha widget（客户端，依赖 Web Crypto / Web Components）
+    import('altcha')
+      .then(() => {
+        const el = widgetRef.current
+        if (el) {
+          el.addEventListener('statechange', (ev: any) => {
+            if (ev.detail?.state === 'verified') {
+              setAltchaPayload(ev.detail.payload || '')
+            } else if (ev.detail?.state === 'expired') {
+              setAltchaPayload('')
+            }
+          })
+        }
+      })
+      .catch(() => {
+        // 加载失败时 payload 保持空，后端会拦截并提示
+      })
+  }, [])
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!altchaPayload) {
+      setError('请先完成人机验证')
+      return
+    }
     setLoading(true)
     setError('')
     try {
-      const data = await localRegister(email, password)
+      const data = await localRegister(email, password, undefined, altchaPayload)
       if (data.key) {
         // Store key and referral code in sessionStorage
         sessionStorage.setItem('moltable_new_key', data.key)
@@ -37,6 +68,8 @@ function RegisterForm() {
       }
     } catch (err: any) {
       setError(err.message || a.registerFailed)
+      // 验证失败后重置 widget，避免旧的 payload 被复用
+      setAltchaPayload('')
     }
     setLoading(false)
   }
@@ -67,6 +100,15 @@ function RegisterForm() {
             onBlur={e => e.target.style.boxShadow = '0 0 0 1px rgba(255,255,255,0.08)'}
             required />
           <p className="text-xs" style={{ color: '#5a5f68' }}>{a.passwordHint}</p>
+
+          {/* Altcha 人机验证（PoW，防机器人批量注册） */}
+          <altcha-widget
+            ref={widgetRef}
+            challenge={`${API_BASE}/api/auth/challenge`}
+            theme="dark"
+            configuration={JSON.stringify({ hideLogo: true, hideFooter: true })}
+          ></altcha-widget>
+
           {error && <p className="text-sm" style={{ color: '#f87171' }}>{error}</p>}
           <button type="submit" disabled={loading}
             className="w-full py-2.5 rounded-[6px] text-sm font-medium disabled:opacity-50 transition-all hover:opacity-90"

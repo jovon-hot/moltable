@@ -16,6 +16,20 @@ import pytest
 from fastapi.testclient import TestClient
 
 
+def _make_altcha_payload() -> str:
+    """生成有效的 Altcha PoW payload（HMAC secret 匹配后端默认值，供 register 测试用）。"""
+    from altcha import Payload, create_challenge, solve_challenge
+
+    challenge = create_challenge(
+        algorithm="PBKDF2/SHA-256",
+        cost=5_000,
+        hmac_secret="moltable-local-dev-altcha-secret",
+    )
+    solution = solve_challenge(challenge)
+    assert solution is not None, "测试环境无法解算 Altcha challenge"
+    return Payload(challenge, solution).to_base64()
+
+
 @pytest.fixture
 def client() -> TestClient:
     """Create a TestClient using the globally mocked app."""
@@ -217,6 +231,7 @@ class TestSyncCodeRealSQLite:
             "email": "sync-test@moltable.ai",
             "password": "TestPass2026!",
             "name": "Sync Tester",
+            "altcha": _make_altcha_payload(),
         })
         assert reg.status_code == 200, reg.text
         account_key = reg.json()["key"]

@@ -47,12 +47,12 @@ export function isLocalLoggedIn(): boolean {
 }
 
 /** 本地注册 */
-export async function localRegister(email: string, password: string, name?: string) {
+export async function localRegister(email: string, password: string, name?: string, altcha?: string) {
   const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.moltable.ai'
   const res = await fetch(`${API_BASE}/api/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password, name: name || '' }),
+    body: JSON.stringify({ email, password, name: name || '', altcha: altcha || '' }),
   })
   if (!res.ok) {
     const data = await res.json().catch(() => ({}))
