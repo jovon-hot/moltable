@@ -187,10 +187,29 @@ def cmd_init(config_path: str) -> None:
         with open(config_path, "w") as f:
             json.dump(cfg, f, ensure_ascii=False, indent=2)
         print(f"✅ 已生成 {config_path}")
-        print("   编辑它声明 workspace / references（外部知识库）/ exclude")
     else:
         print(f"⚠  {config_path} 已存在，未覆盖")
+    print(f"   工作目录（自动发现）: {cfg.get('workspace')}")
+    print("   如需改路径，编辑此文件里的 workspace 字段")
+    print("   也可设 HERMES_HOME 环境变量指向自定义目录")
     print("   api_key 可写在此文件，或设 MOLTABLE_KEY 环境变量")
+
+
+def cmd_detect(config_path: str) -> None:
+    """检测并报告 agent 的工作目录路径（不写配置）。"""
+    from hermes_adapter import detect_workspace
+    ws = detect_workspace()
+    print(f"检测到的 Agent 工作目录: {ws}")
+    exists = os.path.isdir(ws)
+    print(f"目录存在: {'是' if exists else '否（请检查路径或设 HERMES_HOME）'}")
+    if exists:
+        # 列出灵魂资产是否齐全
+        soul = ["SOUL.md", "AGENTS.md", "USER.md", "memories", "skills"]
+        found = [s for s in soul if os.path.exists(os.path.join(ws, s))]
+        missing = [s for s in soul if s not in found]
+        print(f"灵魂资产: 找到 {found if found else '无'}")
+        if missing:
+            print(f"缺失: {missing}")
 
 
 def main() -> None:
@@ -200,6 +219,7 @@ def main() -> None:
 
     sub.add_parser("sources", help="列出备份源")
     sub.add_parser("init", help="生成配置文件")
+    sub.add_parser("detect", help="检测 agent 工作目录路径")
 
     p_push = sub.add_parser("push", help="上传快照")
     p_push.add_argument("--name", help="备份源名称")
@@ -215,6 +235,9 @@ def main() -> None:
     config_path = os.path.expanduser(args.config)
     if args.cmd == "init":
         cmd_init(config_path)
+        return
+    if args.cmd == "detect":
+        cmd_detect(config_path)
         return
 
     config = load_config(config_path)

@@ -149,7 +149,7 @@ export default function OnboardingPage() {
         type: "http",
         url: `${API_BASE}/mcp`,
         headers: { "X-API-Key": apiKey },
-        description: "Moltable — AI Identity & Memory Layer"
+        description: "Moltable — Agent Soul Backup"
       }
     }
   }, null, 2) : '// 请先输入你的 Moltable API Key'
@@ -159,20 +159,16 @@ export default function OnboardingPage() {
       label: 'Hermes Agent',
       steps: [
         {
-          title: lang === 'zh' ? '1. 打开 MCP 配置文件' : '1. Open MCP config file',
-          desc: lang === 'zh' ? '在终端中编辑 ~/.hermes/mcp.json' : 'Edit ~/.hermes/mcp.json in terminal',
-          code: 'nano ~/.hermes/mcp.json'
+          title: lang === 'zh' ? '1. 用命令行配置（推荐，自动写入 config.yaml）' : '1. Configure via CLI (recommended, auto-writes config.yaml)',
+          desc: lang === 'zh' ? 'Hermes 的 MCP 配置在 ~/.hermes/config.yaml，用 hermes config set 添加' : 'Hermes stores MCP config in ~/.hermes/config.yaml; add via hermes config set',
+          code: apiKey ? `hermes config set mcp_servers.moltable.url "${API_BASE}/mcp"\nhermes config set mcp_servers.moltable.headers.X-API-Key "${apiKey}"` : '// 请先输入你的 Moltable API Key'
         },
         {
-          title: lang === 'zh' ? '2. 粘贴配置（如果已有其他服务器，用逗号合并）' : '2. Paste config below (merge with existing mcpServers if any)',
-          code: mcpConfig
-        },
-        {
-          title: lang === 'zh' ? '3. 重启 Hermes 或刷新对话' : '3. Restart Hermes or start a new chat',
+          title: lang === 'zh' ? '2. 重启 Hermes 或刷新对话' : '2. Restart Hermes or start a new chat',
           code: '/new'
         },
         {
-          title: lang === 'zh' ? '4. 验证：在 Hermes 中说' : '4. Verify: ask Hermes',
+          title: lang === 'zh' ? '3. 验证：在 Hermes 中说' : '3. Verify: ask Hermes',
           desc: lang === 'zh' ? '"用 search_memory 搜索: 我是谁"' : '"use search_memory to find: who am I"'
         }
       ]

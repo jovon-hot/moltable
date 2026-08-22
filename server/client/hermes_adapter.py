@@ -137,10 +137,32 @@ def load_config(path: Optional[str] = None) -> dict:
 def default_config() -> dict:
     return {
         "agent_type": "hermes",
-        "workspace": "~/.hermes",
+        "workspace": detect_workspace(),
         "references": [],
         "exclude": list(DEFAULT_EXCLUDE),
     }
+
+
+def detect_workspace() -> str:
+    """自动发现 Agent 的工作目录（灵魂资产所在位置）。
+
+    优先级（从高到低）：
+    1. HERMES_HOME 环境变量 —— Hermes 官方支持的自定义数据目录
+    2. ~/.hermes —— Hermes 默认目录
+    3. 用户可在 backup.json 的 workspace 字段手动覆盖（最高优先级，由 collect_files 读取）
+
+    返回绝对路径。找不到时返回 ~/.hermes（默认值，让用户可改）。
+    """
+    # Hermes 官方自定义路径：HERMES_HOME（若存在且是目录）
+    hermes_home = os.getenv("HERMES_HOME")
+    if hermes_home:
+        p = os.path.abspath(os.path.expanduser(hermes_home))
+        if os.path.isdir(p):
+            return p
+
+    # 默认 ~/.hermes
+    default = os.path.abspath(os.path.expanduser("~/.hermes"))
+    return default
 
 
 def collect_files(config: dict) -> Dict[str, bytes]:
