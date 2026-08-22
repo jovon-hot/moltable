@@ -185,3 +185,24 @@ class TestEmailVerifyHardening:
         assert resp2.status_code == 200
         assert resp2.json()["api_key"] is None
         assert resp2.json()["has_api_key"] is True
+
+    def test_ip_rate_limit_blocks_batch_send(self, tmp_path, monkeypatch):
+        """同一 IP 10 分钟内发 3 封后，第 4 封被拒（防批量轰炸不同邮箱）。"""
+        client, _ = self._make_client(tmp_path, monkeypatch)
+        for i in range(3):
+            resp = client.post("/api/auth/register", json={
+                "email": f"batch-{i}@gmail.com",
+                "password": "TestPass2026!",
+                "name": f"Batch{i}",
+                "altcha": _make_altcha_payload(),
+            })
+            assert resp.status_code == 200, resp.text
+        # 第 4 次 → 同一 IP 超过 3 封/10min → 429
+        resp = client.post("/api/auth/register", json={
+            "email": "batch-3@gmail.com",
+            "password": "TestPass2026!",
+            "name": "Batch3",
+            "altcha": _make_altcha_payload(),
+        })
+        assert resp.status_code == 429, resp.text
+        assert "频繁" in resp.json()["detail"]

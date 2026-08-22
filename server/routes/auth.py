@@ -382,6 +382,51 @@ def _hash_password(password: str) -> str:
         return kdf.derive(password.encode()).hex()
 
 
+# ── 邮件发送频率限制（防邮件轰炸）──────────────────
+EMAIL_COOLDOWN_MINUTES = 5        # 同一邮箱 5 分钟内只发一封
+EMAIL_IP_MAX_PER_10MIN = 3        # 同一 IP 10 分钟内最多发 3 封
+
+
+def _check_email_rate_limit(email: str, ip: str) -> None:
+    """发验证邮件前的频率检查（DB 级：按邮箱冷却 + 按 IP 频率，换 IP 也绕不过按邮箱冷却）。"""
+    now = datetime.now(timezone.utc)
+    # 按邮箱冷却：5 分钟内该邮箱已发过
+    recent = (
+        supabase.table("email_send_audit")
+        .select("id")
+        .eq("email", email)
+        .gte("sent_at", (now - timedelta(minutes=EMAIL_COOLDOWN_MINUTES)).isoformat())
+        .execute()
+    )
+    if recent.data:
+        raise HTTPException(429, "验证邮件已发送，请查收（含垃圾邮件）。如未收到请稍后再试。")
+    # 按 IP 频率：10 分钟内该 IP 发了 ≥ 上限
+    ip_recent = (
+        supabase.table("email_send_audit")
+        .select("id")
+        .eq("ip_address", ip)
+        .gte("sent_at", (now - timedelta(minutes=10)).isoformat())
+        .execute()
+    )
+    if len(ip_recent.data) >= EMAIL_IP_MAX_PER_10MIN:
+        raise HTTPException(429, "发送过于频繁，请稍后再试。")
+
+
+def _record_email_send(email: str, ip: str) -> None:
+    """记录一次验证邮件发送（审计 + 限流依据）。"""
+    try:
+        supabase.table("email_send_audit").insert(
+            {
+                "id": str(_uuid.uuid4()),
+                "email": email,
+                "ip_address": ip,
+                "sent_at": datetime.now(timezone.utc).isoformat(),
+            }
+        ).execute()
+    except Exception:
+        pass  # 审计记录失败不阻断主流程
+
+
 class RegisterRequest(BaseModel):
     email: str = Field(..., max_length=254)
     password: str = Field(..., min_length=8, max_length=128)
@@ -444,6 +489,10 @@ def local_register(request: Request, body: RegisterRequest):
     if existing.data:
         raise HTTPException(409, "该邮箱已注册")
 
+    # 邮件发送频率检查（防轰炸）——提前到创建用户前，避免 429 时已占用邮箱
+    ip = request.client.host if request and request.client else "unknown"
+    _check_email_rate_limit(email, ip)
+
     user_id = str(_uuid.uuid4())
     pw_hash = _hash_password(body.password)
     verify_token = secrets.token_urlsafe(32)
@@ -477,6 +526,7 @@ def local_register(request: Request, body: RegisterRequest):
         from email_utils import send_verification_email
 
         send_verification_email(email, verify_token)
+        _record_email_send(email, ip)
     except Exception:
         pass
 
@@ -569,10 +619,9 @@ def resend_verification(request: Request, body: ResendVerificationRequest):
     if user.get("email_verified"):
         return {"message": "该邮箱已验证，无需重新发送。"}
 
-    # 数据库级频率限制：token 过期时间还剩 >25 分钟（即 5 分钟内发过），拒绝频繁重发
-    _exp = _parse_expiry(user.get("email_verify_token_expires"))
-    if _exp and _exp > datetime.now(timezone.utc) + timedelta(minutes=25):
-        raise HTTPException(429, "验证邮件刚已发送，请检查收件箱（含垃圾邮件）。如未收到请 5 分钟后再试。")
+    # 频率限制（DB 级：按邮箱冷却 + 按 IP 频率，覆盖 register 与 resend 的发送记录）
+    ip = request.client.host if request and request.client else "unknown"
+    _check_email_rate_limit(email, ip)
 
     new_token = secrets.token_urlsafe(32)
     new_expires = (datetime.now(timezone.utc) + timedelta(minutes=30)).isoformat()
@@ -584,6 +633,7 @@ def resend_verification(request: Request, body: ResendVerificationRequest):
         from email_utils import send_verification_email
 
         send_verification_email(email, new_token)
+        _record_email_send(email, ip)
     except Exception:
         pass
 

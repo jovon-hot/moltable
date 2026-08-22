@@ -316,3 +316,13 @@ CREATE TABLE IF NOT EXISTS snapshots (
 );
 CREATE INDEX IF NOT EXISTS snapshots_source_version_idx ON snapshots(source_id, version);
 
+-- 邮箱验证邮件发送审计（防邮件轰炸：按邮箱冷却 + 按 IP 频率）
+CREATE TABLE IF NOT EXISTS email_send_audit (
+    id          TEXT PRIMARY KEY,
+    email       TEXT NOT NULL,
+    ip_address  TEXT,
+    sent_at     TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_email_send_audit_email ON email_send_audit(email, sent_at);
+CREATE INDEX IF NOT EXISTS idx_email_send_audit_ip ON email_send_audit(ip_address, sent_at);
+
