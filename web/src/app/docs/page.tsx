@@ -10,8 +10,8 @@ import {
 
 // Dynamic API host — respects NEXT_PUBLIC_API_URL env var, falls back to production URL
 const API_HOST = typeof window !== 'undefined'
-  ? (process.env.NEXT_PUBLIC_API_URL || 'https://api.moltable.io')
-  : 'https://api.moltable.io'
+  ? (process.env.NEXT_PUBLIC_API_URL || 'https://api.moltable.ai')
+  : 'https://api.moltable.ai'
 
 // ─── Sidebar Navigation ───────────────────────────────────────────
 
