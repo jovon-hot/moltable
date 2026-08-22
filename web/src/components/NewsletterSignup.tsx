@@ -94,7 +94,7 @@ export default function NewsletterSignup({ variant = 'card', className = '' }: N
       <p className="text-sm mb-5 max-w-md mx-auto" style={{ color: '#85829E' }}>
         {isEn
           ? 'Deep dives into AI identity, MCP protocol, and agent infrastructure — delivered to your inbox. No spam.'
-          : 'AI 身份层、MCP 协议、Agent 基础设施的深度内容，每周五推送。不打扰，可随时退订。'}
+          : 'Agent 灵魂资产、MCP 协议、跨框架迁移的深度内容，每周五推送。不打扰，可随时退订。'}
       </p>
       <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
         <input

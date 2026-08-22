@@ -12,19 +12,20 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.moltable.ai'),
   title: {
-    default: 'Moltable.ai — AI Identity Sync: One Registration, Every AI Knows You',
+    default: 'Moltable.ai — Switch Agents, Keep Your Soul',
     template: '%s | Moltable.ai',
   },
   description:
-    'Cross-platform AI identity sync. Restore your full AI environment in 3 minutes. Supports Hermes, Claude, ChatGPT, Cursor. 30-day free trial.',
+    'Back up, version, and migrate your tuned AI agents across frameworks. Pack your SOUL, Skills, and MCP configs — never lose your tuning when you switch machines or frameworks.',
   keywords: [
-    'AI identity',
-    'AI memory',
-    'cross-platform AI',
-    'agent environment',
+    'AI agent backup',
+    'agent soul',
+    'soul backup',
+    'cross-framework migration',
+    'AI agent versioning',
     'MCP tools',
-    'persona sync',
-    'AI agent identity',
+    'agent environment',
+    'AI tuning backup',
   ],
   robots: {
     index: true,
@@ -38,9 +39,9 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: 'Moltable — AI Identity Sync',
+    title: 'Moltable — Switch Agents, Keep Your Soul',
     description:
-      'Cross-platform AI identity sync. Restore your full AI environment in 3 minutes. Hermes · Claude · ChatGPT · Cursor.',
+      'Back up, version, and migrate your tuned AI agents across frameworks. Hermes · OpenClaw · Claude · Codex.',
     url: 'https://www.moltable.ai',
     siteName: 'Moltable.ai',
     locale: 'en_US',
@@ -50,15 +51,15 @@ export const metadata: Metadata = {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Moltable — AI Identity Sync',
+        alt: 'Moltable — Switch Agents, Keep Your Soul',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Moltable — AI Identity Sync',
+    title: 'Moltable — Switch Agents, Keep Your Soul',
     description:
-      'Cross-platform AI identity sync. Restore your full AI environment in 3 minutes.',
+      'Back up, version, and migrate your tuned AI agents across frameworks.',
     images: ['/og-image.png'],
   },
 }
@@ -73,7 +74,7 @@ const jsonLd = {
       logo: 'https://www.moltable.ai/logo-icon.svg',
       sameAs: ['https://github.com/jovon-hot/moltable'],
       description:
-        'Cross-platform AI identity sync — one registration, every AI agent knows you.',
+        'Agent soul asset repository — back up, version, and migrate your tuned AI agents across frameworks.',
     },
     {
       '@type': 'SoftwareApplication',
@@ -86,7 +87,7 @@ const jsonLd = {
         priceCurrency: 'USD',
       },
       description:
-        'Cross-platform AI identity sync — supports Hermes, Claude, ChatGPT, Cursor and MCP-compatible AI agents.',
+        'Back up, version, and migrate your tuned AI agents (SOUL, Skills, MCP) across Hermes, OpenClaw, Claude, Codex and MCP-compatible agents.',
       url: 'https://www.moltable.ai',
     },
   ],

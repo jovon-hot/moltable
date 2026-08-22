@@ -79,10 +79,10 @@ export default function BlogLayout({ children }: { children: React.ReactNode }) 
           <div className="p-6 rounded-card text-center" style={{ background: '#14141E', boxShadow: '0 0 0 1px rgba(99,102,241,0.12)' }}>
             <div className="text-2xl mb-2">⚡</div>
             <h3 className="text-lg font-heading mb-2 font-semibold">
-              想让你的 AI 真正认识你？
+              换 Agent，不换灵魂
             </h3>
             <p className="text-sm text-ln-secondary mb-5 max-w-sm mx-auto">
-              3 分钟注册 Moltable，配置你的 AI 身份 — Claude、Cursor、Hermes 共享同一份记忆。
+              3 分钟备份你的 Agent 灵魂 — SOUL、Skills、记忆打包备份，换框架不丢失。
             </p>
             <Link
               href="/register"

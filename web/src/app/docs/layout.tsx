@@ -1,13 +1,13 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Moltable 开发者文档 — MCP 协议接入指南',
+  title: 'Moltable 开发者文档 — 备份与 MCP 接入指南',
   description:
-    'Moltable API 参考文档：MCP 协议接入、API 端点、Hermes/Claude Agent 配置。快速开始你的 AI 身份层集成。',
+    'Moltable API 参考文档：备份 API 端点、MCP 协议接入、Hermes/Claude Agent 配置。快速开始备份你的 Agent 灵魂资产。',
   openGraph: {
-    title: 'Moltable 开发者文档 — MCP 协议接入指南',
+    title: 'Moltable 开发者文档 — 备份与 MCP 接入指南',
     description:
-      'Moltable API 参考文档：MCP 协议接入、API 端点、Hermes/Claude Agent 配置。',
+      'Moltable API 参考文档：备份 API 端点、MCP 协议接入、Hermes/Claude Agent 配置。',
   },
 }
 
