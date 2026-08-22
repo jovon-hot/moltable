@@ -5,9 +5,8 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# ── 精简生产依赖（无 torch/ML 栈，embedding 自动降级 trigram hash）──
-COPY server/requirements-railway.txt .
-RUN pip install --no-cache-dir -r requirements-railway.txt
+COPY server/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY server/ .
 COPY start.sh /start.sh
