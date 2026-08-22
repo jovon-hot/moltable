@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useToast } from '@/contexts/ToastContext'
 import { useLang } from '@/contexts/LanguageContext'
-import { apiFetch, createCheckout } from '@/lib/api'
-import { Loader2, Key, Copy, Check, Trash2, Shield, Plus, Eye, EyeOff, Brain, Crown, ArrowUp, RefreshCw } from 'lucide-react'
+import { apiFetch, createCheckout, createPortal, getSubscription } from '@/lib/api'
+import { Loader2, Key, Copy, Check, Trash2, Shield, Plus, Eye, EyeOff, Brain, Crown, ArrowUp, RefreshCw, CreditCard } from 'lucide-react'
 
 interface ApiKey { id: string; name: string; key_prefix: string; created_at: string; last_used_at?: string; is_active: boolean }
 interface UsageStats { memories: { used: number; limit: number }; personas: { used: number; limit: number }; agents: { used: number; limit: number }; identities: { used: number; limit: number }; api_keys: { used: number; limit: number } }
@@ -25,7 +25,10 @@ export default function SettingsPage() {
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState(false)
   const [upgrading, setUpgrading] = useState(false)
-  const [activeTab, setActiveTab] = useState<'profile' | 'keys' | 'sync'>('profile')
+  const [activeTab, setActiveTab] = useState<'profile' | 'keys' | 'sync' | 'billing'>('profile')
+  const [sub, setSub] = useState<{ plan: string; plan_name?: string; status?: string } | null>(null)
+  const [subLoading, setSubLoading] = useState(false)
+  const [managing, setManaging] = useState(false)
   const [syncCode, setSyncCode] = useState<string | null>(null)
   const [syncCopied, setSyncCopied] = useState(false)
   const [syncLoading, setSyncLoading] = useState(false)
@@ -113,6 +116,25 @@ export default function SettingsPage() {
     finally { setUpgrading(false) }
   }
 
+  const loadSubscription = async () => {
+    setSubLoading(true)
+    try {
+      const data = await getSubscription()
+      setSub(data)
+    } catch {
+      setSub(null)
+    } finally {
+      setSubLoading(false)
+    }
+  }
+
+  const handleManage = async () => {
+    setManaging(true)
+    try { await createPortal() }
+    catch (e: any) { toast(e.message || (lang === 'zh' ? '跳转订阅管理失败' : 'Failed to open portal'), 'error') }
+    finally { setManaging(false) }
+  }
+
   const renderProgress = (label: string, used: number, limit: number, color: string) => {
     const pct = limit > 0 ? Math.min(100, (used / limit) * 100) : 0
     const isNearLimit = pct >= 80
@@ -147,8 +169,9 @@ export default function SettingsPage() {
           { id: 'profile', label: d.tabProfile },
           { id: 'keys', label: d.tabAPIKeys },
           { id: 'sync', label: d.tabSync || (lang === 'zh' ? '同步码' : 'Sync') },
+          { id: 'billing', label: d.tabBilling },
         ].map(tab => (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id as any)}
+          <button key={tab.id} onClick={() => { setActiveTab(tab.id as any); if (tab.id === 'billing' && !sub) loadSubscription() }}
             className="pb-3 text-sm font-medium transition-all border-b-2"
             style={{ color: activeTab === tab.id ? '#ffffff' : '#888888', borderColor: activeTab === tab.id ? '#4338CA' : 'transparent', fontWeight: activeTab === tab.id ? 590 : 400 }}>
             {tab.label}
@@ -322,6 +345,63 @@ export default function SettingsPage() {
           <p className="text-xs mt-3 text-center" style={{ color: '#62666d' }}>
             {d.syncCodeGenerating || (lang === 'zh' ? '生成后请立即复制保存' : 'Copy and save immediately after generation')}
           </p>
+        </div>
+      )}
+
+      {activeTab === 'billing' && (
+        <div>
+          <h2 className="text-sm mb-4" style={{ fontWeight: 590, color: '#ffffff' }}>{d.tabBilling}</h2>
+
+          {subLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="w-6 h-6 animate-spin" style={{ color: '#4338CA' }} />
+            </div>
+          ) : (
+            <>
+              {/* 当前计划卡片 */}
+              <div className="p-5 rounded-[8px] mb-4" style={{ background: '#14141E', boxShadow: '0 0 0 1px rgba(255,255,255,0.06)' }}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: `${planColor}20` }}>
+                      {isFree ? <Shield size={18} color={planColor} /> : <Crown size={18} color={planColor} />}
+                    </div>
+                    <div>
+                      <p className="text-sm" style={{ fontWeight: 590, color: '#ffffff' }}>
+                        {isFree ? d.subscriptionFree : (sub?.plan === 'team' ? d.subscriptionTeam : d.subscriptionPro)}
+                      </p>
+                      <p className="text-xs" style={{ color: '#888888' }}>
+                        {isFree
+                          ? d.subscriptionUpgradeDesc
+                          : (sub?.status === 'trialing' ? d.trialActive : d.proPlan)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 操作按钮 */}
+              {isFree ? (
+                <button onClick={handleUpgrade} disabled={upgrading}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-[6px] text-sm font-medium transition-all hover:opacity-90 disabled:opacity-50"
+                  style={{ background: '#4338CA', color: '#fff', fontWeight: 510 }}>
+                  {upgrading ? <Loader2 size={16} className="animate-spin" /> : <ArrowUp size={16} />}
+                  {upgrading ? d.upgrading : d.upgradePro}
+                </button>
+              ) : (
+                <>
+                  <button onClick={handleManage} disabled={managing}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-[6px] text-sm font-medium transition-all hover:opacity-90 disabled:opacity-50"
+                    style={{ background: '#4338CA', color: '#fff', fontWeight: 510 }}>
+                    {managing ? <Loader2 size={16} className="animate-spin" /> : <CreditCard size={16} />}
+                    {d.subscriptionManage}
+                  </button>
+                  <p className="text-xs mt-3 text-center" style={{ color: '#888888', lineHeight: 1.6 }}>
+                    {d.subscriptionManageDesc}
+                  </p>
+                </>
+              )}
+            </>
+          )}
         </div>
       )}
     </div>

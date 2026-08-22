@@ -85,6 +85,30 @@ export async function createCheckout(plan: 'pro' | 'team' = 'pro', period: 'mont
   return data
 }
 
+export async function createPortal(): Promise<{url: string}> {
+  const token = await getToken()
+  if (!token) throw new Error('Login required to manage subscription')
+
+  const res = await fetch(`${API_BASE}/api/billing/portal`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-API-Key': token,
+    },
+  })
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(`Portal ${res.status}: ${text}`)
+  }
+  const data = await res.json()
+  window.location.href = data.url
+  return data
+}
+
+export async function getSubscription(): Promise<{ plan: string; plan_name?: string; status?: string }> {
+  return apiFetch('/api/billing/subscription')
+}
+
 // ── 定价(公开端点,无需认证)──────────────
 export interface PlansResponse {
   mode: 'paid' | 'free_trial'
