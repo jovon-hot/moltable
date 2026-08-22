@@ -288,3 +288,24 @@ CREATE TABLE IF NOT EXISTS profiles (
     created_at      TEXT default now()
 );
 
+-- P1: Agent 备份源同步 — 灵魂资产文件级快照 + CAS 内容寻址
+CREATE TABLE IF NOT EXISTS backup_sources (
+    id             TEXT primary key,
+    user_id        TEXT REFERENCES users(id),
+    agent_type     TEXT not null,
+    name           TEXT not null,
+    latest_version integer default 0,
+    created_at     TEXT default (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS backup_sources_user_idx ON backup_sources(user_id);
+
+CREATE TABLE IF NOT EXISTS snapshots (
+    id             TEXT primary key,
+    source_id      TEXT REFERENCES backup_sources(id) ON DELETE CASCADE,
+    version        integer not null,
+    manifest       TEXT not null default '{}',
+    parent_version integer,
+    created_at     TEXT default (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS snapshots_source_version_idx ON snapshots(source_id, version);
+

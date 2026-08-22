@@ -47,6 +47,7 @@ const sidebarItems: SidebarItem[] = [
     ],
   },
   { id: 'mcp', label: 'MCP 协议', icon: GitBranch },
+  { id: 'backup', label: '备份同步', icon: Archive },
   { id: 'faq', label: '常见问题', icon: HelpCircle },
 ]
 
@@ -394,7 +395,7 @@ const faqItems: FAQItem[] = [
   },
   {
     q: '免费版有什么限制？',
-    a: '免费版包含：1 个 Identity、2 个 Persona、最多 500 条记忆、基础 MCP 工具访问。Pro 版（¥15/月）解锁无限记忆、最多 10 个 Persona、浏览器插件和优先支持。',
+    a: '免费版包含：3 个备份源、500MB 存储、灵魂备份、版本管理和基础 MCP 工具。Pro 版解锁 10 个备份源、10GB 存储和引用同步，后续将上线跨框架迁移与 DID+VC 可验证身份。',
   },
   {
     q: '如何贡献代码？',
@@ -989,6 +990,75 @@ hermes --mcp-auto-provision moltable`} />
                   </tbody>
                 </table>
               </div>
+            </div>
+          </section>
+
+          <SectionSeparator />
+
+          {/* ════════════════════════════════════════════════════════
+                     BACKUP SYNC
+                     ════════════════════════════════════════════════════════ */}
+          <section data-section="backup">
+            <h2 className="text-2xl font-heading tracking-[-0.3px] text-ln-text mb-6">备份同步</h2>
+
+            <div className="space-y-6 text-base leading-relaxed text-ln-secondary font-body">
+              <p>
+                Moltable 把每个 Agent 框架实例（Hermes / OpenClaw / Claude / Codex）当作一个<strong>独立的备份源</strong>，
+                打包你的<strong>灵魂资产</strong>（SOUL.md、Skills、MCP 配置、记忆），版本化并支持换机还原。
+              </p>
+
+              <div className="bg-ln-raised rounded-card p-4 text-sm text-ln-tertiary font-body border border-ln-border-subtle">
+                <strong className="text-ln-text">核心边界</strong>：只备份「灵魂资产」，不备份「流水账」。
+                对话日志（state.db）、FTS 索引、WAL 文件、密钥（.env / *.key）自动排除。
+              </div>
+
+              <h3 className="text-lg font-ui text-ln-text mt-6">CLI 快速开始</h3>
+              <CodeBlock
+                label="moltable backup"
+                code={`# 初始化配置（生成 ~/.moltable/backup.json）
+moltable backup init
+
+# 上传快照（增量，CAS 去重：只传变化的文件）
+moltable backup push
+
+# 下载还原（默认最新版本）
+moltable backup pull
+
+# 列出备份源
+moltable backup sources`}
+              />
+
+              <h3 className="text-lg font-ui text-ln-text mt-6">REST API 端点</h3>
+              <CodeBlock
+                label="创建备份源"
+                code={`curl -X POST ${API_HOST}/api/backup/sources \\
+  -H "Content-Type: application/json" \\
+  -H "X-API-Key: *** \\
+  -d '{"agent_type": "hermes", "name": "hermes-mac-pro"}'`}
+              />
+              <CodeBlock
+                label="上传快照"
+                code={`curl -X POST ${API_HOST}/api/backup/push \\
+  -H "Content-Type: application/json" \\
+  -H "X-API-Key: *** \\
+  -d '{
+    "source_id": "…",
+    "manifest": {"self/SOUL.md": "sha256:…"},
+    "blobs": {"sha256:…": "<base64 content>"}
+  }'`}
+              />
+              <CodeBlock
+                label="下载快照"
+                code={`curl -X POST ${API_HOST}/api/backup/pull \\
+  -H "Content-Type: application/json" \\
+  -H "X-API-Key: *** \\
+  -d '{"source_id": "…", "version": null}'`}
+              />
+              <p className="text-ln-quaternary text-sm italic">
+                完整端点：POST /api/backup/sources（创建）、GET /api/backup/sources（列出）、
+                POST /api/backup/push（上传）、POST /api/backup/pull（下载）、
+                POST /api/backup/manifest（仅取 manifest 供客户端 diff）。
+              </p>
             </div>
           </section>
 

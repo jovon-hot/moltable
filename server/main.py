@@ -189,6 +189,7 @@ from routes import (
     admin,
     agents,
     auth,
+    backup,
     billing,
     experiments,
     knowledge,
@@ -220,6 +221,7 @@ app.include_router(agents.router)
 app.include_router(projects.router)
 app.include_router(referrals.router)
 app.include_router(sync.router)
+app.include_router(backup.router)
 app.include_router(admin.router, include_in_schema=False)
 app.include_router(experiments.router, include_in_schema=False)
 app.add_api_route("/.well-known/mcp", mcp.mcp_discovery, methods=["GET"], tags=["mcp"])

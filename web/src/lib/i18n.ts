@@ -4,24 +4,24 @@ export const translations = {
   zh: {
     nav: { features: '功能', pricing: '定价', about: '关于', docs: '文档', connect: '接入', research: '评测', tools: '工具', blog: '博客', faq: 'FAQ', login: '登录', start: '免费开始' },
     hero: {
-      tagline: 'DID+VC · 开源 MIT',
-      title: 'AI Identity Sync — 一次注册，所有 AI 认识你',
-      subtitle: '让你的 AI 永远记得你是谁。',
-      desc: '支持 Hermes · Claude · ChatGPT · Cursor · OpenClaw 全平台',
-      heroCta: '免费创建 AI 身份',
+      tagline: 'Agent 灵魂备份 · 开源 MIT',
+      title: '换 Agent，不换灵魂',
+      subtitle: '你调教的 AI，不会因为换框架、换电脑而丢失。',
+      desc: '备份 Hermes · OpenClaw · Claude · Codex 的灵魂资产，跨框架迁移',
+      heroCta: '免费备份你的 Agent',
       trust: '无需信用卡 · 30天免费体验',
-      trust2: '30 秒接入，从今天开始你的 AI 不再失忆',
-      seeHow: '查看定价 ↓',
+      trust2: '一条命令，备份你的 Agent 灵魂',
+      seeHow: '查看能力 ↓',
     },
     features: {
       title: '核心能力',
       items: [
-        { title: '跨 AI 身份', desc: '一个身份通用于 Hermes、Claude、ChatGPT、Cursor 等所有支持 MCP 的 AI 助手。' },
-        { title: '自动配置', desc: '接入即完成。Agent 自动加载你的记忆、Persona 和规则，无需人工配置。' },
-        { title: '多 Persona', desc: '工作、生活、学习 — 不同场景切换不同人格，各自独立的记忆和偏好。' },
-        { title: '渐进记忆', desc: 'AI 在工作中学到的偏好自动积累。用得越久，AI 越懂你。' },
-        { title: '你拥有数据', desc: '随时随地导出或删除全部数据。我们永远不会用你的数据训练模型。' },
-        { title: '标准协议', desc: '基于 MCP 和 DID+VC 开放标准。任何 AI 都可以接入，不锁定平台。' },
+        { title: '灵魂备份', desc: '一键打包 SOUL、Skills、MCP 配置、记忆——自动排除对话流水账，只备份真正值钱的灵魂资产。' },
+        { title: '版本管理', desc: '每个备份源独立版本库，快照 + 版本号。改坏了随时回滚到任意历史版本。' },
+        { title: '引用同步', desc: '你引用的知识库、内容来源一并备份。换电脑、换框架，工作环境完整还原。' },
+        { title: '你拥有数据', desc: '随时导出或删除全部数据。我们永远不会用你的数据训练模型。' },
+        { title: '跨框架迁移（即将推出）', desc: '用你自己的 LLM，把 Hermes 调教的灵魂翻译成 OpenClaw / Claude / Codex 版本。' },
+        { title: '可验证身份（即将推出）', desc: 'DID+VC 给灵魂签出处。这个灵魂是谁调的、是不是正版、授权给谁，密码学可验证。' },
       ],
     },
     personaDemo: {
@@ -51,9 +51,9 @@ export const translations = {
     how: {
       title: '三步开始',
       steps: [
-        { title: '注册 Moltable', desc: '30 秒创建账号，获取 API Key。' },
-        { title: '加载 Skill', desc: '在 Hermes / Claude 中加载 Moltable Skill，输入 API Key。' },
-        { title: '开始工作', desc: 'AI 自动认识你。像往常一样工作，所有偏好自动同步。' },
+        { title: '安装 CLI', desc: '一行命令安装 Moltable 备份工具，生成配置文件。' },
+        { title: '备份灵魂', desc: 'moltable backup push —— 打包上传你的 Agent 灵魂资产。' },
+        { title: '换机 / 换框架', desc: 'moltable backup pull 还原，或用你自己的 LLM 跨框架迁移。' },
       ],
     },
     pricing: {
@@ -77,9 +77,9 @@ export const translations = {
         cta: '联系咨询',
       },
       features: {
-        free: ['1 个 AI 身份', '2 个 Persona', '100 条记忆', '1 个 Agent', '基础 MCP 工具'],
-        pro: ['3 个 AI 身份', '10 个 Persona', '10,000 条记忆', '5 个 Agent', 'Skills 内容同步', 'MCP 密钥加密'],
-        team: ['10 个 AI 身份', '无限 Persona', '50,000 条记忆', '团队记忆库', '共享 Persona', '管理面板'],
+        free: ['3 个备份源', '500MB 存储', '灵魂备份', '版本管理', '基础 MCP 工具'],
+        pro: ['10 个备份源', '10GB 存储', '引用同步', '跨框架迁移（即将推出）', 'DID+VC（即将推出）'],
+        team: ['无限备份源', '无限存储', '团队共享灵魂', '管理面板', '优先支持'],
       },
     },
     about: {
@@ -331,24 +331,24 @@ export const translations = {
   en: {
     nav: { features: 'Features', pricing: 'Pricing', about: 'About', docs: 'Docs', connect: 'Connect', research: 'Research', tools: 'Tools', blog: 'Blog', faq: 'FAQ', login: 'Sign In', start: 'Get Started' },
     hero: {
-      tagline: 'DID+VC · Open Source MIT',
-      title: 'AI Identity Sync — One Registration, Every AI Knows You',
-      subtitle: 'Your AI remembers who you are. Permanently.',
-      desc: 'Hermes · Claude · ChatGPT · Cursor · OpenClaw — all platforms supported',
-      heroCta: 'Create Your AI Identity',
+      tagline: 'Agent Soul Backup · Open Source MIT',
+      title: 'Switch Agents, Keep Your Soul',
+      subtitle: 'The AI you tuned never disappears when you switch frameworks or machines.',
+      desc: 'Back up your soul assets across Hermes · OpenClaw · Claude · Codex — and migrate between them',
+      heroCta: 'Back Up Your Agent Free',
       trust: 'No credit card · 30-day free trial',
-      trust2: '30-second setup. Your AI never forgets again.',
-      seeHow: 'See pricing ↓',
+      trust2: 'One command to back up your Agent soul',
+      seeHow: 'See capabilities ↓',
     },
     features: {
       title: 'Core Capabilities',
       items: [
-        { title: 'Cross-AI Identity', desc: 'One identity works across Hermes, Claude, ChatGPT, Cursor, and all MCP-compatible AI assistants.' },
-        { title: 'Auto-Provision', desc: 'Connect once, done. Agent auto-loads your memories, personas and rules — no manual setup.' },
-        { title: 'Multi-Persona', desc: 'Work, life, learning — switch between different personas, each with independent memory and preferences.' },
-        { title: 'Progressive Memory', desc: 'AI automatically accumulates preferences learned at work. The longer you use it, the better it knows you.' },
-        { title: 'You Own Your Data', desc: 'Export or delete everything anytime, anywhere. We will never use your data to train models.' },
-        { title: 'Standard Protocol', desc: 'Built on MCP and DID+VC open standards. Any AI can connect — no platform lock-in.' },
+        { title: 'Soul Backup', desc: 'One command packs SOUL, Skills, MCP configs and memories — automatically excluding chat logs, keeping only the soul assets that matter.' },
+        { title: 'Versioning', desc: 'Each backup source has its own version history — snapshot + version number. Roll back to any point anytime.' },
+        { title: 'Reference Sync', desc: 'Knowledge bases and content sources you reference are backed up too. Full environment restored across machines and frameworks.' },
+        { title: 'You Own Your Data', desc: 'Export or delete everything anytime. We never use your data to train models.' },
+        { title: 'Cross-Framework Migration (Coming Soon)', desc: 'Use your own LLM to translate a Hermes-tuned soul into OpenClaw / Claude / Codex versions.' },
+        { title: 'Verifiable Identity (Coming Soon)', desc: 'DID+VC signs your soul\'s provenance. Who tuned it, whether it\'s authentic, who it\'s authorized for — cryptographically verifiable.' },
       ],
     },
     personaDemo: {
@@ -378,9 +378,9 @@ export const translations = {
     how: {
       title: 'Get Started in 3 Steps',
       steps: [
-        { title: 'Sign Up', desc: 'Create your account in 30 seconds. Get your API Key.' },
-        { title: 'Load the Skill', desc: 'Load Moltable Skill in Hermes / Claude. Enter your API Key.' },
-        { title: 'Start Working', desc: 'Your AI knows you instantly. Work as usual — all preferences sync automatically.' },
+        { title: 'Install CLI', desc: 'One command installs the Moltable backup tool and generates a config file.' },
+        { title: 'Back Up Your Soul', desc: 'moltable backup push — pack and upload your Agent soul assets.' },
+        { title: 'Switch Machine / Framework', desc: 'moltable backup pull to restore, or use your own LLM to migrate across frameworks.' },
       ],
     },
     pricing: {
@@ -404,9 +404,9 @@ export const translations = {
         cta: 'Contact Us',
       },
       features: {
-        free: ['1 AI Identity', '2 Personas', '100 Memories', '1 Agent', 'Basic MCP Tools'],
-        pro: ['3 AI Identities', '10 Personas', '10,000 Memories', '5 Agents', 'Skills Content Sync', 'MCP Secret Encryption'],
-        team: ['10 AI Identities', 'Unlimited Personas', '50,000 Memories', 'Team Memory', 'Shared Personas', 'Admin Panel'],
+        free: ['3 Backup Sources', '500MB Storage', 'Soul Backup', 'Versioning', 'Basic MCP Tools'],
+        pro: ['10 Backup Sources', '10GB Storage', 'Reference Sync', 'Cross-Framework Migration (Soon)', 'DID+VC (Soon)'],
+        team: ['Unlimited Sources', 'Unlimited Storage', 'Team Soul Sharing', 'Admin Panel', 'Priority Support'],
       },
     },
     about: {

@@ -447,3 +447,26 @@ CREATE TABLE IF NOT EXISTS profiles (
     created_at      timestamptz default now()
 );
 
+-- P1: Agent 备份源同步 — 灵魂资产文件级快照 + CAS 内容寻址
+-- 只备份「记忆/灵魂资产」，不备份「流水账」(对话日志 db / FTS 索引)
+
+CREATE TABLE IF NOT EXISTS backup_sources (
+    id             uuid primary key default gen_random_uuid(),
+    user_id        uuid references users(id) on delete cascade,
+    agent_type     text not null,
+    name           text not null,
+    latest_version integer default 0,
+    created_at     timestamptz default now()
+);
+CREATE INDEX IF NOT EXISTS backup_sources_user_idx ON backup_sources(user_id);
+
+CREATE TABLE IF NOT EXISTS snapshots (
+    id             uuid primary key default gen_random_uuid(),
+    source_id      uuid references backup_sources(id) on delete cascade,
+    version        integer not null,
+    manifest       jsonb not null default '{}',
+    parent_version integer,
+    created_at     timestamptz default now()
+);
+CREATE INDEX IF NOT EXISTS snapshots_source_version_idx ON snapshots(source_id, version);
+
