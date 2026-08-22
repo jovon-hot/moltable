@@ -1128,7 +1128,7 @@ async def mcp_discovery(request: Request):
         "server": {
             "name": "moltable",
             "version": "0.1.0",
-            "description": "Moltable — AI Identity Layer: Cross-AI identity system with memory, persona, and provisioning",
+            "description": "Moltable — Agent Soul Backup: back up and migrate your agent's soul assets (SOUL.md, skills, MCP config, memories)",
         },
         "capabilities": {
             "tools": {

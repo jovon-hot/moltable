@@ -1,13 +1,13 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Join Moltable — AI Identity Layer',
+  title: 'Join Moltable — Agent Soul Backup',
   description:
-    'You\'ve been invited to Moltable — the cross-platform AI identity sync platform. One registration, every AI knows you. Start free.',
+    'Back up your Agent soul — SOUL.md, skills, MCP config, memories. Switch agents, keep your soul. Start free.',
   openGraph: {
-    title: 'Join Moltable — AI Identity Layer',
+    title: 'Join Moltable — Agent Soul Backup',
     description:
-      'You\'ve been invited to Moltable. Cross-platform AI identity sync in 3 minutes.',
+      'Back up your Agent soul. Switch agents, keep your soul.',
   },
 }
 

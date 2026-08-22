@@ -906,7 +906,7 @@ hermes --mcp-auto-provision moltable`} />
   "server": {
     "name": "moltable",
     "version": "0.1.0",
-    "description": "Moltable — AI Identity Layer"
+    "description": "Moltable — Agent Soul Backup"
   },
   "capabilities": {
     "tools": {
