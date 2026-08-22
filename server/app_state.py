@@ -20,7 +20,15 @@ except ImportError:
 logger = logging.getLogger("moltable")
 
 # ── Rate Limiter ──────────────────────────────────────────
-limiter = Limiter(key_func=get_remote_address)
+def _client_ip_key(request):
+    """从 X-Forwarded-For 提取真实客户端 IP（Railway 代理下 client.host 是内部 IP 且每次变化）。"""
+    xff = request.headers.get("x-forwarded-for", "")
+    if xff:
+        return xff.split(",")[0].strip()
+    return get_remote_address(request)
+
+
+limiter = Limiter(key_func=_client_ip_key)
 
 # ── Supabase ──────────────────────────────────────────────
 # 🔒 Security: prefer SUPABASE_ANON_KEY + RLS over service_role key.

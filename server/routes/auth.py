@@ -387,6 +387,19 @@ EMAIL_COOLDOWN_MINUTES = 5        # 同一邮箱 5 分钟内只发一封
 EMAIL_IP_MAX_PER_10MIN = 3        # 同一 IP 10 分钟内最多发 3 封
 
 
+def _client_ip(request) -> str:
+    """提取真实客户端 IP。
+
+    Railway 等反向代理会把真实 IP 放在 X-Forwarded-For，而 request.client.host
+    是代理内部 IP（100.64.x.x）且每次请求都变化，直接用它会导致 IP 限流失效。
+    """
+    if request is not None and getattr(request, "headers", None):
+        xff = request.headers.get("x-forwarded-for", "")
+        if xff:
+            return xff.split(",")[0].strip()
+    return request.client.host if request and request.client else "unknown"
+
+
 def _check_email_rate_limit(email: str, ip: str) -> None:
     """发验证邮件前的频率检查（DB 级：按邮箱冷却 + 按 IP 频率，换 IP 也绕不过按邮箱冷却）。"""
     now = datetime.now(timezone.utc)
@@ -490,7 +503,7 @@ def local_register(request: Request, body: RegisterRequest):
         raise HTTPException(409, "该邮箱已注册")
 
     # 邮件发送频率检查（防轰炸）——提前到创建用户前，避免 429 时已占用邮箱
-    ip = request.client.host if request and request.client else "unknown"
+    ip = _client_ip(request)
     _check_email_rate_limit(email, ip)
 
     user_id = str(_uuid.uuid4())
@@ -620,7 +633,7 @@ def resend_verification(request: Request, body: ResendVerificationRequest):
         return {"message": "该邮箱已验证，无需重新发送。"}
 
     # 频率限制（DB 级：按邮箱冷却 + 按 IP 频率，覆盖 register 与 resend 的发送记录）
-    ip = request.client.host if request and request.client else "unknown"
+    ip = _client_ip(request)
     _check_email_rate_limit(email, ip)
 
     new_token = secrets.token_urlsafe(32)
