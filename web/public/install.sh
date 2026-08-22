@@ -40,7 +40,13 @@ echo "✓ 已下载到 $INSTALL_DIR/"
 cat > "$BIN_DIR/moltable" << 'EOF'
 #!/bin/bash
 # moltable — Agent 灵魂资产备份 CLI
-exec python3 "$HOME/.moltable/moltable_backup.py" "$@"
+# 用法: moltable backup <init|push|pull|sources> [options]
+#       moltable <init|push|pull|sources> [options]  （backup 可省略）
+args=("$@")
+if [ "${args[0]}" = "backup" ]; then
+  args=("${args[@]:1}")
+fi
+exec python3 "$HOME/.moltable/moltable_backup.py" "${args[@]}"
 EOF
 chmod +x "$BIN_DIR/moltable"
 echo "✓ 已创建命令 $BIN_DIR/moltable"
