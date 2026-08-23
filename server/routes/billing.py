@@ -159,16 +159,28 @@ async def create_checkout(request: Request, body: CheckoutRequest, user_id: str 
         raise HTTPException(400, "Invalid plan or period")
 
     base = str(request.base_url).rstrip("/")
-    try:
-        # 关联已有 Stripe Customer，避免重复订阅产生多个 customer 记录
-        customer_id = None
-        if supabase is not None and not _is_sqlite:
-            try:
-                row = supabase.table("users").select("stripe_customer_id").eq("id", user_id).single().execute()
-                customer_id = row.data.get("stripe_customer_id") if row.data else None
-            except Exception:
-                customer_id = None
 
+    # 关联已有 Stripe Customer（try 外，避免 HTTPException 被外层的 502 兜底吞掉）
+    customer_id = None
+    if supabase is not None and not _is_sqlite:
+        try:
+            row = supabase.table("users").select("stripe_customer_id").eq("id", user_id).single().execute()
+            customer_id = row.data.get("stripe_customer_id") if row.data else None
+        except Exception:
+            customer_id = None
+
+    # 已有活跃订阅则拒绝重复订阅，防止双扣费（升级/改期走 Customer Portal）
+    if customer_id:
+        try:
+            existing = stripe.Subscription.list(customer=customer_id, status="active", limit=1)
+            if existing.data:
+                raise HTTPException(409, "已有活跃订阅，请通过 Customer Portal 管理升级或改期")
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.warning("Failed to check existing subscription: %s", e)
+
+    try:
         session_kwargs = {
             "mode": "subscription",
             "line_items": [{"price": price_id, "quantity": 1}],
@@ -211,6 +223,16 @@ async def stripe_webhook(request: Request):
 
     # Stripe Event 是 StripeObject（非 dict），to_dict() 递归转成普通 dict 以支持 .get()
     event = event.to_dict() if hasattr(event, "to_dict") else event
+
+    # 校验事件 livemode 与当前账户 mode 一致，防止 test/live 混合时测试卡免费白嫖 pro
+    expected_live = os.getenv("STRIPE_SECRET_KEY", "").startswith("sk_live_")
+    if bool(event.get("livemode")) != expected_live:
+        logger.warning(
+            "Rejecting webhook event with mismatched livemode: expected=%s got=%s",
+            expected_live, event.get("livemode"),
+        )
+        raise HTTPException(400, "Webhook livemode mismatch")
+
     event_id = event.get("id")
 
     # 幂等去重：Stripe 会重试失败的 webhook，已处理过的事件直接跳过，

@@ -20,12 +20,21 @@ except ImportError:
 logger = logging.getLogger("moltable")
 
 # ── Rate Limiter ──────────────────────────────────────────
+def client_ip(request) -> str:
+    """提取真实客户端 IP。
+
+    Railway 等反向代理把真实 IP 放在 X-Forwarded-For 首位，而 request.client.host
+    是内部代理 IP（100.64.x.x）且每次请求都变化，直接用它会导致 IP 限流/追踪/审计失效。
+    """
+    if request is not None and getattr(request, "headers", None):
+        xff = request.headers.get("x-forwarded-for", "")
+        if xff:
+            return xff.split(",")[0].strip()
+    return request.client.host if request and request.client else "unknown"
+
+
 def _client_ip_key(request):
-    """从 X-Forwarded-For 提取真实客户端 IP（Railway 代理下 client.host 是内部 IP 且每次变化）。"""
-    xff = request.headers.get("x-forwarded-for", "")
-    if xff:
-        return xff.split(",")[0].strip()
-    return get_remote_address(request)
+    return client_ip(request)
 
 
 limiter = Limiter(key_func=_client_ip_key)

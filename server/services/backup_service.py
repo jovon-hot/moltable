@@ -32,6 +32,28 @@ def sha256_bytes(data: bytes) -> str:
     return "sha256:" + hashlib.sha256(data).hexdigest()
 
 
+def is_valid_hash(h: str) -> bool:
+    """校验 hash 形如 `sha256:<64 hex>`，防止任意字符串被当作对象存储键。"""
+    if not isinstance(h, str) or not h.startswith("sha256:"):
+        return False
+    hexpart = h[len("sha256:"):]
+    return len(hexpart) == 64 and all(c in "0123456789abcdef" for c in hexpart)
+
+
+def is_valid_manifest_path(path: str) -> bool:
+    """校验 manifest 路径：只允许 `self/` 或 `refs/` 前缀，禁止路径穿越与绝对路径。"""
+    if not isinstance(path, str):
+        return False
+    if not (path.startswith("self/") or path.startswith("refs/")):
+        return False
+    if "\\" in path:
+        return False
+    parts = path.split("/")
+    if ".." in parts or "" in parts:
+        return False
+    return True
+
+
 # ── Blob 存储抽象 ──────────────────────────────────────────
 
 
@@ -163,6 +185,10 @@ class PushResult:
     skipped_blobs: int
 
 
+class StorageQuotaExceeded(Exception):
+    """备份存储配额超限（routes 层转 402）。"""
+
+
 class BackupService:
     """Per-user backup operations against a Supabase-compatible client."""
 
@@ -222,6 +248,22 @@ class BackupService:
         except Exception:
             return 0
 
+    def _check_storage_quota(self, new_bytes: int) -> None:
+        """存储配额检查：现有 + 新增 ≤ plan 的 storage_gb 限额。超限抛 StorageQuotaExceeded。"""
+        from services.quota import _get_user_plan
+        from pricing_config import build_plan
+
+        plan = _get_user_plan(self.user_id)
+        storage_gb = build_plan(plan)["limits"]["storage_gb"]
+        if storage_gb < 0:  # -1 = 无限
+            return
+        current = self.get_storage_bytes()
+        limit_bytes = storage_gb * 1024 ** 3
+        if current + new_bytes > limit_bytes:
+            raise StorageQuotaExceeded(
+                f"存储配额超限：当前 {current} 字节 + 新增 {new_bytes} 字节 > {storage_gb}GB。升级 Pro 解锁更多。"
+            )
+
     def _get_source(self, source_id: str) -> Optional[dict]:
         rows = (
             self.db.table(TABLE_SOURCES)
@@ -258,19 +300,36 @@ class BackupService:
         if source is None:
             raise ValueError(f"source {source_id} not found or not owned by user")
 
+        # 校验 manifest 键（路径）与值（hash）格式，防止路径穿越/任意存储键
+        for path, h in manifest.items():
+            if not is_valid_manifest_path(path):
+                raise ValueError(f"invalid manifest path: {path}")
+            if not is_valid_hash(h):
+                raise ValueError(f"invalid manifest hash for {path}: {h}")
+
         latest = int(source.get("latest_version") or 0)
         next_version = latest + 1
         store = self._store()
 
         stored = 0
         skipped = 0
+        # 先收集需要新上传的 blob（校验哈希 + 去重），算新增字节做配额检查
+        to_store: Dict[str, bytes] = {}
         for h, data in blobs.items():
-            if not h.startswith("sha256:"):
+            if not is_valid_hash(h):
                 continue
+            # 内容寻址校验：声明的 hash 必须与实际内容一致，否则拒绝写入
+            if sha256_bytes(data) != h:
+                raise ValueError(f"blob hash mismatch for {h}")
             # 内容寻址去重：hash 相同即复用，不重复上传
             if store.exists(h):
                 skipped += 1
                 continue
+            to_store[h] = data
+
+        self._check_storage_quota(sum(len(d) for d in to_store.values()))
+
+        for h, data in to_store.items():
             store.put(h, data)
             stored += 1
 

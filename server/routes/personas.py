@@ -59,7 +59,23 @@ def _list_personas(user_id: str) -> list:
 
 
 def _list_own_personas(user_id: str) -> list:
-    """仅返回用户自己创建的 Persona（不含 demo）—— 用于配额计算"""
+    """仅返回用户自己创建的 Persona（不含 demo）—— 用于配额计算。
+
+    生产走 Supabase 真实查询，本地（offline）回退内存 store；否则生产创建的
+    persona 不在内存 store 里，配额计数恒为 0。
+    """
+    if not _is_offline():
+        try:
+            result = (
+                supabase.table("personas")
+                .select("id")
+                .eq("user_id", user_id)
+                .eq("is_active", True)
+                .execute()
+            )
+            return result.data or []
+        except Exception:
+            pass
     pstore = get_persona_store()
     return [p for p in pstore.list(user_id) if p.get("user_id") == user_id]
 

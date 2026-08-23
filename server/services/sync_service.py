@@ -234,8 +234,16 @@ class SyncService:
         rows = query.limit(1).execute().data
         return rows[0] if rows else None
 
-    def _insert(self, table: str, fields: dict) -> None:
-        self.db.table(table).insert(fields).execute()
+    def _insert(self, spec: ItemType, fields: dict) -> None:
+        # user_via_field 类型（credential）：插入前校验归属字段 ∈ 本人身份，防跨用户注入
+        if spec.user_via_field:
+            val = fields.get(spec.user_via_field)
+            dids = self._get_user_dids()
+            if not dids or val not in dids:
+                raise ValueError(
+                    f"ownership check failed: {spec.user_via_field}={val!r} not owned by user"
+                )
+        self.db.table(spec.table).insert(fields).execute()
 
     def _update(self, spec: ItemType, item_id: str, fields: dict) -> None:
         query = self.db.table(spec.table).update(fields).eq(spec.key_col, item_id)
@@ -280,7 +288,7 @@ class SyncService:
                 fields = self._content_to_fields(item_type, item.get("content"), updated_at)
                 fields.update(self._base_fields(spec, item_id))
                 fields.update({"version": 1, "base_content": ""})
-                self._insert(spec.table, fields)
+                self._insert(spec, fields)
                 accepted.append({"id": item_id, "type": item_type, "version": 1, "updated_at": updated_at})
                 continue
             server_version = int(row.get("version") or 1)
@@ -328,7 +336,7 @@ class SyncService:
                 fields = self._content_to_fields(item_type, content, updated_at)
                 fields.update(self._base_fields(spec, item_id))
                 fields.update({"version": 1, "base_content": ""})
-                self._insert(spec.table, fields)
+                self._insert(spec, fields)
                 accepted.append({"id": item_id, "type": item_type, "version": 1, "updated_at": updated_at})
                 continue
             # 状态机保护（did）：revoked 不可逆
@@ -361,7 +369,7 @@ class SyncService:
                 continue
             fields = self._content_to_fields(item_type, item.get("content"), updated_at)
             fields.update(self._base_fields(spec, item_id))
-            self._insert(spec.table, fields)
+            self._insert(spec, fields)
             accepted.append({"id": item_id, "type": item_type, "version": 1, "updated_at": updated_at})
         return {"accepted": accepted, "conflicts": []}
 
@@ -438,7 +446,7 @@ class SyncService:
                     fields.update(self._base_fields(spec, item_id))
                     fields["version"] = int(item.get("version") or 1)
                     fields["base_content"] = ""
-                    self._insert(spec.table, fields)
+                    self._insert(spec, fields)
                     imported += 1
                     continue
                 incoming_ts = parse_iso(item.get("updated_at"))

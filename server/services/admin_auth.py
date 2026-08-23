@@ -66,20 +66,21 @@ _MAX_FAILURES = 5
 
 
 def _client_ip(request: Optional[Request]) -> str:
+    """提取真实客户端 IP。
+
+    Railway 代理把真实 IP 放在 X-Forwarded-For 首位，而 request.client.host 是
+    内部代理 IP(100.64.x.x)且每次请求都变化，直接用它会导致按 IP 的暴力破解防护
+    完全失效（_failure_store 每次记到不同的 key，5 次锁定永不触发）。
+    """
     if request is None:
         return "unknown"
-    direct = request.client.host if request.client else None
-    allowed_proxies = os.getenv("ALLOWED_PROXY_IPS", "")
-    if allowed_proxies and direct and direct in [ip.strip() for ip in allowed_proxies.split(",")]:
-        xff = request.headers.get("X-Forwarded-For", "")
-        if xff:
-            return xff.split(",")[0].strip()
-        xri = request.headers.get("X-Real-IP", "")
-        if xri:
-            return xri.strip()
-    if direct:
-        return direct
-    return "unknown"
+    xff = request.headers.get("X-Forwarded-For", "")
+    if xff:
+        return xff.split(",")[0].strip()
+    xri = request.headers.get("X-Real-IP", "")
+    if xri:
+        return xri.strip()
+    return request.client.host if request.client else "unknown"
 
 
 def _hash_password(password: str) -> str:

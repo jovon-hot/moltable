@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import hashlib
 import json
 import os
 import sys
@@ -45,6 +46,14 @@ def _api_key(config: dict) -> str:
 def _request(path: str, config: dict, payload: dict | None = None, method: str = "POST") -> dict:
     """调用后端 API，返回 JSON。"""
     api = config.get("api") or DEFAULT_API
+    # 强制 HTTPS（仅放行 loopback），防止 API key 与灵魂资产经明文 HTTP 传输
+    if not (
+        api.startswith("https://")
+        or api.startswith("http://localhost")
+        or api.startswith("http://127.0.0.1")
+    ):
+        print(f"❌ API 地址必须为 https://（仅放行本地 loopback）：{api}")
+        sys.exit(1)
     url = f"{api}/api/backup/{path}"
     key = _api_key(config)
     data = json.dumps(payload or {}).encode() if payload is not None else None
@@ -141,6 +150,10 @@ def cmd_pull(config: dict, source_id: str | None, version: int | None, name: str
             print(f"⚠  缺少 blob {h}（{path}），跳过")
             continue
         data = base64.b64decode(b64)
+        # 校验内容哈希，防止传输损坏或内容被篡改
+        if not h.startswith("sha256:") or hashlib.sha256(data).hexdigest() != h[len("sha256:"):]:
+            print(f"⚠  blob 哈希不匹配 {h}（{path}），跳过")
+            continue
         target = _resolve_target(workspace, config, path)
         if target is None:
             continue
@@ -166,15 +179,36 @@ def _resolve_source(config: dict, name: str | None) -> str | None:
 
 
 def _resolve_target(workspace: str, config: dict, path: str) -> str | None:
-    """把 manifest 逻辑路径还原成真实路径。self/ → workspace，refs/逻辑名 → 用户声明路径。"""
+    """把 manifest 逻辑路径还原成真实路径。self/ → workspace，refs/逻辑名 → 用户声明路径。
+
+    防御路径穿越：拒绝含 `..` 的路径，并用 realpath 校验最终落在声明的根目录内。
+    """
     if path.startswith("self/"):
-        return os.path.join(workspace, path[len("self/"):])
+        rel = path[len("self/"):]
+        if ".." in rel.split("/") or rel.startswith("/"):
+            print(f"⚠  路径非法（含 .. 或绝对路径），跳过 {path}")
+            return None
+        target = os.path.realpath(os.path.join(workspace, rel))
+        root = os.path.realpath(workspace)
+        if target != root and not target.startswith(root + os.sep):
+            print(f"⚠  路径越界，跳过 {path}")
+            return None
+        return target
     if path.startswith("refs/"):
         rest = path[len("refs/"):]
         logical, _, rel = rest.partition("/")
+        if ".." in rel.split("/") or rel.startswith("/"):
+            print(f"⚠  路径非法（含 .. 或绝对路径），跳过 {path}")
+            return None
         for ref in config.get("references", []):
             if ref.get("logical_name") == logical:
-                return os.path.join(os.path.expanduser(ref.get("path", "")), rel)
+                base = os.path.expanduser(ref.get("path", ""))
+                target = os.path.realpath(os.path.join(base, rel))
+                root = os.path.realpath(base)
+                if target != root and not target.startswith(root + os.sep):
+                    print(f"⚠  路径越界，跳过 {path}")
+                    return None
+                return target
         print(f"⚠  引用 {logical} 未在配置中声明，跳过还原")
         return None
     return None
@@ -189,6 +223,11 @@ def cmd_init(config_path: str) -> None:
         print(f"✅ 已生成 {config_path}")
     else:
         print(f"⚠  {config_path} 已存在，未覆盖")
+    # 配置文件含 API key 明文，强制仅本人可读（默认 umask 022 会落成 0644）
+    try:
+        os.chmod(config_path, 0o600)
+    except OSError:
+        pass
     print(f"   工作目录（自动发现）: {cfg.get('workspace')}")
     print("   如需改路径，编辑此文件里的 workspace 字段")
     print("   也可设 HERMES_HOME 环境变量指向自定义目录")

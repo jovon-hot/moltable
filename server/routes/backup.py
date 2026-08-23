@@ -12,12 +12,12 @@ from __future__ import annotations
 import base64
 from typing import Dict, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
-from app_state import supabase
+from app_state import limiter, supabase
 from routes.auth import get_user
-from services.backup_service import BackupService
+from services.backup_service import BackupService, StorageQuotaExceeded
 
 router = APIRouter(prefix="/api/backup", tags=["backup"])
 
@@ -45,19 +45,37 @@ class ManifestRequest(BaseModel):
 
 
 @router.post("/sources")
-def create_source(body: CreateSourceRequest, user_id: str = Depends(get_user)):
+@limiter.limit("20/hour")
+def create_source(request: Request, body: CreateSourceRequest, user_id: str = Depends(get_user)):
     if not body.agent_type.strip() or not body.name.strip():
         raise HTTPException(status_code=400, detail="agent_type and name are required")
+
+    # 备份源数量配额检查
+    from services.quota import _get_user_plan
+    from pricing_config import build_plan
+
+    plan = _get_user_plan(user_id)
+    max_sources = build_plan(plan)["limits"]["backup_sources"]
+    if max_sources >= 0:  # -1 = 无限
+        current = len(BackupService(supabase, user_id).list_sources())
+        if current >= max_sources:
+            raise HTTPException(
+                status_code=402,
+                detail=f"备份源数量已达 {max_sources} 上限。升级 Pro 解锁更多。",
+            )
+
     return BackupService(supabase, user_id).create_source(body.agent_type.strip(), body.name.strip())
 
 
 @router.get("/sources")
-def list_sources(user_id: str = Depends(get_user)):
+@limiter.limit("120/minute")
+def list_sources(request: Request, user_id: str = Depends(get_user)):
     return {"sources": BackupService(supabase, user_id).list_sources()}
 
 
 @router.get("/sources/{source_id}")
-def get_source_detail(source_id: str, user_id: str = Depends(get_user)):
+@limiter.limit("120/minute")
+def get_source_detail(request: Request, source_id: str, user_id: str = Depends(get_user)):
     """备份源详情：基本信息 + 版本历史。"""
     svc = BackupService(supabase, user_id)
     try:
@@ -78,7 +96,8 @@ def get_source_detail(source_id: str, user_id: str = Depends(get_user)):
 
 
 @router.delete("/sources/{source_id}")
-def delete_source(source_id: str, user_id: str = Depends(get_user)):
+@limiter.limit("20/hour")
+def delete_source(request: Request, source_id: str, user_id: str = Depends(get_user)):
     """删除备份源及其所有快照（不可恢复）。"""
     try:
         BackupService(supabase, user_id).delete_source(source_id)
@@ -88,7 +107,8 @@ def delete_source(source_id: str, user_id: str = Depends(get_user)):
 
 
 @router.post("/push")
-def push(body: PushRequest, user_id: str = Depends(get_user)):
+@limiter.limit("20/hour")
+def push(request: Request, body: PushRequest, user_id: str = Depends(get_user)):
     blobs: Dict[str, bytes] = {}
     for h, b64 in body.blobs.items():
         try:
@@ -97,13 +117,16 @@ def push(body: PushRequest, user_id: str = Depends(get_user)):
             raise HTTPException(status_code=400, detail=f"invalid base64 for blob {h}")
     try:
         result = BackupService(supabase, user_id).push(body.source_id, body.manifest, blobs)
+    except StorageQuotaExceeded as exc:
+        raise HTTPException(status_code=402, detail=str(exc))
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
     return {"version": result.version, "stored_blobs": result.stored_blobs, "skipped_blobs": result.skipped_blobs}
 
 
 @router.post("/pull")
-def pull(body: PullRequest, user_id: str = Depends(get_user)):
+@limiter.limit("30/minute")
+def pull(request: Request, body: PullRequest, user_id: str = Depends(get_user)):
     try:
         result = BackupService(supabase, user_id).pull(body.source_id, body.version)
     except ValueError as exc:
@@ -114,7 +137,8 @@ def pull(body: PullRequest, user_id: str = Depends(get_user)):
 
 
 @router.post("/manifest")
-def get_manifest(body: ManifestRequest, user_id: str = Depends(get_user)):
+@limiter.limit("60/minute")
+def get_manifest(request: Request, body: ManifestRequest, user_id: str = Depends(get_user)):
     try:
         return BackupService(supabase, user_id).get_manifest(body.source_id, body.version)
     except ValueError as exc:

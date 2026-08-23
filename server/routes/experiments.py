@@ -16,7 +16,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
-from app_state import _is_sqlite, limiter, supabase
+from app_state import _is_sqlite, client_ip, limiter, supabase
 from services.admin_auth import require_staff
 
 logger = logging.getLogger("moltable.experiments")
@@ -317,7 +317,7 @@ def assign_variant(experiment_id: str, request: Request):
         return {"variant": "control", "reason": "too_few_variants"}
 
     # Check if user already assigned
-    user_id = request.headers.get("X-User-Id") or request.client.host
+    user_id = request.headers.get("X-User-Id") or client_ip(request)
     try:
         existing = supabase.table("experiment_assignments").select("variant").eq("experiment_id", experiment_id).eq("user_id", user_id).execute()
         if existing.data and len(existing.data) > 0:
@@ -356,7 +356,7 @@ def assign_variant(experiment_id: str, request: Request):
 @limiter.limit("120/minute")
 def record_conversion(experiment_id: str, request: Request):
     """Record a conversion event for a user in an experiment."""
-    user_id = request.headers.get("X-User-Id") or request.client.host
+    user_id = request.headers.get("X-User-Id") or client_ip(request)
 
     # Look up assignment
     try:

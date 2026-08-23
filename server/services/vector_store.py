@@ -48,7 +48,7 @@ class VectorStore:
                 continue
             results.append(doc)
         results.sort(key=lambda d: d["created_at"], reverse=True)
-        return results[:limit]
+        return results[:limit] if limit else results
 
     def update(self, memory_id: str, user_id: str, **kwargs) -> bool:
         doc = self._store.get(memory_id)

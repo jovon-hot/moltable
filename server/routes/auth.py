@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Auth routes — Supabase JWT verification + API key management"""
 
+import base64
 import hashlib
+import hmac
 import logging
 import os
 import secrets
@@ -14,7 +16,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
-from app_state import limiter, supabase
+from app_state import client_ip, limiter, supabase
 
 logger = logging.getLogger(__name__)
 
@@ -44,13 +46,33 @@ class CreateAPIKeyRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=100, description="API key name")
 
 
+# ── 生产环境判断 + 密钥 fail-closed ──────────────────────
+def _is_production() -> bool:
+    return os.getenv("RAILWAY_ENVIRONMENT") == "production" or os.getenv("ENV") == "production"
+
+
+def _secret_or_fail(env_name: str, dev_default: str) -> str:
+    """生产环境缺失即拒绝启动；本地/测试用 dev 默认值。"""
+    value = os.getenv(env_name)
+    if value:
+        return value
+    if _is_production():
+        raise RuntimeError(
+            f"{env_name} 未配置。生产环境拒绝启动，请设置该环境变量（本地开发可用默认值）。"
+        )
+    return dev_default
+
+
+_API_KEY_PEPPER = _secret_or_fail("API_KEY_PEPPER", "moltable-local-dev-pepper")
+_ALTCHA_HMAC_SECRET = _secret_or_fail("ALTCHA_HMAC_SECRET", "moltable-local-dev-altcha-secret")
+
+
 # ── Helpers ──────────────────────────────────────────────
 def hash_api_key(key: str) -> str:
     """SHA-256 with pepper salt (PBKDF2-HMAC)."""
     import hashlib
 
-    pepper = os.getenv("API_KEY_PEPPER", "moltable-local-dev-pepper")
-    return hashlib.pbkdf2_hmac("sha256", key.encode(), pepper.encode(), 100_000).hex()
+    return hashlib.pbkdf2_hmac("sha256", key.encode(), _API_KEY_PEPPER.encode(), 100_000).hex()
 
 
 def hash_session_token(raw: str) -> str:
@@ -70,7 +92,7 @@ async def get_user(
     Failed authentications are logged to audit_logs with IP address.
     Also updates last_active_at on the user row (best-effort, silently ignored on failure).
     """
-    ip_address = request.client.host if request and request.client else None
+    ip_address = client_ip(request)
     user_id = None
 
     if authorization:
@@ -142,7 +164,7 @@ async def get_user(
         try:
             resp = (
                 supabase.table("sessions")
-                .select("session_uuid, token, expires_at, migrated_at")
+                .select("session_uuid, token, expires_at, migrated_at, user_id")
                 .eq("token", hash_session_token(x_session_token))
                 .execute()
             )
@@ -160,7 +182,7 @@ async def get_user(
                 if expires_at < datetime.now(timezone.utc):
                     _log_failed_auth("Session expired", ip_address)
                     raise HTTPException(401, "Session expired — create a new one")
-            user_id = str(session.get("session_uuid", x_session_token))
+            user_id = session.get("user_id") or str(session.get("session_uuid", x_session_token))
         except HTTPException:
             raise
         except Exception:
@@ -330,12 +352,6 @@ async def authenticate_agent(
 import re
 import uuid as _uuid
 
-_API_KEY_PEPPER = os.getenv("API_KEY_PEPPER", "moltable-local-dev-pepper")
-
-# ── Altcha 人机验证（PoW）HMAC 密钥 ──
-# 生产环境必须通过 ALTCHA_HMAC_SECRET 环境变量覆盖此默认值。
-_ALTCHA_HMAC_SECRET = os.getenv("ALTCHA_HMAC_SECRET", "moltable-local-dev-altcha-secret")
-
 # ── XSS 防护 ────────────────────────────────────────
 _HTML_TAG_RE = re.compile(r"<[^>]*>")
 
@@ -371,15 +387,36 @@ def _is_disposable_email(email: str) -> bool:
     return domain in _DISPOSABLE_EMAIL_DOMAINS
 
 
-def _hash_password(password: str) -> str:
-    """使用 scrypt 进行密码哈希（抗 GPU 暴力破解）。"""
-    salt = _API_KEY_PEPPER.encode()[:16]
+def _scrypt_hex(password: str, salt: bytes) -> str:
+    """scrypt 派生 64 字节 → hex（兼容 macOS LibreSSL）。"""
     try:
         return hashlib.scrypt(password.encode(), salt=salt, n=16384, r=8, p=1, dklen=64).hex()
     except AttributeError:
         # macOS LibreSSL fallback
         kdf = Scrypt(salt=salt, length=64, n=16384, r=8, p=1)
         return kdf.derive(password.encode()).hex()
+
+
+def _hash_password(password: str) -> str:
+    """scrypt 密码哈希，随机 per-user 盐。格式：base64(16-byte salt) + hex(64-byte digest)。"""
+    salt = secrets.token_bytes(16)
+    return base64.b64encode(salt).decode() + _scrypt_hex(password, salt)
+
+
+def _verify_password(password: str, stored_hash: str) -> bool:
+    """验证密码。兼容新随机盐格式与 legacy 静态盐格式（已注册用户）。"""
+    if not stored_hash:
+        return False
+    # 新格式：24-char base64 salt + 128-hex digest = 152 chars
+    if len(stored_hash) == 152:
+        try:
+            salt = base64.b64decode(stored_hash[:24])
+            return hmac.compare_digest(_scrypt_hex(password, salt), stored_hash[24:])
+        except Exception:
+            return False
+    # legacy 格式：128-hex（静态 PEPPER 盐）
+    legacy = _scrypt_hex(password, _API_KEY_PEPPER.encode()[:16])
+    return hmac.compare_digest(legacy, stored_hash)
 
 
 # ── 邮件发送频率限制（防邮件轰炸）──────────────────
@@ -671,9 +708,7 @@ def local_login(request: Request, body: LoginRequest):
         raise HTTPException(401, "邮箱或密码错误")
 
     user = result.data[0]
-    expected_hash = _hash_password(body.password)
-
-    if user.get("password_hash") != expected_hash:
+    if not _verify_password(body.password, user.get("password_hash") or ""):
         raise HTTPException(401, "邮箱或密码错误")
 
     # 邮箱未验证 → 拦截登录（方案 A：验证邮箱后才发放 key / 使用账号）

@@ -35,6 +35,8 @@ _mock_supabase.auth.get_user.return_value = MagicMock(id="test-user-id")
 _mock_supabase.table().select().eq().eq().eq().limit().execute.return_value.data = []
 _mock_supabase.table().insert().execute.return_value.data = []
 _mock_supabase.table().update().eq().eq().execute.return_value.data = []
+# .single() 查询（billing checkout/portal 用）默认返回空 → 模拟「用户无 Stripe customer」
+_mock_supabase.table().select().eq().single().execute.return_value.data = None
 patch("app_state.supabase", _mock_supabase).start()
 
 # Patch embed in the memories route so tests don't load the ML model

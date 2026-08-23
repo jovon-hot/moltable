@@ -141,8 +141,9 @@ class SupabaseMemoryRepository(Repository):
             .select("*") \
             .eq("user_id", user_id) \
             .eq("is_archived", False) \
-            .order("created_at", desc=True) \
-            .limit(limit)
+            .order("created_at", desc=True)
+        if limit:
+            query = query.limit(limit)
         if category:
             query = query.eq("category", category)
         resp = query.execute()

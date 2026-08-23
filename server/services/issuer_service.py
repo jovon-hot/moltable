@@ -118,8 +118,8 @@ class IssuerService:
         except Exception as exc:
             logger.warning(
                 "⚠️  无法持久化 Issuer 私钥到 %s: %s。密钥仅在内存中。"
-                "重启后将丢失，请设置 MOLTABLE_ISSUER_KEY 环境变量。\n"
-                "    密钥值为: %s", _KEY_FILE, exc, seed_hex
+                "重启后将丢失，请设置 MOLTABLE_ISSUER_KEY 环境变量。",
+                _KEY_FILE, exc,
             )
         return private_key
 

@@ -17,7 +17,7 @@ from fastapi import APIRouter, Header, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from app_state import _is_sqlite, get_store, limiter, supabase
+from app_state import _is_sqlite, client_ip, get_store, limiter, supabase
 from services.embedding import embed
 
 router = APIRouter(tags=["mcp"])
@@ -1073,7 +1073,7 @@ async def mcp_endpoint(
 
     # ── 可选认证 ────────────────────────────────────
     user_id = None
-    ip_address = request.client.host if request and request.client else None
+    ip_address = client_ip(request)
     # Agent 来源追踪: X-Agent-Platform 请求头（hermes/claude/chatgpt 等）
     agent_platform = (request.headers.get("x-agent-platform") or "").strip() or None
     if x_api_key:

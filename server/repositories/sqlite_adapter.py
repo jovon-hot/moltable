@@ -134,7 +134,9 @@ class QueryBuilder:
         return self
 
     def limit(self, n: int) -> "QueryBuilder":
-        self._limit_val = n
+        # n=0 或 None 表示不限制（用于计数/全量查询），否则生成 LIMIT n
+        if n:
+            self._limit_val = n
         return self
 
     def single(self) -> "QueryBuilder":

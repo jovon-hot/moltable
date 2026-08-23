@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 
-from app_state import limiter, supabase
+from app_state import client_ip, limiter, supabase
 from routes.auth import get_user
 from services.provision_service import auto_provision
 
@@ -19,7 +19,7 @@ class ProvisionRequest(BaseModel):
 @limiter.limit("30/hour")
 def auto_provision_endpoint(request: Request, user_id: str = Depends(get_user)):
     """返回完整用户上下文，Agent据此自动配置自己"""
-    ip_address = request.client.host if request.client else None
+    ip_address = client_ip(request)
     result = auto_provision(supabase, user_id, ip_address=ip_address)
     result["instructions"] = """
 你现在已经加载了用户的完整上下文。
@@ -36,7 +36,7 @@ def auto_provision_endpoint(request: Request, user_id: str = Depends(get_user)):
 @limiter.limit("30/hour")
 def auto_provision_get(request: Request, user_id: str = Depends(get_user)):
     """GET 方式获取用户上下文（浏览器/curl 友好）"""
-    ip_address = request.client.host if request.client else None
+    ip_address = client_ip(request)
     result = auto_provision(supabase, user_id, ip_address=ip_address)
     result["instructions"] = """
 你现在已经加载了用户的完整上下文。

@@ -261,8 +261,11 @@ def _count(supabase, table: str, user_id: str, extra_field: str = None, extra_va
 
 def _get_user_plan(user_id: str) -> str:
     plan = check_trial_expiry(user_id)
-    # 查询失败（None）时 fail-open 返回 pro，避免瞬时故障把付费用户锁成 free 配额
-    return plan if plan is not None else "pro"
+    if plan is None:
+        # 查询失败时 fail-closed 返回 free，避免 DB 瞬时故障时全员按 pro 配额放行
+        logger.warning("quota plan 查询失败，fail-closed 到 free: user=%s", user_id)
+        return "free"
+    return plan
 
 
 def _empty_usage() -> dict:

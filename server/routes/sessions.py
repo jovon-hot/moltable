@@ -141,7 +141,9 @@ async def migrate_session(request: Request, body: MigrateRequest):
         raise HTTPException(401, "Invalid API key")
 
     user_id = key_resp.data[0]["user_id"]
-    session_user_id = f"session:{session_token}"
+    # 匿名会话的记忆挂在 session_uuid 下（与 get_user 的 X-Session-Token 分支身份推导一致），
+    # 而不是 "session:{token}"，否则 migrate 永远匹配不到任何行
+    session_user_id = session.get("user_id") or str(session.get("session_uuid", session_token))
 
     # 3. Migrate memories using the repository's migrate_user method
     store = get_store()
