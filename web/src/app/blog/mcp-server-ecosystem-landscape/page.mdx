@@ -1,0 +1,147 @@
+export const meta = {
+  title: 'MCP Server Ecosystem: The Open-Source Servers Your AI Agent Should Plug Into',
+  date: '2026-08-24',
+  description: '除了内置工具，你的 AI Agent 还能调用哪些开源 MCP Server？盘点 context7、GitHub、Postgres、Memory、Playwright 等主流 Server，给出「什么场景接什么 Server」的选型清单，附 FastMCP 十分钟接入示例。',
+  tags: ['MCP', '生态', '盘点', '教程', '工具'],
+  slug: 'mcp-server-ecosystem-landscape',
+}
+
+import ArticleLayout from '../_components/ArticleLayout'
+
+<ArticleLayout meta={meta}>
+
+**上一篇 [Agent Protocol 深入](/blog/agent-protocol-swap-orchestration) 我们解决了 Agent 之间「怎么编排、怎么换手」。但再强的编排器，也得先回答一个更底层的问题：Agent 的双手到底能伸到哪？内置工具永远是有限的，真正的能力边界，取决于它连上了多少 MCP Server。这篇把目光从「Agent 之间」拉回「Agent 与工具之间」，横向盘点一遍 2026 年值得接的开源 MCP Server。**
+
+先厘清一个前提：我们之前在 [MCP 实战：Git 工作流](/blog/mcp-server-git-workflow) 和 [多租户记忆隔离](/blog/mcp-multi-tenant-isolation) 里，是从「怎么自己写一个 Server」的角度切入的。这篇反过来，站在「选型」的立场——**市面上已经有一堆高质量的开源 Server，你该接哪个、不接哪个，取决于你想让 Agent 干什么。**
+
+---
+
+## 一、为什么「内置工具」永远不够
+
+每个 Agent 框架出厂时都带一批内置工具：Claude 有 WebSearch、Code 有 bash、各家都有文件读写。但真实工作流里，你会立刻撞上三堵墙：
+
+1. **墙内的私有系统**：公司内部的 GitHub 仓库、私有 Postgres、内部 wiki——这些数据在墙内，内置工具够不着。
+2. **专有领域的深水区**：Agent 要写代码，光会 bash 不够，它得能读文档（context7）、查库（Postgres）、跑浏览器（Playwright）、记上下文（memory）。
+3. **工具的组合爆炸**：需求在变，硬编码进框架的工具永远追不上。你需要的是「按需接线」的能力，而不是「等框架更新」。
+
+MCP（Model Context Protocol）解决的正是这件事——**它是 AI 的 USB-C**，一套协议，把「Agent 想用什么能力」和「谁来提供这个能力」解耦。这一点我们在 [MCP：为什么它是 AI 的 USB-C](/blog/mcp-ai-usb-c) 里展开讲过，这里不再赘述，直接上货架。
+
+---
+
+## 二、主流开源 MCP Server 盘点（按场景分组）
+
+### 1. 知识 / 文档检索类
+
+| Server | 干什么 | 一句话选型 |
+|--------|--------|-----------|
+| **context7** | 把最新版库/框架文档喂给 Agent | 写代码必接，解决「模型训练数据过时」的头号痛点 |
+| **fetch** | 抓取网页内容转成 Markdown | Agent 需要「读一个链接」时最轻量的方案 |
+| **filesystem** | 受控的本地文件读写 | 让 Agent 读写指定目录，替代裸 bash |
+| **memory** | 本地知识图谱记忆 | 让 Agent 有跨会话的实体/关系记忆 |
+
+`context7` 可能是过去一年对「写代码型 Agent」价值最高的单个 Server：它实时拉取框架官方文档的最新版本，注入上下文。**你用 Claude Code 写 Vue 3 时它读的是 2024 年的训练数据，接上 context7 后它读的是本周发布的文档。** 这个差距，就是「能跑」和「写对」的差距。
+
+### 2. 开发 / 代码类
+
+| Server | 干什么 | 一句话选型 |
+|--------|--------|-----------|
+| **GitHub** | 操作 issue/PR/代码审查/搜索 | 让 Agent 参与真实协作，而不是只会写本地代码 |
+| **Git / GitLab** | 本地或自托管 Git 操作 | 私有仓库、内网 GitLab 的对应方案 |
+| **Postgres / SQLite** | 直接查询数据库 | 数据分析型 Agent 的标配，比导出 CSV 再喂强一个量级 |
+| **Docker** | 容器编排 | 让 Agent 自己起/停隔离的运行时环境 |
+
+数据库类是「能力杠杆」最明显的一类：Agent 能直接 `SELECT`，就能从「读你给的截图」进化到「自己查真相」。我们在 [Pinecone 实战](/blog/pinecone-vector-retrieval) 里也用了类似思路——身份图谱留 Postgres、语义检索下沉托管云，MCP 就是那根把两者接起来的线。
+
+### 3. 浏览器 / 自动化类
+
+| Server | 干什么 | 一句话选型 |
+|--------|--------|-----------|
+| **Playwright / Puppeteer** | 真实浏览器自动化 | 爬 JS 渲染页、做端到端测试、模拟用户操作 |
+
+浏览器类 Server 是「Agent 从信息世界走进真实世界」的桥。它能点按钮、填表单、等渲染——这是 `curl` 永远做不到的。
+
+### 4. 搜索 / 网络类
+
+| Server | 干什么 | 一句话选型 |
+|--------|--------|-----------|
+| **Brave Search** | 带 API key 的网页搜索 | 需要实时检索事实时，比模型内置搜索更可控 |
+| **exa** | 语义搜索 + 抓取一体 | 想让 Agent 做「找相似文档」这类语义检索时 |
+
+---
+
+## 三、选型清单：什么场景，接什么 Server
+
+这是全篇最实用的一张表。**别贪多，按「你最想让 Agent 干的 2-3 件事」倒推，接对应的 Server 即可。**
+
+| 你想让 Agent 干的事 | 必接 Server | 可选增强 |
+|---------------------|-------------|----------|
+| 写代码、修 bug | context7 + GitHub + filesystem | Postgres（查数据） |
+| 数据分析 / 报表 | Postgres / SQLite | fetch（补外部数据） |
+| 爬网页 / 做监控 | Playwright + fetch | Brave Search |
+| 记住你是谁 / 长期协作 | memory | 身份层（见第五节） |
+| 端到端自动化任务 | Docker + filesystem + fetch | 按任务组合 |
+
+**一个反直觉的建议**：不要一上来把十个 Server 全接上。每个 Server 都是新的攻击面、新的权限边界、新的上下文噪音。**先接一个，把它用透，再添下一个。** 这与 [多租户记忆隔离](/blog/mcp-multi-tenant-isolation) 里「权限最小化」的原则一脉相承——能力越少，边界越清晰，出事越好排查。
+
+---
+
+## 四、十分钟接入一个 Server（FastMCP 示例）
+
+接一个现成的 Server，比写一个简单。以 `@modelcontextprotocol/server-filesystem` 为例，Claude Desktop 的配置长这样：
+
+```json
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/Users/you/projects"]
+    }
+  }
+}
+```
+
+重启后，Agent 就有了一个「只能读写 `/Users/you/projects`」的受控文件能力——**注意这个 `args` 里的路径，就是它的权限边界**。接错了路径，等于给了 Agent 一把能开所有门的钥匙。
+
+如果你想自己写一个轻量 Server，FastMCP 五分钟起步：
+
+```python
+from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("my-tools")
+
+@mcp.tool()
+def add(a: float, b: float) -> float:
+    """两个数相加。"""
+    return a + b
+
+if __name__ == "__main__":
+    mcp.run()
+```
+
+这就是一个完整可用的 MCP Server。协议层已经替你把「工具的发现、调用、参数校验」全部做完了——你只写业务逻辑。我们在 [Git 工作流](/blog/mcp-server-git-workflow) 那篇里从头实现过一个完整版，感兴趣可以回去对照着看。
+
+---
+
+## 五、工具生态之上，还差一层「身份」
+
+盘点到这里，你可能会发现一个微妙的事实：**MCP 生态已经非常繁荣——但它是「能力」的繁荣，不是「身份」的繁荣。**
+
+一个 Agent 接上十个 Server，它能读库、能爬网页、能写代码——但它仍然不知道「你是谁」。它连上了 Postgres，却不知道你偏好哪个 schema；它连上了 memory，却记不住「这是你的项目还是别人的项目」。
+
+这正是 Moltable 想补的那块：**MCP 解决「Agent 能干什么」，Identity 解决「Agent 在替谁干、带着谁的上下文干」。** 工具是 Agent 的手，身份是 Agent 的自我。手可以借（开源 Server 随便接），自我必须是你自己的——这就是我们一直讲的 [Identity Layer](/blog/ai-identity-layer) 与 [记忆 vs 身份](/blog/moltable-vs-mem0-identity-vs-memory) 的分工。
+
+换句话说：**开源 MCP Server 生态是你 Agent 的「工具包」，Moltable 是你 Agent 的「身份卡」。** 两者缺一不可，前者已经热闹起来了，后者才刚起步。
+
+---
+
+## 六、结语：先接对工具，再谈 Agent 经济
+
+回到上一篇的结尾——Agent 经济（编排 + Swap + 信誉）要跑起来，前提是每个 Agent 的「手」够长、够稳。这篇盘点想说的其实很简单：
+
+1. **别重新造轮子**：开源 MCP Server 生态已经覆盖了写代码、查数据、爬网页、记上下文的主流场景，先接现成的。
+2. **按需接线，权限最小**：接一个用透一个，别贪多；每个 Server 的路径/scope 就是它的权限边界。
+3. **工具是手，身份是自我**：MCP 让你 Agent 的手变长，但只有身份层能让你 Agent 认得你。
+
+下一篇，我们把竞品矩阵补上最后一块：**Moltable vs Letta（MemGPT）——记忆状态机与身份图谱，是两条不同的路。** 下篇见。
+
+</ArticleLayout>

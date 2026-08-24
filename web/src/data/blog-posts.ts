@@ -12,6 +12,15 @@ export interface BlogPost {
 
 const posts: BlogPost[] = [
   {
+    slug: 'mcp-server-ecosystem-landscape',
+    date: '2026-08-24',
+    title: 'MCP 工具生态盘点：除了内置工具，Agent 还能调用哪些开源 MCP Server',
+    titleEn: 'MCP Server Ecosystem: The Open-Source Servers Your AI Agent Should Plug Into',
+    excerpt:
+      '承接 Swap 篇，把目光拉回 Agent 与工具之间：盘点 context7、GitHub、Postgres、Memory、Playwright 等主流开源 MCP Server，给出「什么场景接什么 Server」的选型清单，附 FastMCP 十分钟接入示例。',
+    tags: ['MCP', '生态', '盘点', '教程', '工具'],
+  },
+  {
     slug: 'agent-protocol-swap-orchestration',
     date: '2026-08-22',
     title: 'Agent Protocol 深入：多 Agent 编排与任务市场 Swap 实战',
