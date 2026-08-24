@@ -251,6 +251,56 @@ def cmd_detect(config_path: str) -> None:
             print(f"缺失: {missing}")
 
 
+def _save_config(config_path: str, config: dict) -> None:
+    """写回配置（含 API key 明文，强制 0600 仅本人可读）。"""
+    os.makedirs(os.path.dirname(config_path), exist_ok=True)
+    with open(config_path, "w") as f:
+        json.dump(config, f, ensure_ascii=False, indent=2)
+    try:
+        os.chmod(config_path, 0o600)
+    except OSError:
+        pass
+
+
+def cmd_list_refs(config_path: str) -> None:
+    """列出已配置的引用（外部知识库）。"""
+    config = load_config(config_path)
+    refs = config.get("references") or []
+    if not refs:
+        print("（暂无引用。用 `moltable backup add-ref <名字> <路径>` 添加你引用的知识库。）")
+        return
+    print(f"{'逻辑名':<20} {'路径'}")
+    for ref in refs:
+        print(f"{ref.get('logical_name', ''):<20} {ref.get('path', '')}")
+
+
+def cmd_add_ref(config_path: str, logical: str, path: str) -> None:
+    """添加引用：把外部知识库纳入备份（refs/逻辑名/...）。"""
+    config = load_config(config_path)
+    refs = [r for r in (config.get("references") or []) if r.get("logical_name") != logical]
+    abs_path = os.path.abspath(os.path.expanduser(path))
+    if not os.path.isdir(abs_path):
+        print(f"⚠  路径不存在或不是目录：{abs_path}")
+        sys.exit(1)
+    refs.append({"logical_name": logical, "path": abs_path})
+    config["references"] = refs
+    _save_config(config_path, config)
+    print(f"✅ 已添加引用 {logical} → {abs_path}")
+
+
+def cmd_remove_ref(config_path: str, logical: str) -> None:
+    """删除引用。"""
+    config = load_config(config_path)
+    refs = config.get("references") or []
+    new_refs = [r for r in refs if r.get("logical_name") != logical]
+    if len(new_refs) == len(refs):
+        print(f"⚠  未找到引用 {logical}")
+        return
+    config["references"] = new_refs
+    _save_config(config_path, config)
+    print(f"✅ 已删除引用 {logical}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(prog="moltable backup", description="Agent 灵魂资产备份同步")
     parser.add_argument("--config", default=os.path.expanduser("~/.moltable/backup.json"), help="配置文件路径")
@@ -259,6 +309,14 @@ def main() -> None:
     sub.add_parser("sources", help="列出备份源")
     sub.add_parser("init", help="生成配置文件")
     sub.add_parser("detect", help="检测 agent 工作目录路径")
+    sub.add_parser("list-ref", help="列出引用（外部知识库）")
+
+    p_add_ref = sub.add_parser("add-ref", help="添加引用（外部知识库纳入备份）")
+    p_add_ref.add_argument("logical", help="逻辑名（如 ailib）")
+    p_add_ref.add_argument("path", help="知识库路径")
+
+    p_rm_ref = sub.add_parser("remove-ref", help="删除引用")
+    p_rm_ref.add_argument("logical", help="逻辑名")
 
     p_push = sub.add_parser("push", help="上传快照")
     p_push.add_argument("--name", help="备份源名称")
@@ -277,6 +335,15 @@ def main() -> None:
         return
     if args.cmd == "detect":
         cmd_detect(config_path)
+        return
+    if args.cmd == "add-ref":
+        cmd_add_ref(config_path, args.logical, args.path)
+        return
+    if args.cmd == "list-ref":
+        cmd_list_refs(config_path)
+        return
+    if args.cmd == "remove-ref":
+        cmd_remove_ref(config_path, args.logical)
         return
 
     config = load_config(config_path)

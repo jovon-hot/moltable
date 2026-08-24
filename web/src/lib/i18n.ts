@@ -24,30 +24,6 @@ export const translations = {
         { title: '可验证身份（即将推出）', desc: 'DID+VC 给灵魂签出处。这个灵魂是谁调的、是不是正版、授权给谁，密码学可验证。' },
       ],
     },
-    personaDemo: {
-      badge: '化身对比',
-      title: '一个灵魂，多种化身',
-      subtitle: 'Moltable 让一个灵魂派生出多个化身——工作、生活、创业，各自独立的思维模式。一个 AI，抵多个专家。',
-      question: '「是否应该进入东南亚市场？」',
-      questionHint: '同一问题 · 两个化身 · 一次对比',
-      traitsLabel: 'Traits',
-      promptLabel: 'System Prompt',
-      note: '两个回答同时存在——同一个灵魂，两套思维，一次对比。这就是 Moltable 的多化身能力。',
-      left: {
-        name: '战略顾问',
-        role: '先看机会，再看风险',
-        traits: ['思维模式 · 第一性原理', '风险偏好 · 激进', '风格 · 麦肯锡框架'],
-        prompt: '你是战略顾问。先用第一性原理拆解问题，再用量化数据验证机会。优先看增长空间，最后才谈风险。',
-        reply: '东南亚 6.5 亿人口，电商渗透率从 2022 年的 5% 增长到 2026 年的 20%+——每年翻倍的市场。建议轻资产模式：新加坡设总部，先用 Lazada / Shopee 验证 PMF，3 个月跑通后自建团队。',
-      },
-      right: {
-        name: '保守审核员',
-        role: '先列风险，再谈机会',
-        traits: ['思维模式 · 风险清单', '风险偏好 · 保守', '风格 · 合规导向'],
-        prompt: '你是保守审核员。任何决策先列风险清单，逐项核对法规与合规红线。机会再大，风险不可控就不通过。',
-        reply: '⚠️ 6 个风险点需先解决：① 印尼外资电商新规（PP No.80/2023）要求本地合资且外方持股 ≤49%；② 物流基建不均衡；③ 汇率波动（印尼盾 2024 年贬值 8%）。建议先做 6 个月试点，验证合规后再谈扩张。',
-      },
-    },
     how: {
       title: '三步开始',
       steps: [
@@ -63,9 +39,9 @@ export const translations = {
       yearly: '按年',
       savePercent: '',
       redirecting: '跳转中...',
-      free: { name: 'Free', price: '¥0', desc: '10 个备份源 · 2GB 存储 · 始终免费', cta: '免费注册' },
+      free: { name: 'Free', price: '$0', desc: '10 个备份源 · 2GB 存储 · 始终免费', cta: '免费注册' },
       pro: {
-        name: 'Pro', priceMonthly: '¥3/月', priceYearly: '', priceYearlyMonthly: '',
+        name: 'Pro', priceMonthly: '$3/月', priceYearly: '', priceYearlyMonthly: '',
         desc: '100 个备份源 · 50GB 存储 · 引用同步 · 跨框架迁移（即将推出）',
         descShort: '100 源 · 50GB · 全功能',
         cta: '升级 Pro', ctaYearly: '', badge: '推荐',
@@ -99,7 +75,7 @@ export const translations = {
     privacy: {
       title: '隐私与安全',
       items: [
-        { title: '加密存储', desc: '所有记忆在传输和存储中加密。API Key 使用 SHA-256 哈希存储。' },
+        { title: '加密传输', desc: '记忆经 HTTPS 加密传输。API Key 使用 SHA-256 哈希存储。' },
         { title: '你的数据你做主', desc: '随时导出或删除全部数据。我们不会用你的数据训练模型。' },
         { title: '合规', desc: '遵守 GDPR 和《个人信息保护法》。' },
       ],
@@ -372,30 +348,6 @@ export const translations = {
         { title: 'Verifiable Identity (Coming Soon)', desc: 'DID+VC signs your soul\'s provenance. Who tuned it, whether it\'s authentic, who it\'s authorized for — cryptographically verifiable.' },
       ],
     },
-    personaDemo: {
-      badge: 'Avatar Showdown',
-      title: 'One soul, many avatars',
-      subtitle: 'Moltable lets one soul branch into many avatars — work, life, venture — each with an independent way of thinking. One AI, many experts.',
-      question: '“Should we enter the Southeast Asia market?”',
-      questionHint: 'One question · Two avatars · Side by side',
-      traitsLabel: 'Traits',
-      promptLabel: 'System Prompt',
-      note: 'Both answers exist at once — same soul, two minds, one comparison. That is Moltable multi-avatar in action.',
-      left: {
-        name: 'Strategic Advisor',
-        role: 'Opportunity first, risk later',
-        traits: ['Thinking · First-principles', 'Risk · Aggressive', 'Style · McKinsey'],
-        prompt: 'You are a strategic advisor. Break the problem down from first principles, then validate with quantitative data. Prioritize growth upside; only then discuss risk.',
-        reply: 'Southeast Asia: 650M people, e-commerce penetration up from 5% in 2022 to 20%+ in 2026 — a market doubling every year. Go asset-light: HQ in Singapore, validate PMF on Lazada / Shopee, then build your own team within 3 months.',
-      },
-      right: {
-        name: 'Conservative Auditor',
-        role: 'Risks first, opportunity later',
-        traits: ['Thinking · Risk checklist', 'Risk · Conservative', 'Style · Compliance-driven'],
-        prompt: 'You are a conservative auditor. Before any decision, produce a risk checklist and verify every regulation and compliance red line. No matter how big the upside, reject it if the risk is uncontrolled.',
-        reply: '⚠️ 6 risks to resolve first: ① Indonesia’s new foreign e-commerce rules (PP No.80/2023) require a local JV with foreign ownership capped at 49%; ② uneven logistics infrastructure; ③ FX volatility (IDR -8% in 2024). Recommend a 6-month pilot before scaling.',
-      },
-    },
     how: {
       title: 'Get Started in 3 Steps',
       steps: [
@@ -447,7 +399,7 @@ export const translations = {
     privacy: {
       title: 'Privacy & Security',
       items: [
-        { title: 'Encrypted Storage', desc: 'All memories encrypted in transit and at rest. API Keys stored with SHA-256 hashing.' },
+        { title: 'Encrypted Transit', desc: 'Memories encrypted in transit via HTTPS. API Keys stored with SHA-256 hashing.' },
         { title: 'Your Data, Your Control', desc: 'Export or delete all your data anytime. We never use your data to train models.' },
         { title: 'Compliance', desc: 'GDPR and data protection compliant.' },
       ],

@@ -15,6 +15,7 @@ import fnmatch
 import hashlib
 import json
 import os
+import re
 from typing import Dict, List, Optional, Tuple
 
 DEFAULT_EXCLUDE = [
@@ -29,9 +30,36 @@ HERMES_SOUL_PATHS = [
     "SOUL.md",
     "AGENTS.md",
     "USER.md",
+    "config.yaml",  # MCP 服务器等配置（敏感值脱敏）
     "memories",
     "skills",
 ]
+
+
+# config.yaml 里需要脱敏的敏感字段（值替换为 [REDACTED]，保留配置结构）
+_SENSITIVE_KEY_RE = re.compile(
+    r"^(\s*(?:api_key|token|secret|password|password_hash|access_key|client_secret|private_key)\s*:\s*)(.+)$",
+    re.IGNORECASE,
+)
+_AUTH_BEARER_RE = re.compile(r"(Authorization\s*:\s*Bearer\s+)\S+", re.IGNORECASE)
+
+
+def _sanitize_config(data: bytes) -> bytes:
+    """脱敏 config.yaml 的敏感值（api_key/token/secret/Authorization 等），只保留配置结构。
+
+    空值（'' / 空）保持不变；非空敏感值替换为 [REDACTED]，避免把密钥打包进云端备份。
+    """
+    text = data.decode("utf-8", errors="replace")
+    out = []
+    for line in text.splitlines():
+        line = _AUTH_BEARER_RE.sub(r"\1[REDACTED]", line)
+        m = _SENSITIVE_KEY_RE.match(line)
+        if m:
+            val = m.group(2).strip()
+            if val and val not in ("''", '""', "[]", "{}", "~"):
+                line = m.group(1) + "[REDACTED]"
+        out.append(line)
+    return ("\n".join(out) + "\n").encode("utf-8")
 
 
 def sha256_bytes(data: bytes) -> str:
@@ -92,7 +120,10 @@ def scan_soul_assets(workspace: str, exclude: Optional[List[str]] = None) -> Dic
             if not _matches_exclude(rel, exclude):
                 try:
                     with open(full, "rb") as f:
-                        result[f"self/{rel}"] = f.read()
+                        data = f.read()
+                    if rel == "config.yaml":
+                        data = _sanitize_config(data)
+                    result[f"self/{rel}"] = data
                 except (OSError, PermissionError):
                     continue
         elif os.path.isdir(full):
