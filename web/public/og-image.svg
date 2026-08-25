@@ -43,12 +43,12 @@
 
   <!-- Tagline -->
   <text x="600" y="310" text-anchor="middle" font-family="Geist,-apple-system,sans-serif" font-size="22" fill="#A8A5B8">
-    AI Identity Sync — One Registration, Every AI Knows You
+    Agent Soul Backup — Switch Agents, Keep Your Soul
   </text>
 
   <!-- Bottom label -->
   <text x="600" y="370" text-anchor="middle" font-family="Geist,-apple-system,sans-serif" font-size="14" fill="#85829E">
-    iCloud for AI Agents · MCP Native · 3-Minute Recovery
+    GitHub for AI Agents · Versioned · Deduplicated
   </text>
 
   <!-- Bottom accent -->

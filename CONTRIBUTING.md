@@ -1,6 +1,6 @@
 # Contributing to Moltable
 
-Thanks for wanting to help! Moltable is an AI Identity Sync layer — think iCloud for AI Agents.
+Thanks for wanting to help! Moltable is a versioned backup repository for your AI agent's soul — think GitHub for AI Agents.
 
 ## Quick Start
 

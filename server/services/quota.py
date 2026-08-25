@@ -222,6 +222,7 @@ def get_usage(user_id: str) -> dict:
         # 备份源 + 存储用量（对齐「灵魂资产备份」新定位）
         from pricing_config import build_plan
         from services.backup_service import BackupService
+        from services.bonus_service import get_bonus_gb
         backup_limits = build_plan(plan)["limits"]
         backup_sources = _count(supabase, "backup_sources", user_id)
         try:
@@ -229,13 +230,17 @@ def get_usage(user_id: str) -> dict:
         except Exception:
             storage_bytes = 0
         storage_gb = round(storage_bytes / (1024 ** 3), 2)
+        bonus_gb = get_bonus_gb(user_id)
+        base_storage_limit = backup_limits["storage_gb"]
+        # 无限（-1）不叠加；有限额度叠加赠送 bonus
+        storage_limit_gb = base_storage_limit if base_storage_limit < 0 else base_storage_limit + bonus_gb
 
         return {
             "plan": plan,
             "plan_name": PLAN_NAMES.get(plan, plan),
             "usage": {
                 "backup_sources": {"used": backup_sources, "limit": backup_limits["backup_sources"]},
-                "storage_gb": {"used": storage_gb, "limit": backup_limits["storage_gb"]},
+                "storage_gb": {"used": storage_gb, "limit": storage_limit_gb, "bonus": bonus_gb},
                 "memories": {"used": memories, "limit": limits["memories"]},
                 "personas": {"used": personas, "limit": limits["personas"]},
                 "agents": {"used": agents, "limit": limits["agents"]},

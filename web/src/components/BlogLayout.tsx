@@ -92,7 +92,7 @@ export default function BlogLayout({ children }: { children: React.ReactNode }) 
               免费开始 <ArrowRight size={16} />
             </Link>
             <p className="text-[11px] text-ln-tertiary mt-3">
-              Pro 版享 30 天免费体验 · 无需信用卡
+              无需信用卡 · 免费开始
             </p>
           </div>
         </div>

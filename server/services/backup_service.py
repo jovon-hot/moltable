@@ -249,19 +249,22 @@ class BackupService:
             return 0
 
     def _check_storage_quota(self, new_bytes: int) -> None:
-        """存储配额检查：现有 + 新增 ≤ plan 的 storage_gb 限额。超限抛 StorageQuotaExceeded。"""
+        """存储配额检查：现有 + 新增 ≤ (plan 基础 + 赠送 bonus) 的 storage_gb 限额。超限抛 StorageQuotaExceeded。"""
         from services.quota import _get_user_plan
         from pricing_config import build_plan
+        from services.bonus_service import get_bonus_gb
 
         plan = _get_user_plan(self.user_id)
         storage_gb = build_plan(plan)["limits"]["storage_gb"]
         if storage_gb < 0:  # -1 = 无限
             return
+        bonus_gb = get_bonus_gb(self.user_id)
+        total_gb = storage_gb + bonus_gb
         current = self.get_storage_bytes()
-        limit_bytes = storage_gb * 1024 ** 3
+        limit_bytes = total_gb * 1024 ** 3
         if current + new_bytes > limit_bytes:
             raise StorageQuotaExceeded(
-                f"存储配额超限：当前 {current} 字节 + 新增 {new_bytes} 字节 > {storage_gb}GB。升级 Pro 解锁更多。"
+                f"存储配额超限：当前 {current} 字节 + 新增 {new_bytes} 字节 > {total_gb}GB（含赠送 {bonus_gb}GB）。升级 Pro 解锁更多。"
             )
 
     def _get_source(self, source_id: str) -> Optional[dict]:
@@ -345,6 +348,13 @@ class BackupService:
 
         self.db.table(TABLE_SOURCES).update({"latest_version": next_version}) \
             .eq("id", source_id).eq("user_id", self.user_id).execute()
+
+        # 好友完成首次备份 → 邀请人 +1GB（失败不影响备份主流程）
+        try:
+            from services.bonus_service import grant_referral_bonus_on_first_backup
+            grant_referral_bonus_on_first_backup(self.user_id)
+        except Exception:
+            pass
 
         return PushResult(version=next_version, stored_blobs=stored, skipped_blobs=skipped)
 

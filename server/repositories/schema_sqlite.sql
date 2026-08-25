@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS users (
     email_verified INTEGER DEFAULT 0,
     email_verify_token TEXT,
     email_verify_token_expires TEXT,
+    bonus_storage_gb REAL DEFAULT 0,
     created_at TEXT DEFAULT (datetime('now'))
 );
 
@@ -32,6 +33,8 @@ ALTER TABLE users ADD COLUMN stripe_subscription_id TEXT;
 ALTER TABLE users ADD COLUMN email_verified INTEGER DEFAULT 0;
 ALTER TABLE users ADD COLUMN email_verify_token TEXT;
 ALTER TABLE users ADD COLUMN email_verify_token_expires TEXT;
+-- 迁移：分享/邀请赠送的存储额度
+ALTER TABLE users ADD COLUMN bonus_storage_gb REAL DEFAULT 0;
 
 -- API 密钥 (legacy, deprecated)
 CREATE TABLE IF NOT EXISTS api_keys (
@@ -248,11 +251,24 @@ CREATE TABLE IF NOT EXISTS referrals (
     referrer_id TEXT NOT NULL,
     code TEXT UNIQUE NOT NULL,
     referred_email TEXT,
+    referred_user_id TEXT,
+    reward_granted INTEGER DEFAULT 0,
     status TEXT DEFAULT 'pending',
     created_at TEXT DEFAULT (datetime('now')),
     claimed_at TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_referrals_referrer ON referrals(referrer_id, status);
+
+-- 赠送额度发放审计（分享/邀请），防重复发放
+CREATE TABLE IF NOT EXISTS bonus_events (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    event_type TEXT NOT NULL,
+    amount_gb REAL NOT NULL,
+    source TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_bonus_events_user ON bonus_events(user_id, event_type);
 
 -- ── Stripe webhook 事件去重表 ───────
 CREATE TABLE IF NOT EXISTS webhook_events (

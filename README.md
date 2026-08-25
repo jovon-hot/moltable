@@ -2,96 +2,65 @@
   <img src="web/public/logo-brand.svg" width="120" alt="Moltable" />
 </p>
 
-<h1 align="center">Moltable — AI Identity Sync</h1>
-<p align="center"><strong>One identity. Every agent.</strong> · <strong>你的 AI，永远认识你。</strong></p>
+<h1 align="center">Moltable — Agent Soul Backup</h1>
+<p align="center"><strong>换 Agent，不换灵魂。</strong> · <strong>Switch agents, keep your soul.</strong></p>
 
 <p align="center">
   <a href="https://github.com/jovon-hot/moltable/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
   <a href="https://www.moltable.ai"><img src="https://img.shields.io/badge/Website-moltable.ai-4338CA" /></a>
-  <a href="https://www.moltable.ai/blog"><img src="https://img.shields.io/badge/Blog-34_posts-FB6B4B" /></a>
+  <a href="https://www.moltable.ai/blog"><img src="https://img.shields.io/badge/Blog-35_posts-FB6B4B" /></a>
 </p>
 
 ---
 
-Moltable is the **identity sync layer for AI agents**. Connect once — every agent (Claude, Cursor, Hermes) auto-syncs your preferences, Personas, skills, and memories. Switch computers? Full AI environment recovery in 3 minutes.
+Moltable is the **versioned backup repository for your AI agent's soul**. One command packs your tuned AI — SOUL, skills, MCP configs, memories — into a versioned, deduplicated backup. Switch frameworks or machines without losing the agent you tuned.
 
-Moltable 是 AI Agent 的**身份同步层**。一个身份接入，所有 Agent 自动同步偏好、Persona、技能和记忆。换电脑 3 分钟恢复完整 AI 环境。
-
----
-
-## Why does my AI forget me every morning?
-
-> "Hey Claude, continue yesterday's work."  
-> "Hello! I don't have any context from previous conversations."
-
-Every AI agent session starts from zero. You spend 3.2 hours/week re-teaching your AI who you are. Moltable fixes this with a **three-layer identity architecture**:
-
-```
-Identity Layer    → Cross-platform unique ID
-Persona Layer     → Role management (Developer / Architect / Writer)
-Sync Layer        → One sync code restores everything
-```
-
-Not a memory tool. **An identity layer.** Read more: [moltable vs mem0](https://www.moltable.ai/blog/moltable-vs-mem0-identity-vs-memory)
+Moltable 是你调教 AI 的**灵魂资产版本仓库**。一条命令把你调教的成果——SOUL、Skills、MCP 配置、记忆——打包成版本化、去重的备份。换框架、换电脑，你调教的 AI 都不会丢。
 
 ---
 
-## 🚀 One-line Connect
+## 一条命令备份
 
 ```bash
-# Claude Desktop
-npx @moltable/connect claude --api-key <your-api-key>
+curl -sL moltable.ai/install.sh | bash
 
-# Cursor
-npx @moltable/connect cursor --api-key <your-api-key>
-
-# Hermes
-npx @moltable/connect hermes --api-key <your-api-key>
+moltable backup init        # 生成配置
+moltable backup push        # 打包上传（快照 + 版本号 + 增量去重）
+moltable backup pull        # 下载还原
+moltable backup sources     # 查看备份源
+moltable backup add-ref ailib ~/Desktop/ailib   # 引用外部知识库一并备份
 ```
 
-No manual JSON editing. Auto-detects your config, backs it up, injects Moltable MCP server, validates your key. [Get a free API key →](https://moltable.ai/register)
+备份的是你的「灵魂资产」，自动排除流水账（`state.db` / WAL / FTS 索引）和密钥（`.env` / `*.key`）：
 
-### Manual MCP config
-
-```json
-{
-  "mcpServers": {
-    "moltable": {
-      "type": "http",
-      "url": "https://api.moltable.ai/mcp",
-      "headers": { "X-API-Key": "your-api-key" }
-    }
-  }
-}
+```
+SOUL.md · AGENTS.md · USER.md · config.yaml（MCP 配置，密钥脱敏）· memories/ · skills/
 ```
 
----
+## 核心能力
 
-## Capabilities
+| | 说明 |
+|---|---|
+| **灵魂备份** | 文件级打包 = bundle + manifest + CAS（内容寻址去重）+ 对象存储 |
+| **版本管理** | 每个备份源独立版本库，快照 + 版本号，随时回滚到任意历史版本 |
+| **增量去重** | 内容寻址（sha256），未变化的文件只传一次 |
+| **引用同步** | 你引用的知识库、内容来源一并备份（`add-ref`） |
+| **你拥有数据** | 随时导出或删除，我们永远不用你的数据训练模型 |
 
-| | Free | Pro (30-day free trial) |
-|---|---|---|
-| AI Identities | 1 | 3 |
-| Personas | 2 | 10 |
-| Memories | 100 | 10,000 |
-| Agents | 1 | 5 |
-| API calls / day | 50 | 500 |
-| Semantic search | ✅ | ✅ |
-| Sync code recovery | ✅ | ✅ |
+## 定价
 
----
+| | Free | Pro | Team |
+|---|---|---|---|
+| 备份源 | 10 | 100 | 无限 |
+| 存储 | 2GB | 50GB | 无限 |
+| 价格 | $0 | **$3/月** | 联系咨询 |
+| | [免费开始](https://moltable.ai/register) | [升级 Pro](https://moltable.ai/register) | hi@moltable.ai |
 
-## Supported Agents
+无需信用卡 · 随时取消。
 
-<p>
-  <img src="https://img.shields.io/badge/Hermes-Agent-4338CA" />
-  <img src="https://img.shields.io/badge/Claude_Desktop-MCP-4338CA" />
-  <img src="https://img.shields.io/badge/Cursor-MCP-4338CA" />
-</p>
+## 支持框架
 
-Any MCP-compatible client works out of the box.
-
----
+**Hermes · OpenClaw · Claude · Codex** —— 每个框架实例是一个独立备份源。跨框架迁移（用你自己的 LLM 翻译灵魂资产）即将推出。
 
 ## Self-Host
 
@@ -102,7 +71,7 @@ pip install -r requirements.txt
 python main.py
 ```
 
-Licensed under **MIT**. Identity data belongs to you — always.
+Licensed under **MIT**. Your soul belongs to you — always.
 
 ---
 

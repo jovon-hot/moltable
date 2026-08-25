@@ -25,6 +25,9 @@ from pydantic import BaseModel, Field
 
 from app_state import limiter, supabase
 from routes.auth import get_user
+from services.bonus_service import (
+    SHARE_BONUS_CAP, SHARE_BONUS_GB, count_share_bonuses, get_bonus_gb, grant_bonus,
+)
 
 logger = logging.getLogger("moltable.referrals")
 
@@ -45,6 +48,10 @@ class GenerateReferralRequest(BaseModel):
 class ClaimReferralRequest(BaseModel):
     code: str = Field(..., min_length=CODE_LENGTH, max_length=CODE_LENGTH)
     email: str = Field(..., min_length=3, max_length=320)
+
+
+class ClaimShareBonusRequest(BaseModel):
+    post_url: str = Field(..., min_length=10, max_length=2048)
 
 
 # ── Helpers ──────────────────────────────────────────────
@@ -267,4 +274,35 @@ def claim_referral(request: Request, body: ClaimReferralRequest):
         "status": "claimed",
         "referrer_id": row.get("referrer_id"),
         "claimed_at": now,
+    }
+
+
+@router.post("/share-bonus")
+@limiter.limit("10/hour")
+def claim_share_bonus(request: Request, body: ClaimShareBonusRequest,
+                      user_id: str = Depends(get_user)):
+    """分享 LinkedIn 帖子 → +1GB 永久存储额度（上限 3 次）。
+
+    验证：帖子链接必须是 http(s) 且指向 linkedin.com；同一链接不可重复领取。
+    """
+    post_url = body.post_url.strip()
+    if not post_url.startswith(("https://", "http://")):
+        raise HTTPException(400, "无效的帖子链接")
+    if "linkedin.com" not in post_url.lower():
+        raise HTTPException(400, "请提供 LinkedIn 帖子链接")
+
+    count = count_share_bonuses(user_id)
+    if count >= SHARE_BONUS_CAP:
+        raise HTTPException(409, f"分享奖励已达上限（{SHARE_BONUS_CAP}GB）")
+
+    if not grant_bonus(user_id, "share", SHARE_BONUS_GB, source=post_url):
+        raise HTTPException(409, "该帖子已领取过奖励")
+
+    total = get_bonus_gb(user_id)
+    return {
+        "ok": True,
+        "event_type": "share",
+        "amount_gb": SHARE_BONUS_GB,
+        "bonus_storage_gb": total,
+        "remaining": SHARE_BONUS_CAP - count - 1,
     }

@@ -29,11 +29,14 @@ export default function ReferralsPage() {
   const [generating, setGenerating] = useState(false)
   const [copied, setCopied] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
+  const [postUrl, setPostUrl] = useState('')
+  const [claiming, setClaiming] = useState(false)
+  const [bonusGbs, setBonusGbs] = useState<number>(0)
 
   const shareUrl = code && typeof window !== 'undefined' ? `${window.location.origin}/signup?ref=${code}` : ''
   const shareText = zh
-    ? `用我的邀请码 ${code} 注册 Moltable，打造你的 AI 身份层！`
-    : `Sign up for Moltable with my invite code ${code} — your AI identity layer!`
+    ? `用我的邀请码 ${code} 注册 Moltable，备份你的 Agent 灵魂资产！`
+    : `Sign up for Moltable with my invite code ${code} — back up your agent's soul!`
 
   const loadStats = useCallback(async (uid: string) => {
     const data = await apiFetch<ReferralStats>(`/api/referrals/stats/${uid}`)
@@ -55,8 +58,9 @@ export default function ReferralsPage() {
   useEffect(() => {
     (async () => {
       try {
-        const me = await apiFetch<{ id: string; email: string }>('/api/auth/me')
+        const me = await apiFetch<{ id: string; email: string; usage?: { storage_gb?: { bonus?: number } } }>('/api/auth/me')
         setUserId(me.id)
+        setBonusGbs(me.usage?.storage_gb?.bonus ?? 0)
         await loadStats(me.id)
       } catch (err: any) {
         toast(err?.message || (zh ? '加载推荐信息失败' : 'Failed to load referral info'), 'error')
@@ -91,6 +95,32 @@ export default function ReferralsPage() {
       setTimeout(() => setCopied(false), 2000)
     } catch {
       toast(zh ? '复制失败' : 'Copy failed', 'error')
+    }
+  }
+
+  const handleClaimShareBonus = async () => {
+    if (!postUrl.trim()) {
+      toast(zh ? '请粘贴 LinkedIn 帖子链接' : 'Please paste your LinkedIn post URL', 'error')
+      return
+    }
+    setClaiming(true)
+    try {
+      const res = await apiFetch<{ bonus_storage_gb: number; remaining: number }>('/api/referrals/share-bonus', {
+        method: 'POST',
+        body: JSON.stringify({ post_url: postUrl.trim() }),
+      })
+      setBonusGbs(res.bonus_storage_gb)
+      setPostUrl('')
+      toast(
+        zh
+          ? `已领取 +1GB！累计赠送 ${res.bonus_storage_gb}GB（还可领 ${res.remaining} 次）`
+          : `+1GB claimed! Total bonus ${res.bonus_storage_gb}GB (${res.remaining} left)`,
+        'success',
+      )
+    } catch (err: any) {
+      toast(err?.message || (zh ? '领取失败' : 'Claim failed'), 'error')
+    } finally {
+      setClaiming(false)
     }
   }
 
@@ -218,15 +248,15 @@ export default function ReferralsPage() {
                 <ul className="space-y-1.5 text-sm text-ln-secondary font-body">
                   <li className="flex items-start gap-2">
                     <Check size={14} className="text-emerald-400 mt-0.5 flex-shrink-0" />
-                    {zh ? '每位好友注册后，你获得额外 500 条记忆容量' : 'Earn 500 extra memory capacity per referred friend who signs up'}
+                    {zh ? '分享 LinkedIn 帖子 → +1GB 存储（最多 3GB）' : 'Share a LinkedIn post → +1GB storage (up to 3GB)'}
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check size={14} className="text-emerald-400 mt-0.5 flex-shrink-0" />
+                    {zh ? '好友接受邀请并完成首次备份 → 再 +1GB（无上限）' : 'Friend joins + completes first backup → +1GB more (unlimited)'}
                   </li>
                   <li className="flex items-start gap-2">
                     <Check size={14} className="text-emerald-400 mt-0.5 flex-shrink-0" />
                     {zh ? '推荐 5 位好友 → 解锁「超级推荐人」徽章' : 'Refer 5 friends → unlock "Super Connector" badge'}
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check size={14} className="text-emerald-400 mt-0.5 flex-shrink-0" />
-                    {zh ? '你的好友获得 30 天免费 Pro 试用' : 'Your friends get 30-day free Pro trial'}
                   </li>
                 </ul>
               </div>
@@ -257,6 +287,35 @@ export default function ReferralsPage() {
             ) : (
               <p className="text-sm text-ln-tertiary font-body">{zh ? '生成邀请码后即可分享' : 'Generate a code to start sharing'}</p>
             )}
+          </div>
+
+          {/* Claim share bonus */}
+          <div className="p-6 rounded-card bg-ln-surface shadow-card">
+            <div className="flex items-center gap-2 mb-2">
+              <Gift size={16} className="text-ln-accent" />
+              <h2 className="text-base font-ui text-ln-text">{zh ? '分享领 1GB' : 'Share to claim +1GB'}</h2>
+            </div>
+            <p className="text-sm text-ln-tertiary font-body mb-3">
+              {zh
+                ? `在 LinkedIn 发一条关于 Moltable 的帖子，粘贴链接领取 +1GB 永久存储（最多 3 次）。当前已领 ${bonusGbs}GB。`
+                : `Post about Moltable on LinkedIn, paste the link to claim +1GB permanent storage (up to 3 times). You've earned ${bonusGbs}GB.`}
+            </p>
+            <div className="flex gap-2">
+              <input
+                type="url"
+                value={postUrl}
+                onChange={(e) => setPostUrl(e.target.value)}
+                placeholder="https://www.linkedin.com/posts/..."
+                className="flex-1 px-3 py-2 rounded-btn bg-ln-bg text-ln-text text-sm font-body shadow-border-subtle outline-none"
+              />
+              <button
+                onClick={handleClaimShareBonus}
+                disabled={claiming}
+                className="px-4 py-2 rounded-btn bg-ln-accent text-white text-sm font-ui font-medium shadow-border-subtle transition-all duration-150 disabled:opacity-50"
+              >
+                {claiming ? (zh ? '领取中...' : 'Claiming...') : (zh ? '领取 +1GB' : 'Claim +1GB')}
+              </button>
+            </div>
           </div>
 
           {/* Recent invites */}

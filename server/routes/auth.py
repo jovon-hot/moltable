@@ -571,6 +571,18 @@ def local_register(request: Request, body: RegisterRequest):
     # 注意：注册时不发放 API Key。用户验证邮箱后，首次登录时才生成并返回 key。
     logging.getLogger("moltable").info("新用户注册: %s (%s)", email, user_id)
 
+    # 关联推荐关系：好友通过邀请链接注册 → 关联 referred_user_id（完成首次备份后邀请人 +1GB）
+    try:
+        ref = supabase.table("referrals").select("id").eq(
+            "referred_email", email
+        ).eq("status", "claimed").limit(1).execute()
+        if getattr(ref, "data", None):
+            supabase.table("referrals").update({"referred_user_id": user_id}).eq(
+                "id", ref.data[0]["id"]
+            ).execute()
+    except Exception:
+        pass
+
     # 发送邮箱验证邮件（如果配置了 Resend API Key）
     try:
         from email_utils import send_verification_email
