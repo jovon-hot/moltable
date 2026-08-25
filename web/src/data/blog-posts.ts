@@ -12,6 +12,15 @@ export interface BlogPost {
 
 const posts: BlogPost[] = [
   {
+    slug: 'moltable-vs-letta-stateful-memory',
+    date: '2026-08-25',
+    title: 'Moltable vs Letta：状态记忆 vs 灵魂资产备份',
+    titleEn: 'Moltable vs Letta (MemGPT): Stateful Memory vs Soul Asset Backup',
+    excerpt:
+      '竞品矩阵收官篇。Letta 给 Agent 一个会自我编辑的工作记忆（memory blocks + dreaming），Moltable 给你一份可版本化、可跨框架迁移的灵魂资产备份。一个管 Agent 的「脑子」，一个管你的「遗产」——它们不是竞品，是上下游。',
+    tags: ['Letta', 'MemGPT', '对比', 'Agent Memory', '灵魂资产备份'],
+  },
+  {
     slug: 'mcp-server-ecosystem-landscape',
     date: '2026-08-24',
     title: 'MCP 工具生态盘点：除了内置工具，Agent 还能调用哪些开源 MCP Server',
