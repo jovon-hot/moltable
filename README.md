@@ -8,7 +8,7 @@
 <p align="center">
   <a href="https://github.com/jovon-hot/moltable/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
   <a href="https://www.moltable.ai"><img src="https://img.shields.io/badge/Website-moltable.ai-4338CA" /></a>
-  <a href="https://www.moltable.ai/blog"><img src="https://img.shields.io/badge/Blog-35_posts-FB6B4B" /></a>
+  <a href="https://www.moltable.ai/blog"><img src="https://img.shields.io/badge/Blog-36_posts-FB6B4B" /></a>
 </p>
 
 ---

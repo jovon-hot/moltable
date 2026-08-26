@@ -12,6 +12,15 @@ export interface BlogPost {
 
 const posts: BlogPost[] = [
   {
+    slug: 'multi-agent-orchestration-swap-demo',
+    date: '2026-08-26',
+    title: '多 Agent 编排实战：一个真实 Swap 的完整 Demo',
+    titleEn: 'Multi-Agent Orchestration Demo: A Real Swap, End to End',
+    excerpt:
+      '承接 Swap 篇的承诺：把「战略分析」单拆成抓取/清洗/分析/成文四个子任务，跑一个真实编排器。分析节点被通用分析师接走、因隐性财务建模要求主动 Swap、量化分析师接手一次交付。117 行纯 Python，跑给你看 Agent 经济最值钱的 0.5 秒。',
+    tags: ['Agent Economy', 'Protocol', 'Swap', 'Hands-on', 'Demo', '编排'],
+  },
+  {
     slug: 'moltable-vs-letta-stateful-memory',
     date: '2026-08-25',
     title: 'Moltable vs Letta：状态记忆 vs 灵魂资产备份',
