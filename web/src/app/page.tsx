@@ -60,10 +60,10 @@ export default function LandingPage() {
             style={{ background: '#4338CA', color: '#fff', boxShadow: '0 0 0 1px rgba(99,102,241,0.3)' }}>
             {(t.hero as any).heroCta}
           </Link>
-          <Link href="/login" className="px-7 py-3 rounded-lg text-sm font-semibold transition-all duration-200 hover:bg-white/5"
+          <a href="#how" className="px-7 py-3 rounded-lg text-sm font-semibold transition-all duration-200 hover:bg-white/5"
             style={{ background: 'rgba(255,255,255,0.04)', color: '#A8A5B8', border: '1px solid rgba(255,255,255,0.08)' }}>
-            {t.nav.login}
-          </Link>
+            {(t.hero as any).howCta}
+          </a>
         </div>
         <p className="relative mt-4 text-xs" style={{ color: '#6E6B80' }}>{(t.hero as any).trust}</p>
         <p className="relative mt-1 text-xs" style={{ color: '#6366F1' }}>{(t.hero as any).trust2}</p>
@@ -152,7 +152,7 @@ export default function LandingPage() {
       </div>
 
       {/* ── How it works ── */}
-      <section className="px-6 py-20 max-w-5xl mx-auto">
+      <section id="how" className="px-6 py-20 max-w-5xl mx-auto">
         <h2 className="text-2xl text-center mb-12 font-bold">{t.how.title}</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {t.how.steps.map((step: any, i: number) => (
