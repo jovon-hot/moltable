@@ -6,6 +6,7 @@
   moltable backup push [--name X]       扫描灵魂资产 → 增量上传快照
   moltable backup pull [--version N]     下载快照 → 还原到工作区
   moltable backup init                   生成 ~/.moltable/backup.json 配置
+  moltable sync <同步码>                 用同步码恢复账号（换机闭环）
 
 环境变量：
   MOLTABLE_API   后端地址（默认 https://api.moltable.ai）
@@ -301,6 +302,46 @@ def cmd_remove_ref(config_path: str, logical: str) -> None:
     print(f"✅ 已删除引用 {logical}")
 
 
+def cmd_sync(config_path: str, code: str) -> None:
+    """用同步码恢复账号 API Key（换机闭环）。消费一次性同步码 → 拿到账号级 Key → 写入本地配置。"""
+    config = load_config(config_path)
+    api = config.get("api") or DEFAULT_API
+    if not (
+        api.startswith("https://")
+        or api.startswith("http://localhost")
+        or api.startswith("http://127.0.0.1")
+    ):
+        print(f"❌ API 地址必须为 https://（仅放行本地 loopback）：{api}")
+        sys.exit(1)
+    url = f"{api}/api/auth/sync"
+    data = json.dumps({"sync_code": code}).encode()
+    req = urllib.request.Request(url, data=data, method="POST")
+    req.add_header("Content-Type", "application/json")
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            body = json.loads(resp.read().decode())
+    except urllib.error.HTTPError as e:
+        msg = e.read().decode(errors="replace")
+        print(f"❌ 同步码无效或已失效（HTTP {e.code}）：{msg[:300]}")
+        sys.exit(1)
+    except urllib.error.URLError as e:
+        print(f"❌ 网络错误：{e.reason}")
+        sys.exit(1)
+
+    api_key = body.get("api_key")
+    user = body.get("user") or {}
+    if not api_key:
+        print("❌ 后端未返回 API Key")
+        sys.exit(1)
+
+    config["api_key"] = api_key
+    _save_config(config_path, config)
+    name = user.get("name") or user.get("email") or "（未命名账号）"
+    print(f"✅ 身份已恢复：{name}")
+    print(f"   API Key 已写入 {config_path}")
+    print(f"   接下来：`moltable backup pull` 还原灵魂资产，或用 MCP auto_provision 一键同步上下文。")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(prog="moltable backup", description="Agent 文件级备份（打包·快照·回滚，在线同步兜底）")
     parser.add_argument("--config", default=os.path.expanduser("~/.moltable/backup.json"), help="配置文件路径")
@@ -317,6 +358,9 @@ def main() -> None:
 
     p_rm_ref = sub.add_parser("remove-ref", help="删除引用")
     p_rm_ref.add_argument("logical", help="逻辑名")
+
+    p_sync = sub.add_parser("sync", help="用同步码恢复账号（换机闭环）")
+    p_sync.add_argument("code", help="同步码（molt_sync_xxx，一次性，7 天有效）")
 
     p_push = sub.add_parser("push", help="上传快照")
     p_push.add_argument("--name", help="备份源名称")
@@ -344,6 +388,9 @@ def main() -> None:
         return
     if args.cmd == "remove-ref":
         cmd_remove_ref(config_path, args.logical)
+        return
+    if args.cmd == "sync":
+        cmd_sync(config_path, args.code)
         return
 
     config = load_config(config_path)

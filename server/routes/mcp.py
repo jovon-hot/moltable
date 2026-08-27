@@ -344,6 +344,57 @@ MCP_TOOLS = [
             "required": ["project_id"],
         },
     },
+    {
+        "name": "sync_pull",
+        "description": "拉取云端全部同步状态（记忆/Persona/项目/决策/DID/凭证等），每条带 version 和 updated_at。Agent 据此知道服务端当前版本，供 sync_push 传 base_version 做冲突检测。",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "since": {
+                    "type": "string",
+                    "description": "可选：只拉取 updated_at >= since 的变更（ISO 8601 时间戳）。不传则返回全部。",
+                },
+            },
+        },
+    },
+    {
+        "name": "sync_push",
+        "description": "把本地记忆/Persona/项目/决策批量同步到云端（git 式三向合并）。每条带 base_version：与云端 version 一致才接受，不一致则返回冲突而不覆盖。全新条目 base_version 传 0。",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "description": "要同步的条目列表",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "type": {"type": "string", "enum": ["memory", "persona", "project", "decision"], "description": "条目类型"},
+                            "id": {"type": "string", "description": "条目唯一 ID（本地稳定生成，勿每次重生成）"},
+                            "content": {"description": "条目内容（对象或字符串）"},
+                            "base_version": {"type": "integer", "default": 0, "description": "本地已知的服务端版本号（从 sync_pull 拿到的 version）；全新条目传 0"},
+                        },
+                        "required": ["type", "id", "content"],
+                    },
+                },
+            },
+            "required": ["items"],
+        },
+    },
+    {
+        "name": "sync_resolve",
+        "description": "接受一条本地已解决的冲突：以 resolved_content 为准落库，版本 +1。仅在 sync_push 返回冲突后使用。",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "type": {"type": "string", "enum": ["memory", "persona", "project", "decision"], "description": "条目类型"},
+                "id": {"type": "string", "description": "冲突条目 ID"},
+                "resolved_content": {"description": "解决后的内容"},
+                "base_version": {"type": "integer", "description": "冲突时的服务端 version"},
+            },
+            "required": ["type", "id", "resolved_content", "base_version"],
+        },
+    },
 ]
 
 
@@ -358,6 +409,9 @@ TOOL_SCOPE_MAP = {
     "list_personas": ["persona:read"],
     "list_skills": ["skill:read"],
     "get_skill": ["skill:read"],
+    "sync_pull": ["memory:read"],
+    "sync_push": ["memory:write"],
+    "sync_resolve": ["memory:write"],
 }
 
 
@@ -874,6 +928,95 @@ def _tool_update_project(user_id: str, params: dict) -> dict:
     return {"id": project_id, "updated": True}
 
 
+# ── 同步工具（接 /api/sync 语义，git 式双向同步）──────────
+_SYNC_TYPE_TO_TABLE = {
+    "memory": "memories",
+    "persona": "personas",
+    "project": "projects",
+    "decision": "decisions",
+    "did": "dids",
+    "credential": "credentials",
+    "persona_version": "persona_versions",
+    "profile": "profiles",
+}
+
+_RESOLVEABLE_TYPES = {"memory", "persona", "project", "decision"}
+
+
+def _tool_sync_pull(user_id: str, params: dict) -> dict:
+    """拉取云端全部同步状态（带 version，供 sync_push 传 base_version）"""
+    from services.sync_service import SyncService
+
+    if supabase is None:
+        return {"error": "同步需要云端（Supabase）支持，本地 SQLite 模式不可用"}
+
+    since = params.get("since")
+    raw = SyncService(supabase, user_id).pull(since)
+    items = {t: raw.get(table, []) for t, table in _SYNC_TYPE_TO_TABLE.items()}
+    total = sum(len(v) for v in items.values())
+    return {"items": items, "total": total}
+
+
+def _tool_sync_push(user_id: str, params: dict) -> dict:
+    """批量同步（git 式，冲突不覆盖）"""
+    from services.sync_service import SyncService
+
+    if supabase is None:
+        return {"error": "同步需要云端（Supabase）支持，本地 SQLite 模式不可用"}
+
+    items = params.get("items", [])
+    if not isinstance(items, list) or not items:
+        return {"accepted": [], "conflicts": [], "accepted_count": 0, "conflict_count": 0, "note": "items 为空"}
+
+    service = SyncService(supabase, user_id)
+    accepted: list = []
+    conflicts: list = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        t = item.get("type")
+        if t not in _SYNC_TYPE_TO_TABLE:
+            conflicts.append({"id": item.get("id"), "type": t, "reason": f"未知类型 {t}"})
+            continue
+        payload = {
+            "id": item.get("id"),
+            "content": item.get("content"),
+            "base_version": int(item.get("base_version") or 0),
+            "updated_at": item.get("updated_at"),
+        }
+        try:
+            r = service.push([payload], t)
+            accepted.extend(r.get("accepted", []))
+            conflicts.extend(r.get("conflicts", []))
+        except Exception as e:  # noqa: BLE001
+            conflicts.append({"id": item.get("id"), "type": t, "reason": str(e)})
+    return {
+        "accepted": accepted,
+        "conflicts": conflicts,
+        "accepted_count": len(accepted),
+        "conflict_count": len(conflicts),
+    }
+
+
+def _tool_sync_resolve(user_id: str, params: dict) -> dict:
+    """接受本地已解决的冲突，版本 +1"""
+    from services.sync_service import SyncService
+
+    if supabase is None:
+        return {"error": "同步需要云端（Supabase）支持，本地 SQLite 模式不可用"}
+
+    item_id = params.get("id", "")
+    t = params.get("type", "")
+    if not item_id or t not in _RESOLVEABLE_TYPES:
+        return {"error": "需要 id 与合法 type（memory/persona/project/decision）"}
+    try:
+        return SyncService(supabase, user_id).resolve(
+            item_id, t, params.get("resolved_content"), int(params.get("base_version") or 0)
+        )
+    except Exception as e:  # noqa: BLE001
+        return {"error": str(e)}
+
+
 # ── 工具路由表 ────────────────────────────────────────────
 TOOL_DISPATCH = {
     "search_memory": _tool_search_memory,
@@ -890,6 +1033,9 @@ TOOL_DISPATCH = {
     "get_project": _tool_get_project,
     "create_project": _tool_create_project,
     "update_project": _tool_update_project,
+    "sync_pull": _tool_sync_pull,
+    "sync_push": _tool_sync_push,
+    "sync_resolve": _tool_sync_resolve,
 }
 
 

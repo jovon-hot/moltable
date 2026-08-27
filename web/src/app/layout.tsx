@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     'MCP tools',
     'agent environment',
     'auto provision',
-    'agent identity sync',
+    'agent online sync',
   ],
   robots: {
     index: true,
