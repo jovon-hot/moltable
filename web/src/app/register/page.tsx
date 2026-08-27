@@ -60,8 +60,8 @@ function RegisterForm() {
       setRegistered(true)
     } catch (err: any) {
       setError(err.message || a.registerFailed)
-      // 验证失败后重置 widget，避免旧的 payload 被复用
-      setAltchaPayload('')
+      // 非验证码类错误（邮箱重复/格式/一次性邮箱等）保留 payload —— 5 分钟内可复用，
+      // 用户改完表单即可直接重试；验证码过期由 widget 的 expired 状态自行清空。
     }
     setLoading(false)
   }
@@ -119,6 +119,7 @@ function RegisterForm() {
           <altcha-widget
             ref={widgetRef}
             challenge={`${API_BASE}/api/auth/challenge`}
+            auto="onload"
             theme="dark"
             configuration={JSON.stringify({ hideLogo: true, hideFooter: true })}
           ></altcha-widget>
