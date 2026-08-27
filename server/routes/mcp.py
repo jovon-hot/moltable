@@ -929,16 +929,12 @@ def _tool_update_project(user_id: str, params: dict) -> dict:
 
 
 # ── 同步工具（接 /api/sync 语义，git 式双向同步）──────────
-_SYNC_TYPE_TO_TABLE = {
-    "memory": "memories",
-    "persona": "personas",
-    "project": "projects",
-    "decision": "decisions",
-    "did": "dids",
-    "credential": "credentials",
-    "persona_version": "persona_versions",
-    "profile": "profiles",
-}
+# 表名映射以 sync_service.ITEM_REGISTRY 为单一事实源（如 did → did_registry，不是 dids）
+def _sync_type_to_table() -> dict:
+    from services.sync_service import ITEM_REGISTRY
+
+    return {name: spec.table for name, spec in ITEM_REGISTRY.items()}
+
 
 _RESOLVEABLE_TYPES = {"memory", "persona", "project", "decision"}
 
@@ -952,7 +948,8 @@ def _tool_sync_pull(user_id: str, params: dict) -> dict:
 
     since = params.get("since")
     raw = SyncService(supabase, user_id).pull(since)
-    items = {t: raw.get(table, []) for t, table in _SYNC_TYPE_TO_TABLE.items()}
+    table_map = _sync_type_to_table()
+    items = {t: raw.get(table, []) for t, table in table_map.items()}
     total = sum(len(v) for v in items.values())
     return {"items": items, "total": total}
 
@@ -971,11 +968,12 @@ def _tool_sync_push(user_id: str, params: dict) -> dict:
     service = SyncService(supabase, user_id)
     accepted: list = []
     conflicts: list = []
+    table_map = _sync_type_to_table()
     for item in items:
         if not isinstance(item, dict):
             continue
         t = item.get("type")
-        if t not in _SYNC_TYPE_TO_TABLE:
+        if not isinstance(t, str) or t not in table_map:
             conflicts.append({"id": item.get("id"), "type": t, "reason": f"未知类型 {t}"})
             continue
         payload = {
