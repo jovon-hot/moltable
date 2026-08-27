@@ -12,6 +12,15 @@ export interface BlogPost {
 
 const posts: BlogPost[] = [
   {
+    slug: 'ai-agent-compliance-soc2-iso27001',
+    date: '2026-08-27',
+    title: 'AI Agent 合规进阶：SOC2 / ISO27001 与数据跨境清单',
+    titleEn: 'AI Agent Compliance: SOC2, ISO 27001 & Cross-Border Data Checklist',
+    excerpt:
+      '承接 GDPR 篇，把合规从「删除权/可携带」推进到企业级认证框架：SOC2 五项信任服务原则、ISO27001 的 93 项 Annex A 控制如何映射到 Agent 记忆层，以及中国数据出境与欧盟 Schrems II 下的自托管落地方案，附可直接抄的合规检查清单。',
+    tags: ['合规', 'SOC2', 'ISO27001', '数据主权', '安全'],
+  },
+  {
     slug: 'multi-agent-orchestration-swap-demo',
     date: '2026-08-26',
     title: '多 Agent 编排实战：一个真实 Swap 的完整 Demo',
