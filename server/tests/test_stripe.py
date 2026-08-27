@@ -36,6 +36,46 @@ class TestStripeCheckout:
             resp = client.post("/api/billing/checkout", json={"plan": "invalid", "period": "monthly"})
         assert resp.status_code == 422  # pydantic validation
 
+    def test_checkout_quarterly_pro_uses_quarterly_price(self, client):
+        mock_stripe = MagicMock()
+        mock_stripe.checkout.Session.create.return_value = MagicMock(url="https://checkout.stripe.com/quarterly")
+        with patch("routes.billing.get_stripe", return_value=mock_stripe):
+            resp = client.post("/api/billing/checkout", json={"plan": "pro", "period": "quarterly"})
+        assert resp.status_code == 200
+        assert resp.json()["url"] == "https://checkout.stripe.com/quarterly"
+        # 必须把季度 price ID 传给 Stripe，而不是空串或月付价
+        line_items = mock_stripe.checkout.Session.create.call_args.kwargs["line_items"]
+        assert line_items[0]["price"] == "price_1U8r3iLkDZlUqAEdEzNv4fF9"
+
+    def test_checkout_quarterly_team_uses_quarterly_price(self, client):
+        mock_stripe = MagicMock()
+        mock_stripe.checkout.Session.create.return_value = MagicMock(url="https://checkout.stripe.com/quarterly")
+        with patch("routes.billing.get_stripe", return_value=mock_stripe):
+            resp = client.post("/api/billing/checkout", json={"plan": "team", "period": "quarterly"})
+        assert resp.status_code == 200
+        line_items = mock_stripe.checkout.Session.create.call_args.kwargs["line_items"]
+        assert line_items[0]["price"] == "price_1U8r3jLkDZlUqAEdhq1b6MKh"
+
+    def test_plans_include_quarterly_prices(self, client):
+        mock_stripe = MagicMock()
+        mock_stripe.Price.retrieve.side_effect = lambda pid: MagicMock(
+            to_dict=lambda: {
+                "id": pid,
+                "unit_amount": {"price_1U4YZjLkDZlUqAEdFsjo33iT": 300, "price_1U8r3iLkDZlUqAEdEzNv4fF9": 800,
+                                "price_1U4YZkLkDZlUqAEdGqojLR3r": 2000,
+                                "price_1U4YZnLkDZlUqAEdEntKfvAC": 600, "price_1U8r3jLkDZlUqAEdhq1b6MKh": 1600,
+                                "price_1U4YZpLkDZlUqAEd7GvNU3kr": 5500}.get(pid, 0),
+                "currency": "usd",
+            }
+        )
+        with patch("routes.billing.get_stripe", return_value=mock_stripe):
+            resp = client.get("/api/billing/plans")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["pro"]["price_quarterly"] == 8.0
+        assert body["team"]["price_quarterly"] == 16.0
+        assert body["pro"]["price_monthly"] == 3.0
+
 
 class TestStripeWebhook:
     def test_webhook_not_configured(self, client):

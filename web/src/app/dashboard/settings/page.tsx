@@ -26,6 +26,7 @@ export default function SettingsPage() {
   const [error, setError] = useState(false)
   const [upgrading, setUpgrading] = useState(false)
   const [activeTab, setActiveTab] = useState<'profile' | 'keys' | 'sync' | 'billing'>('profile')
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly')
   const [sub, setSub] = useState<{ plan: string; plan_name?: string; status?: string } | null>(null)
   const [subLoading, setSubLoading] = useState(false)
   const [managing, setManaging] = useState(false)
@@ -111,10 +112,30 @@ export default function SettingsPage() {
 
   const handleUpgrade = async () => {
     setUpgrading(true)
-    try { await createCheckout('pro', 'monthly') }
+    try { await createCheckout('pro', billingPeriod) }
     catch (e: any) { toast(e.message || (lang === 'zh' ? '跳转支付失败，请重试' : 'Checkout failed, please retry'), 'error') }
     finally { setUpgrading(false) }
   }
+
+  const renderPeriodPicker = () => (
+    <div className="flex gap-2">
+      {([
+        { id: 'monthly', label: lang === 'zh' ? '月付' : 'Monthly' },
+        { id: 'quarterly', label: lang === 'zh' ? '季付' : 'Quarterly' },
+        { id: 'yearly', label: lang === 'zh' ? '年付' : 'Yearly' },
+      ] as const).map(opt => (
+        <button key={opt.id} onClick={() => setBillingPeriod(opt.id)}
+          className="flex-1 py-1.5 rounded-[6px] text-xs font-medium transition-all"
+          style={{
+            background: billingPeriod === opt.id ? '#4338CA' : 'rgba(255,255,255,0.06)',
+            color: billingPeriod === opt.id ? '#fff' : '#888888',
+            fontWeight: billingPeriod === opt.id ? 590 : 400,
+          }}>
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  )
 
   const loadSubscription = async () => {
     setSubLoading(true)
@@ -212,8 +233,9 @@ export default function SettingsPage() {
               <div className="grid grid-cols-2 gap-2 text-xs" style={{ color: '#cccccc' }}>
                 {proFeatures.map((f: string, i: number) => (<div key={i} className="flex items-center gap-2"><Check size={12} style={{ color: '#4338CA' }} />{f}</div>))}
               </div>
+              {renderPeriodPicker()}
               <button onClick={handleUpgrade} disabled={upgrading}
-                className="w-full mt-4 py-2 rounded-[6px] text-sm font-medium transition-all hover:opacity-90"
+                className="w-full mt-3 py-2 rounded-[6px] text-sm font-medium transition-all hover:opacity-90"
                 style={{ background: '#4338CA', color: '#fff', fontWeight: 510 }}>
                 {upgrading ? d.upgrading : d.y149year}
               </button>
@@ -379,12 +401,15 @@ export default function SettingsPage() {
 
               {/* 操作按钮 */}
               {isFree ? (
-                <button onClick={handleUpgrade} disabled={upgrading}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-[6px] text-sm font-medium transition-all hover:opacity-90 disabled:opacity-50"
-                  style={{ background: '#4338CA', color: '#fff', fontWeight: 510 }}>
-                  {upgrading ? <Loader2 size={16} className="animate-spin" /> : <ArrowUp size={16} />}
-                  {upgrading ? d.upgrading : d.upgradePro}
-                </button>
+                <>
+                  {renderPeriodPicker()}
+                  <button onClick={handleUpgrade} disabled={upgrading}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-[6px] text-sm font-medium transition-all hover:opacity-90 disabled:opacity-50"
+                    style={{ background: '#4338CA', color: '#fff', fontWeight: 510 }}>
+                    {upgrading ? <Loader2 size={16} className="animate-spin" /> : <ArrowUp size={16} />}
+                    {upgrading ? d.upgrading : d.upgradePro}
+                  </button>
+                </>
               ) : (
                 <>
                   <button onClick={handleManage} disabled={managing}

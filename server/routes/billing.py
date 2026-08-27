@@ -21,8 +21,10 @@ router = APIRouter(prefix="/api/billing", tags=["billing"])
 # ── Stripe Price ID 映射（可用环境变量覆盖）────────────────────
 PRICE_IDS = {
     ("pro", "monthly"): os.getenv("STRIPE_PRICE_PRO_MONTHLY", "price_1U4YZjLkDZlUqAEdFsjo33iT"),
+    ("pro", "quarterly"): os.getenv("STRIPE_PRICE_PRO_QUARTERLY", "price_1U8r3iLkDZlUqAEdEzNv4fF9"),
     ("pro", "yearly"): os.getenv("STRIPE_PRICE_PRO_YEARLY", "price_1U4YZkLkDZlUqAEdGqojLR3r"),
     ("team", "monthly"): os.getenv("STRIPE_PRICE_TEAM_MONTHLY", "price_1U4YZnLkDZlUqAEdEntKfvAC"),
+    ("team", "quarterly"): os.getenv("STRIPE_PRICE_TEAM_QUARTERLY", "price_1U8r3jLkDZlUqAEdhq1b6MKh"),
     ("team", "yearly"): os.getenv("STRIPE_PRICE_TEAM_YEARLY", "price_1U4YZpLkDZlUqAEd7GvNU3kr"),
 }
 
@@ -49,6 +51,8 @@ def get_pricing():
     try:
         prices = {}
         for (plan, period), pid in PRICE_IDS.items():
+            if not pid:
+                continue  # 未配置的价格周期跳过（如 quarterly 未上线）
             p = stripe.Price.retrieve(pid)
             p = p.to_dict() if hasattr(p, "to_dict") else p
             prices[f"{plan}_{period}"] = {
@@ -120,6 +124,7 @@ def get_plans(request: Request):
         "pro": {
             "name": "Pro",
             "price_monthly": pricing["pro_monthly"]["amount"] / 100 if pricing else 0,
+            "price_quarterly": pricing["pro_quarterly"]["amount"] / 100 if pricing and pricing.get("pro_quarterly") else 0,
             "price_yearly": pricing["pro_yearly"]["amount"] / 100 if pricing else 0,
             "badge": None,
             "features": pro_plan["features"],
@@ -129,6 +134,7 @@ def get_plans(request: Request):
         "team": {
             "name": "Team",
             "price_monthly": pricing["team_monthly"]["amount"] / 100 if pricing else 0,
+            "price_quarterly": pricing["team_quarterly"]["amount"] / 100 if pricing and pricing.get("team_quarterly") else 0,
             "price_yearly": pricing["team_yearly"]["amount"] / 100 if pricing else 0,
             "features": team_plan["features"],
             "limits": team_plan["limits"],
@@ -143,7 +149,7 @@ def get_plans(request: Request):
 
 class CheckoutRequest(BaseModel):
     plan: str = Field(default="pro", pattern=r"^(pro|team)$")
-    period: str = Field(default="monthly", pattern=r"^(monthly|yearly)$")
+    period: str = Field(default="monthly", pattern=r"^(monthly|quarterly|yearly)$")
 
 
 @router.post("/checkout")

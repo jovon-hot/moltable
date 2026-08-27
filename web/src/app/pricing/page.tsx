@@ -6,11 +6,14 @@ import { Check } from 'lucide-react'
 import { useLang } from '@/contexts/LanguageContext'
 import { getPlans } from '@/lib/api'
 
+type Period = 'monthly' | 'quarterly' | 'yearly'
+
 export default function PricingPage() {
   const { t, lang } = useLang()
   const p = t.pricing as any
   const pricingFeatures = p.features || {}
   const [plansData, setPlans] = useState<any>(null)
+  const [period, setPeriod] = useState<Period>('monthly')
 
   useEffect(() => {
     getPlans().then(setPlans).catch(() => {})
@@ -18,13 +21,33 @@ export default function PricingPage() {
 
   // Stripe 已接入(mode=paid)时显示真实 USD 价格;未接入回退到静态文案
   const paid = plansData?.mode === 'paid'
-  const fmtUsd = (amount: number) => (lang === 'zh' ? `$${amount.toFixed(0)}/月` : `$${amount.toFixed(0)}/mo`)
-  const fmtYear = (amount: number) => (lang === 'zh' ? `$${amount.toFixed(0)}/年` : `$${amount.toFixed(0)}/yr`)
+  const hasQuarterly = paid && (plansData.pro?.price_quarterly || 0) > 0
+
+  const periods = ([
+    { id: 'monthly', label: lang === 'zh' ? '月付' : 'Monthly' },
+    { id: 'quarterly', label: lang === 'zh' ? '季付' : 'Quarterly' },
+    { id: 'yearly', label: lang === 'zh' ? '年付' : 'Yearly' },
+  ] as const).filter(x => x.id !== 'quarterly' || hasQuarterly)
+
+  const fmt = (amount: number, p: Period) => {
+    const suffix = lang === 'zh'
+      ? { monthly: '/月', quarterly: '/季', yearly: '/年' } as const
+      : { monthly: '/mo', quarterly: '/qtr', yearly: '/yr' } as const
+    return `$${amount.toFixed(0)}${suffix[p]}`
+  }
+
+  const priceOf = (key: 'pro' | 'team') => {
+    if (!paid) return null
+    const d = plansData[key]
+    if (period === 'quarterly' && hasQuarterly) return d.price_quarterly
+    if (period === 'yearly') return d.price_yearly
+    return d.price_monthly
+  }
 
   const plans = [
     {
       name: plansData?.free?.name || p.free.name,
-      price: paid ? '$0' : p.free.price,
+      price: '$0',
       desc: p.free.desc,
       cta: p.free.cta,
       href: '/register',
@@ -32,8 +55,8 @@ export default function PricingPage() {
     },
     {
       name: plansData?.pro?.name || p.pro.name,
-      price: paid ? fmtUsd(plansData.pro.price_monthly) : p.pro.priceMonthly,
-      desc: paid ? `${fmtUsd(plansData.pro.price_monthly)} · 年付 ${fmtYear(plansData.pro.price_yearly)}` : p.pro.desc,
+      price: paid ? fmt(priceOf('pro') ?? 0, period) : p.pro.priceMonthly,
+      desc: p.pro.desc,
       cta: p.pro.cta,
       badge: p.pro.badge,
       accent: true,
@@ -42,7 +65,7 @@ export default function PricingPage() {
     },
     {
       name: plansData?.team?.name || p.team.name,
-      price: paid ? fmtUsd(plansData.team.price_monthly) : p.team.price,
+      price: paid ? fmt(priceOf('team') ?? 0, period) : p.team.price,
       desc: p.team.descShort || p.team.desc,
       cta: p.team.cta,
       href: 'mailto:hi@moltable.ai',
@@ -61,6 +84,24 @@ export default function PricingPage() {
             {p.subtitle}
           </p>
         </div>
+
+        {paid && periods.length > 1 && (
+          <div className="flex justify-center mb-8">
+            <div className="inline-flex rounded-[8px] p-1" style={{ background: 'rgba(255,255,255,0.04)' }}>
+              {periods.map(x => (
+                <button key={x.id} onClick={() => setPeriod(x.id)}
+                  className="px-5 py-2 rounded-[6px] text-sm font-medium transition-all"
+                  style={{
+                    background: period === x.id ? '#4338CA' : 'transparent',
+                    color: period === x.id ? '#fff' : '#888888',
+                    fontWeight: period === x.id ? 590 : 400,
+                  }}>
+                  {x.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {plans.map((plan, i) => (
