@@ -2,12 +2,12 @@ import type { Metadata } from 'next'
 import BlogLayout from '@/components/BlogLayout'
 
 export const metadata: Metadata = {
-  title: 'Moltable vs mem0: AI Identity Layer 和 Memory Layer 的本质区别',
-  description: '为什么你的 AI Agent 有了记忆还是不认识你？深度剖析 Identity Layer 和 Memory Layer 的本质差异，帮你做出正确的技术选型。',
+  title: 'Moltable vs mem0: 灵魂备份和记忆层的本质区别',
+  description: '为什么你的 AI Agent 有了记忆还是不认识你？深度剖析灵魂资产备份和记忆层的本质差异，帮你做出正确的技术选型。',
   alternates: { canonical: 'https://www.moltable.ai/blog/moltable-vs-mem0-identity-vs-memory' },
   openGraph: {
-    title: 'Moltable vs mem0: Identity vs Memory — 本质区别',
-    description: 'Identity Layer 不是 Memory Layer。从架构哲学、数据模型、多 Agent 协作三个维度深度对比。',
+    title: 'Moltable vs mem0: Soul Backup vs Memory — 本质区别',
+    description: '灵魂备份不是记忆层。从架构哲学、数据模型、多 Agent 协作三个维度深度对比。',
     url: 'https://www.moltable.ai/blog/moltable-vs-mem0-identity-vs-memory',
     type: 'article',
     publishedTime: '2026-08-05',

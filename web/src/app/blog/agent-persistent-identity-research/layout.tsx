@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: 'arXiv 最新论文：AI Agent 的「持续身份」——多锚点架构如何让 Agent 不再失忆',
   description:
-    '2026年3月 arXiv 论文提出多锚点身份理论：参考人类记忆障碍的神经科学研究，论证 AI Agent 需要偏好、决策、关系、价值观、叙事五个锚点来维持持续身份。Moltable 的三层架构完整实现了这一理论。',
+    '2026年3月 arXiv 论文提出多锚点身份理论：参考人类记忆障碍的神经科学研究，论证 AI Agent 需要偏好、决策、关系、价值观、叙事五个锚点来维持持续身份。Moltable 的灵魂资产备份完整落地了这一理论。',
   keywords: [
     'AI持续身份',
     'Agent身份锚点',
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'arXiv 论文解读：AI Agent 的「持续身份」——多锚点架构',
     description:
-      '2026年3月 arXiv 论文提出多锚点身份理论：五个锚点维持 AI Agent 持续身份。Moltable 三层架构完整实现了这一理论。',
+      '2026年3月 arXiv 论文提出多锚点身份理论：五个锚点维持 AI Agent 持续身份。Moltable 灵魂资产备份完整落地了这一理论。',
     url: 'https://www.moltable.ai/blog/agent-persistent-identity-research',
     siteName: 'Moltable.ai',
     type: 'article',
