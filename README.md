@@ -22,7 +22,7 @@ Moltable 是你调教 AI 的**灵魂资产版本仓库**。一条命令把你调
 ## 一条命令备份
 
 ```bash
-curl -sL moltable.ai/install.sh | bash
+curl -sL https://moltable.ai/install.sh | bash
 
 moltable backup init        # 生成配置
 moltable backup push        # 打包上传（快照 + 版本号 + 增量去重）

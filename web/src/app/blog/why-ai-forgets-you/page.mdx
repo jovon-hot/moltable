@@ -103,12 +103,11 @@ Claude 调用 moltable 工具...
 换一台新电脑？一条命令：
 
 ```
-{`# 一条命令接入 Claude Desktop
-npx @moltable/connect claude --api-key molt_k7xq9p2v_xxxxx
+{`# 一条命令安装 Moltable CLI
+curl -sL https://moltable.ai/install.sh | bash
 
-# 同样适配其他 Agent
-npx @moltable/connect cursor --api-key
-npx @moltable/connect hermes --api-key `}
+# 首次备份你的 Agent 灵魂资产
+moltable backup push`}
 ```
 
 而且，身份数据是**跨 Agent 同步**的。你在 Claude 里记录的新偏好，Cursor 下次启动时自动就能读到。一次配置，所有 Agent 共享——这正是 Identity Layer 和单点记忆工具的本质区别。
@@ -143,7 +142,7 @@ auto_provision 自动加载，直接开工
 
 换新电脑
 全部配置手写，MCP JSON 逐个重建
-一条 npx 命令，环境完整恢复
+一条命令安装，环境完整恢复
 
 换一个 Agent
 新 Agent 从零认识你
@@ -171,11 +170,11 @@ Persona 持久化，一键调用
 {`# 30 秒注册
 open https://moltable.ai/register
 
-# 60 秒接入你的 Agent
-npx @moltable/connect claude --api-key
+# 60 秒安装 Moltable CLI
+curl -sL https://moltable.ai/install.sh | bash
 
-# 说一句「记录我的偏好」
-# 从此，你的 AI 不再失忆。`}
+# 备份你的 Agent 灵魂资产
+moltable backup push`}
 ```
 
 👉 [免费注册 Moltable — 一次配置，所有 Agent 共享](/register)

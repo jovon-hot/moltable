@@ -126,7 +126,7 @@ Zep answers the question "how do facts change?" Moltable answers "**how does an 
 - **Model**: open source (MIT) + hosted cloud; self-hostable with `pip install` + `python main.py`
 - **Storage**: Supabase `temporal_facts` table (with row-level security) for transitions, pgvector for semantic search — zero new dependencies
 - **Extraction**: heuristic change detection (no LLM calls) + entity keyword matching (English *and* Chinese)
-- **Access**: native MCP protocol — any MCP client connects in one line: `npx @moltable/connect claude --api-key <key>`
+- **Access**: native MCP protocol — any agent connects in one line: `curl -sL https://moltable.ai/install.sh | bash`
 - **Deployment**: cloud or your own infra; identity data always yours
 - **License**: MIT
 

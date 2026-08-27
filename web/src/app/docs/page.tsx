@@ -769,13 +769,11 @@ hermes --mcp-auto-provision moltable`} />
                 code={`{
   "mcpServers": {
     "moltable": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@moltable/mcp-server",
-        "--api-key",
-        "<YOUR_API_KEY>"
-      ]
+      "type": "http",
+      "url": "https://api.moltable.ai/mcp",
+      "headers": {
+        "X-API-Key": "<YOUR_API_KEY>"
+      }
     }
   }
 }`} />

@@ -81,17 +81,18 @@ Claude 调用 moltable 工具...
 换到新 Mac 之后，你只需要一行命令：
 
 ```
-{`# 一条命令接入 Claude Desktop
-npx @moltable/connect claude --api-key molt_k7xq9p2v_xxxxx`}
+{`# 一条命令安装 Moltable CLI
+curl -sL https://moltable.ai/install.sh | bash`}
 ```
 
-这条命令自动完成：读取现有配置 → 备份原配置 → 写入 Moltable Server → 验证 API Key → 打印指引。**不需要手动编辑任何 JSON。**
+这条命令自动完成：检测 Python → 下载 CLI → 添加到 PATH。之后运行 `moltable backup push` 即可把 Agent 灵魂资产备份到云端。**不需要手动编辑任何 JSON。**
 
-同样适配其他 Agent：
+备份同样适配其他 Agent：
 
 ```
-{`npx @moltable/connect cursor --api-key
-npx @moltable/connect hermes --api-key `}
+{`# 首次备份
+moltable backup init
+moltable backup push`}
 ```
 
 ## 第四步：验证恢复效果
@@ -157,11 +158,14 @@ Moltable 使用 PBKDF2-HMAC-SHA256 加盐哈希（10 万次迭代）保护 API K
 {`# 30 秒注册
 open https://moltable.ai/register
 
-# 60 秒接入 Claude Desktop
-npx @moltable/connect claude --api-key
+# 60 秒安装 Moltable CLI
+curl -sL https://moltable.ai/install.sh | bash
 
-# 3 分钟恢复全部 AI 环境
-# 然后继续写代码，就像什么都没发生一样。`}
+# 首次备份你的 Agent 灵魂资产
+moltable backup push
+
+# 换机后一条命令恢复
+moltable backup pull`}
 ```
 
 👉 [免费注册 Moltable — 让你的 AI 永远认识你](/register)

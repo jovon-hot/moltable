@@ -49,10 +49,10 @@ Claude Desktop 和 ChatGPT 的每个会话是独立沙箱。你可以在一个�
 {`{
 "mcpServers": {
 "moltable": {
-"command": "npx",
-"args": ["-y", "@moltable/mcp-server"],
-"env": {
-"MOLTABLE_API_KEY": "molt_your_key_here"
+"type": "http",
+"url": "https://api.moltable.ai/mcp",
+"headers": {
+"X-API-Key": "molt_your_key_here"
 }
 }
 }

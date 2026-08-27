@@ -28,7 +28,7 @@ export const translations = {
     how: {
       title: '三步开始',
       steps: [
-        { title: '安装 CLI', desc: 'curl -sL moltable.ai/install.sh | bash —— 一行命令安装备份工具。' },
+        { title: '安装 CLI', desc: 'curl -sL https://moltable.ai/install.sh | bash —— 一行命令安装备份工具。' },
         { title: '备份灵魂', desc: 'moltable backup push —— 打包上传你的 Agent 灵魂资产。' },
         { title: '换机 / 换框架', desc: 'moltable backup pull 还原，或用你自己的 LLM 跨框架迁移。' },
       ],
@@ -284,7 +284,7 @@ export const translations = {
       agentsDesc: '你备份到云端的 Agent 灵魂资产，每个 Agent 一个独立备份源。',
       agentsEmpty: '还没有备份任何 Agent',
       agentsEmptyDesc: '安装 CLI 后运行 moltable backup push，你的 Agent 就会出现在这里。',
-      agentsInstallCmd: 'curl -sL moltable.ai/install.sh | bash',
+      agentsInstallCmd: 'curl -sL https://moltable.ai/install.sh | bash',
       agentsInstallBtn: '查看安装教程',
       agentTypeHermes: 'Hermes',
       agentTypeClaude: 'Claude',
@@ -353,7 +353,7 @@ export const translations = {
     how: {
       title: 'Get Started in 3 Steps',
       steps: [
-        { title: 'Install CLI', desc: 'curl -sL moltable.ai/install.sh | bash — one command installs the backup tool.' },
+        { title: 'Install CLI', desc: 'curl -sL https://moltable.ai/install.sh | bash — one command installs the backup tool.' },
         { title: 'Back Up Your Soul', desc: 'moltable backup push — pack and upload your Agent soul assets.' },
         { title: 'Switch Machine / Framework', desc: 'moltable backup pull to restore, or use your own LLM to migrate across frameworks.' },
       ],
@@ -609,7 +609,7 @@ export const translations = {
       agentsDesc: 'Your backed-up Agent soul assets, one backup source per agent.',
       agentsEmpty: 'No agents backed up yet',
       agentsEmptyDesc: 'Install the CLI and run moltable backup push — your agents will appear here.',
-      agentsInstallCmd: 'curl -sL moltable.ai/install.sh | bash',
+      agentsInstallCmd: 'curl -sL https://moltable.ai/install.sh | bash',
       agentsInstallBtn: 'View install guide',
       agentTypeHermes: 'Hermes',
       agentTypeClaude: 'Claude',

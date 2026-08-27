@@ -144,12 +144,11 @@ Layer 3
 这套架构的核心理念是：身份数据只存一份，属于你，不属于任何厂商；Agent 只是身份的「消费者」。无论你换电脑、换 Agent，还是同时使用五个 AI，它们读到的都是同一个身份。接入就是一条命令：
 
 ```
-{`# 一条命令接入 Claude Desktop
-npx @moltable/connect claude --api-key molt_xxxxx
+{`# 一条命令安装 Moltable CLI
+curl -sL https://moltable.ai/install.sh | bash
 
-# 同样适配其他 Agent
-npx @moltable/connect cursor --api-key
-npx @moltable/connect codex --api-key `}
+# 首次备份你的 Agent 灵魂资产
+moltable backup push`}
 ```
 
 
@@ -208,7 +207,7 @@ npx @moltable/connect codex --api-key `}
 
 连接 Agent（1 分钟）
 
-在 Claude、Cursor 或 Codex 里跑一条 npx 命令，完成接入。
+在终端里跑一条命令，完成安装。
 
 4
 

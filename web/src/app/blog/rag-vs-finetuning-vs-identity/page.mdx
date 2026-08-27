@@ -172,12 +172,11 @@ mem0、Cognee、Zep 本质上在做「Memory Layer」，介于 RAG 和 Identity 
 使用 Identity Layer + RAG 组合：
 
 ```bash
-npx @moltable/connect hermes --api-key molt_xxx
-npx @moltable/connect claude --api-key molt_xxx
-npx @moltable/connect cursor --api-key molt_xxx
+curl -sL https://moltable.ai/install.sh | bash
+moltable backup push
 ```
 
-3 条命令，3 分钟。所有 Agent 自动加载你的：
+两条命令，3 分钟。你的 Agent 灵魂资产完成备份：
 - ✅ 代码风格偏好（Identity → Preferences）
 - ✅ 项目知识库配置（Identity → Skills）
 - ✅ MCP 工具列表（Identity → Skills）

@@ -90,10 +90,10 @@ Moltable 会自动将这些偏好保存到 7 个分类中，并建立语义索�
 {`{
 "mcpServers": {
 "moltable": {
-"command": "npx",
-"args": ["-y", "@moltable/mcp-server"],
-"env": {
-"MOLTABLE_API_KEY": "molt_your_key_here"
+"type": "http",
+"url": "https://api.moltable.ai/mcp",
+"headers": {
+"X-API-Key": "molt_your_key_here"
 }
 }
 }
