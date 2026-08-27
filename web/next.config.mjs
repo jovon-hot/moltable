@@ -1,7 +1,13 @@
-const path = require('path')
-const withMDX = require('@next/mdx')({
+import path from 'path'
+import { fileURLToPath } from 'url'
+import createMDX from '@next/mdx'
+import remarkGfm from 'remark-gfm'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+const withMDX = createMDX({
   extension: /\.mdx?$/,
-  options: { remarkPlugins: [], rehypePlugins: [] },
+  options: { remarkPlugins: [remarkGfm], rehypePlugins: [] },
 })
 
 const cspHeader = [
@@ -79,4 +85,4 @@ const nextConfig = {
   },
 }
 
-module.exports = withMDX(nextConfig)
+export default withMDX(nextConfig)
