@@ -18,11 +18,14 @@ logger = logging.getLogger("moltable.billing")
 
 router = APIRouter(prefix="/api/billing", tags=["billing"])
 
-# ── Stripe Price ID 映射（可用环境变量覆盖）────────────────────
+# ── Stripe Price ID 映射（可用环境变量覆盖，默认=live 价格）────
 PRICE_IDS = {
-    ("pro", "monthly"): os.getenv("STRIPE_PRICE_PRO_MONTHLY", "price_1U4YZjLkDZlUqAEdFsjo33iT"),
-    ("ultra", "monthly"): os.getenv("STRIPE_PRICE_ULTRA_MONTHLY", ""),
+    ("pro", "monthly"): os.getenv("STRIPE_PRICE_PRO_MONTHLY", "price_1U8uG7LAjVZX7G68ZSvo8kTi"),
+    ("ultra", "monthly"): os.getenv("STRIPE_PRICE_ULTRA_MONTHLY", "price_1U8uuGLAjVZX7G68qHqIC7VN"),
 }
+
+# 前端 App 域名（checkout/portal 回调跳转用），与 routes/referrals.py 的 APP_URL 一致
+APP_URL = os.getenv("APP_URL", "https://moltable.ai").rstrip("/")
 
 
 # ── 定价缓存(从 Stripe 拉取真实 USD 价格)────────────────
@@ -155,7 +158,7 @@ async def create_checkout(request: Request, body: CheckoutRequest, user_id: str 
     if not price_id:
         raise HTTPException(400, "Invalid plan or period")
 
-    base = str(request.base_url).rstrip("/")
+    base = APP_URL
 
     # 关联已有 Stripe Customer（try 外，避免 HTTPException 被外层的 502 兜底吞掉）
     customer_id = None
@@ -312,7 +315,7 @@ async def create_portal(request: Request, user_id: str = Depends(get_user)):
     if not customer_id:
         raise HTTPException(400, "No Stripe customer found")
 
-    base = str(request.base_url).rstrip("/")
+    base = APP_URL
     try:
         session = stripe.billing_portal.Session.create(
             customer=customer_id,

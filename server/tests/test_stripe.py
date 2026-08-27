@@ -38,10 +38,14 @@ class TestStripeCheckout:
 
     def test_plans_include_pro_and_ultra(self, client):
         mock_stripe = MagicMock()
+        amount_by_id = {
+            "price_1U8uG7LAjVZX7G68ZSvo8kTi": 300,  # Pro $3
+            "price_1U8uuGLAjVZX7G68qHqIC7VN": 500,  # Ultra $5
+        }
         mock_stripe.Price.retrieve.side_effect = lambda pid: MagicMock(
             to_dict=lambda: {
                 "id": pid,
-                "unit_amount": {"price_1U4YZjLkDZlUqAEdFsjo33iT": 300}.get(pid, 500),
+                "unit_amount": amount_by_id.get(pid, 0),
                 "currency": "usd",
             }
         )
@@ -50,6 +54,7 @@ class TestStripeCheckout:
         assert resp.status_code == 200
         body = resp.json()
         assert body["pro"]["price_monthly"] == 3.0
+        assert body["ultra"]["price_monthly"] == 5.0
         assert "ultra" in body
 
 
