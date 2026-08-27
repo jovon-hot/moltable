@@ -78,7 +78,7 @@ MCP（Model Context Protocol）解决的正是这件事——**它是 AI 的 USB
 | 写代码、修 bug | context7 + GitHub + filesystem | Postgres（查数据） |
 | 数据分析 / 报表 | Postgres / SQLite | fetch（补外部数据） |
 | 爬网页 / 做监控 | Playwright + fetch | Brave Search |
-| 记住你是谁 / 长期协作 | memory | 身份层（见第五节） |
+| 记住你是谁 / 长期协作 | memory | 灵魂资产备份（见第五节） |
 | 端到端自动化任务 | Docker + filesystem + fetch | 按任务组合 |
 
 **一个反直觉的建议**：不要一上来把十个 Server 全接上。每个 Server 都是新的攻击面、新的权限边界、新的上下文噪音。**先接一个，把它用透，再添下一个。** 这与 [多租户记忆隔离](/blog/mcp-multi-tenant-isolation) 里「权限最小化」的原则一脉相承——能力越少，边界越清晰，出事越好排查。
@@ -140,7 +140,7 @@ if __name__ == "__main__":
 
 1. **别重新造轮子**：开源 MCP Server 生态已经覆盖了写代码、查数据、爬网页、记上下文的主流场景，先接现成的。
 2. **按需接线，权限最小**：接一个用透一个，别贪多；每个 Server 的路径/scope 就是它的权限边界。
-3. **工具是手，身份是自我**：MCP 让你 Agent 的手变长，但只有身份层能让你 Agent 认得你。
+3. **工具是手，身份是自我**：MCP 让你 Agent 的手变长，但只有灵魂资产备份能让你 Agent 换机不丢。
 
 下一篇，我们把竞品矩阵补上最后一块：**Moltable vs Letta（MemGPT）——记忆状态机与身份图谱，是两条不同的路。** 下篇见。
 
