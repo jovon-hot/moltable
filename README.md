@@ -49,12 +49,12 @@ SOUL.md · AGENTS.md · USER.md · config.yaml（MCP 配置，密钥脱敏）· 
 
 ## 定价
 
-| | Free | Pro | Team |
+| | Free | Pro | Ultra |
 |---|---|---|---|
-| 备份源 | 10 | 100 | 无限 |
-| 存储 | 2GB | 50GB | 无限 |
-| 价格 | $0 | **$3/月** | 联系咨询 |
-| | [免费开始](https://moltable.ai/register) | [升级 Pro](https://moltable.ai/register) | hi@moltable.ai |
+| 备份源 | 3 | 10 | 100 |
+| 存储 | 100MB | 1GB | 10GB |
+| 价格 | $0 | **$3/月** | **$5/月** |
+| | [免费开始](https://moltable.ai/register) | [升级 Pro](https://moltable.ai/register) | [升级 Ultra](https://moltable.ai/register) |
 
 无需信用卡 · 随时取消。
 
