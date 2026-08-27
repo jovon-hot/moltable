@@ -1,8 +1,8 @@
 export const meta = {
   title: 'AI 灵魂资产的设计哲学：从 Memory 到备份',
   date: '2026-06-28',
-  description: '从「让 AI 记住更多」到「让你调教的 AI 不丢」：解析碎片化、被动的 Memory 局限，以及 Moltable 灵魂资产版本仓库为何是更优解。',
-  tags: ['AI Agent 记忆', '灵魂资产备份', '架构', '设计哲学', '多 Agent'],
+  description: '从「让 AI 记住更多」到「让你调教的 AI 不丢」：解析碎片化、被动的 Memory 局限，以及 Moltable Agent 在线同步层为何是更优解。',
+  tags: ['AI Agent 记忆', 'Agent 在线同步', '架构', '设计哲学', '多 Agent'],
   slug: 'ai-identity-layer',
 }
 
@@ -26,16 +26,16 @@ import Link from 'next/link'
 
 这就像给了你一个无限容量的硬盘，但没有文件系统。数据都在，但你找不到。
 
-## 另一个方向：备份灵魂资产
+## 另一个方向：在线同步调教成果
 
-Moltable 选择了一个不同的入口。如果把 Memory 比作「让 AI 记住更多」、Identity 比作「让 AI 认识你」，那么 Moltable 的答案是更朴素的第三条路：**把你调教 AI 的成果，原样备份下来**。
+Moltable 选择了一个不同的入口。如果把 Memory 比作「让 AI 记住更多」、Identity 比作「让 AI 认识你」，那么 Moltable 的答案是更朴素的第三条路：**把你调教 AI 的成果，在线同步起来**。
 
-Memory Layer 和灵魂资产备份的区别在于：
+Memory Layer 和 Agent 在线同步层的区别在于：
 
 - **Memory Layer 是运行时组件**：它住在你的 Agent 进程里，负责存取记忆
-- **灵魂资产备份是保险箱**：它不运行你的 Agent，只负责把 SOUL、Skills、MCP 配置、记忆打包成版本化、去重的备份——换框架/换电脑都不丢
+- **Agent 在线同步层是同步中枢**：它不运行你的 Agent，只负责让 SOUL、Skills、MCP 配置、记忆跨设备、跨 Agent 保持一致——换框架/换电脑都不丢
 
-两条路线解决的是不同的问题：Memory Layer 解决「Agent 记不住」，Moltable 解决「你调教好的 Agent 会丢」。
+两条路线解决的是不同的问题：Memory Layer 解决「Agent 记不住」，Moltable 解决「你调教好的 Agent 跟不跟你走」。
 
 ```bash
 curl -sL https://moltable.ai/install.sh | bash
@@ -44,32 +44,32 @@ moltable backup push   # 打包上传
 moltable backup pull   # 换机/换框架后一键还原
 ```
 
-备份的内容是：SOUL.md、AGENTS.md、USER.md、config.yaml（MCP 配置，密钥脱敏）、memories/、skills/；对话流水账（state.db/WAL/FTS）和密钥（.env/*.key）自动排除。
+在线同步的内容是：SOUL.md、AGENTS.md、USER.md、config.yaml（MCP 配置，密钥脱敏）、memories/、skills/；对话流水账（state.db/WAL/FTS）和密钥（.env/*.key）自动排除。文件级备份提供版本快照与回滚。
 
-不需要导出。不需要手动复制配置文件。换电脑、换框架，一条命令找回你的 Agent 灵魂。
+不需要导出。不需要手动复制配置文件。换电脑、换框架，登录账号即自动同步；文件级备份则一条命令找回你的调教成果。
 
 ## 三层架构：Profile → Soul → 凭证
 
-这是 Moltable 最核心的设计决策——把「用户本体」和「可备份的 Agent 化身」分开：
+这是 Moltable 最核心的设计决策——把「用户本体」和「可同步的 Agent 化身」分开：
 
 - **Profile（本体）**：你本人。唯一、不可复制。拥有所有数据的所有权。
-- **Soul（化身）**：人格 + 记忆，可备份。你可以为不同场景维护多个化身（战略顾问、保守审核员、创意伙伴），每个化身是一个独立的备份源，输出风格完全不同。
+- **Soul（化身）**：人格 + 记忆，可同步。你可以为不同场景维护多个化身（战略顾问、保守审核员、创意伙伴），每个化身独立同步、互不干扰，输出风格完全不同。
 - **凭证（DID + VC）**：可验证身份，即将推出。
 
-这个架构的关键洞察是：同一个人的 Profile 是稳定的，但面对不同场景需要不同的化身。做战略决策时需要激进的分析师，审核合同时需要保守的审核员。两个化身各自独立备份——就像同一个人的左右脑，各有各的档案。Hermes、OpenClaw、Claude、Codex 每实例一个备份源，互不干扰。
+这个架构的关键洞察是：同一个人的 Profile 是稳定的，但面对不同场景需要不同的化身。做战略决策时需要激进的分析师，审核合同时需要保守的审核员。两个化身各自独立同步——就像同一个人的左右脑，各有各的档案。Hermes、OpenClaw、Claude、Codex 每个实例独立同步，互不干扰。
 
 ## 为什么竞品不做
 
 不是想不到，而是定位决定的。mem0 定位"通用记忆层"——适合任何 AI 应用插入记忆功能。这个定位天然偏向运行时组件，无法回答"你的 Agent 丢了怎么办"。
 
-Moltable 定位"灵魂资产版本仓库"——只服务 AI Agent 和 AI 重度用户。这个窄定位允许我们做深：bundle + manifest + CAS 内容寻址去重 + 对象存储；每个备份源独立版本库，快照 + 版本号 + 回滚；sha256 增量去重；add-ref 引用外部知识库一并备份。开源 MIT，MCP 接入走 HTTP（https://api.moltable.ai/mcp + X-API-Key），不需要本地拉起服务。
+Moltable 定位"Agent 在线同步层"——只服务 AI Agent 和 AI 重度用户。这个窄定位允许我们做深：一个账号，身份、记忆、Persona 跨设备、跨 Agent 在线同步；文件级备份兜底——bundle + manifest + CAS 内容寻址去重 + 对象存储，每个 Agent 独立版本库，快照 + 版本号 + 回滚；sha256 增量去重；add-ref 引用外部知识库一并纳入。开源 MIT，MCP 接入走 HTTP（https://api.moltable.ai/mcp + X-API-Key），auto_provision 一键同步上下文，不需要本地拉起服务。
 
 ## 你的调教成果属于你
 
 每一次对话、每一轮调教，AI 都在学习你的偏好、你的工作方式、你的决策模式。这些成果目前散落在 ChatGPT、Claude、Hermes 各自的封闭环境里。
 
-Moltable 要做的是让这些成果回到你手中。备份数据随时可导出、可删除，绝不用来训练。Free $0（3 备份源/100MB）、Pro $3/月（10 备份源/1GB）、Ultra $5/月（100 备份源/10GB），仅月付。
+Moltable 要做的是让这些成果回到你手中。同步数据随时可导出、可删除，绝不用来训练。Free $0（3 个 Agent/100MB）、Pro $3/月（10 个 Agent/1GB）、Ultra $5/月（100 个 Agent/10GB），仅月付。
 
-换 Agent，不换灵魂——这才是 Agent 时代的个人数据主权。
+你的 AI 永远顺手——这才是 Agent 时代的个人数据主权。
 
 </ArticleLayout>

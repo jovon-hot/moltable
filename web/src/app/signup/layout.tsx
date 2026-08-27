@@ -1,13 +1,13 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Join Moltable — Agent Soul Backup',
+  title: 'Join Moltable — Your AI, Always in Sync',
   description:
-    'Back up your Agent soul — SOUL.md, skills, MCP config, memories. Switch agents, keep your soul. Start free.',
+    'Sync your Agent identity, memories, personas, and projects across devices and agents. Your AI, always in sync. Start free.',
   openGraph: {
-    title: 'Join Moltable — Agent Soul Backup',
+    title: 'Join Moltable — Your AI, Always in Sync',
     description:
-      'Back up your Agent soul. Switch agents, keep your soul.',
+      'Sync your Agent across devices and agents. Your AI, always in sync.',
   },
 }
 

@@ -3,14 +3,14 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: '换电脑不换脑子：3 分钟恢复完整 AI 开发环境实战指南',
   description:
-    '换一台新 Mac，Claude、Cursor、Codex 全部失忆？手把手教你用 Moltable 在 3 分钟内恢复完整 AI 工作环境——从 SOUL 到 MCP 配置，从记忆到技能偏好，一条命令全搞定。',
+    '换一台新 Mac，Claude、Cursor、Codex 全部失忆？手把手教你用 Moltable 在线同步 + auto_provision 在 3 分钟内恢复完整 AI 工作环境——身份、记忆、技能偏好一键到位。',
   keywords: [
     'AI环境恢复',
     '换电脑AI配置',
     'Claude记忆恢复',
-    'Agent灵魂备份',
+    'Agent在线同步',
     'MCP配置迁移',
-    '灵魂资产备份',
+    'Agent 在线同步',
     'AI开发环境',
   ],
   openGraph: {

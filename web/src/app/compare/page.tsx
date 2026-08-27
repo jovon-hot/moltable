@@ -7,16 +7,16 @@ import { useLang } from '@/contexts/LanguageContext'
 const comparisonData = {
   zh: {
     hero: {
-      title: 'Agent 灵魂资产备份平台对比 2026',
-      subtitle: 'Moltable vs mem0 vs Zep — 记忆层，还是灵魂资产备份？',
+      title: 'Agent 在线同步平台对比 2026',
+      subtitle: 'Moltable vs mem0 vs Zep — 记忆层，还是 Agent 在线同步层？',
       updated: '2026-08-22',
     },
-    intro: 'Moltable 与 mem0 / Zep 不是同一赛道：mem0 和 Zep 做的是「记忆层」（存储和检索 AI 的对话记忆），Moltable 做的是「灵魂资产备份」（把你调教的 Agent——SOUL、Skills、MCP 配置——打包、版本化、跨框架迁移）。重叠维度有限，本对比仅供技术选型参考。',
+    intro: 'Moltable 与 mem0 / Zep 不是同一赛道：mem0 和 Zep 做的是「记忆层」（存储和检索 AI 的对话记忆），Moltable 做的是「Agent 在线同步层」（一个账号，把你调教的 Agent——身份、记忆、Persona、项目——跨设备、跨 Agent 在线同步，换设备用 auto_provision 一键恢复）。重叠维度有限，本对比仅供技术选型参考。',
     overview: {
       title: '平台概览',
       moltable: {
         name: 'Moltable.ai',
-        positioning: 'Agent 灵魂资产版本仓库 — 换 Agent，不换灵魂',
+        positioning: 'Agent 在线同步层 — 你的 AI 永远顺手',
         founded: '2026',
         license: 'MIT',
         protocol: 'MCP Native',
@@ -42,11 +42,11 @@ const comparisonData = {
     features: {
       title: '功能对比',
       rows: [
-        { feature: '灵魂资产备份 (SOUL/Skills/MCP)', moltable: true, mem0: false, zep: false },
+        { feature: 'Agent 在线同步 (身份/记忆/Persona/项目)', moltable: true, mem0: false, zep: false },
         { feature: '版本管理 (快照 + 回滚)', moltable: true, mem0: false, zep: false },
         { feature: '跨框架迁移 (LLM 翻译, 即将推出)', moltable: true, mem0: false, zep: false },
-        { feature: '引用同步 (知识库一并备份)', moltable: true, mem0: false, zep: false },
-        { feature: '排除对话流水账 (只备份灵魂)', moltable: true, mem0: false, zep: false },
+        { feature: '引用同步 (知识库一并同步)', moltable: true, mem0: false, zep: false },
+        { feature: '排除对话流水账 (只同步资产)', moltable: true, mem0: false, zep: false },
         { feature: '语义记忆存储', moltable: true, mem0: true, zep: true },
         { feature: '向量搜索', moltable: true, mem0: true, zep: true },
         { feature: 'MCP Server', moltable: true, mem0: true, zep: true },
@@ -60,24 +60,24 @@ const comparisonData = {
     },
     pricing: {
       title: '定价对比',
-      moltable: { free: '3 备份源 / 500MB', pro: '10 备份源 / 10GB', team: '联系销售' },
+      moltable: { free: '1 Agent · 2 Persona · 100 记忆', pro: '5 Agent · 10 Persona · 1万记忆 · 1GB 备份存储', team: '联系销售' },
       mem0: { free: '开源免费', pro: '$249/月', team: '企业定制' },
       zep: { free: '开源免费', pro: '$99/月起', team: '企业定制' },
     },
     architecture: {
       title: '架构对比',
-      moltable: 'Profile（本体）→ Soul（化身）→ 凭证（身份证明）三层。以「灵魂资产」为备份原子单位，快照 + 版本号做内容寻址去重，DID+VC 给灵魂签出处。只备份灵魂资产（SOUL/Skills/MCP/记忆），自动排除对话流水账。',
-      mem0: 'Memory → User → Agent 三层。以「记忆」为最小单位，专注记忆的存储、检索和管理。Pro 版增加团队协作，但不涉及灵魂资产备份或跨框架迁移。',
+      moltable: 'Profile（本体）→ Soul（化身）→ 凭证（身份证明）三层。以「Agent」为同步单位：身份、记忆、Persona、项目通过 MCP 在线同步，换设备用 auto_provision 一键恢复；文件级备份（快照 + 版本号 + 回滚）作为兜底，DID+VC 给资产签出处，自动排除对话流水账。',
+      mem0: 'Memory → User → Agent 三层。以「记忆」为最小单位，专注记忆的存储、检索和管理。Pro 版增加团队协作，但不涉及 Agent 在线同步或跨框架迁移。',
       zep: 'Memory → Graph → User。以「记忆 + 知识图谱」为核心，在记忆之上构建实体关系图。适合需要复杂上下文推理的场景，但学习曲线较陡。',
     },
     strengths: {
       title: '各自优势',
       moltable: [
-        '唯一做「灵魂资产备份」的平台——解决「换框架/换电脑，调教成果全丢」的问题',
+        '唯一做「Agent 在线同步」的平台——解决「换框架/换电脑，调教成果全丢」的问题',
         '版本管理：快照 + 版本号，改坏了随时回滚到任意历史版本',
-        '跨框架迁移：用你自己的 LLM 把 Hermes 灵魂翻译成 OpenClaw / Claude 版本',
-        '引用同步：知识库、内容来源一并备份，工作环境完整还原',
-        '只备份灵魂不备份流水账：实测 39MB 灵魂 vs 1.2GB 对话日志，压缩比 30 倍',
+        '跨框架迁移：用你自己的 LLM 把 Hermes 的调教成果翻译成 OpenClaw / Claude 版本',
+        '引用同步：知识库、内容来源一并同步，工作环境完整还原',
+        '只同步资产、排除流水账：实测 39MB 资产 vs 1.2GB 对话日志，压缩比 30 倍',
         'MIT 开源 + DID 可验证身份（即将推出）',
       ],
       mem0: [
@@ -101,7 +101,7 @@ const comparisonData = {
         '同时用多个 Agent 框架（Hermes + OpenClaw + Claude）的重度用户',
         '花大量时间调教 AI、担心换机器/换框架就丢的人',
         '需要把调教成果版本化、可回滚的个人/团队',
-        '未来需要「可验证身份」给灵魂签出处的开发者',
+        '未来需要「可验证身份」给 Agent 签出处的开发者',
       ],
       mem0: [
         '构建 AI 应用的开发者：需要在产品中嵌入记忆能力',
@@ -119,27 +119,27 @@ const comparisonData = {
     verdict: {
       title: '如何选择？',
       lines: [
-        '如果你要「换 Agent 不换灵魂」——把调教成果备份、版本化、跨框架迁移 → 选 Moltable',
+        '如果你要「你的 AI 永远顺手」——一个账号在线同步、换设备一键恢复、版本化兜底 → 选 Moltable',
         '如果你在构建 AI 产品，需要嵌入「记忆」能力且看重社区生态 → 选 mem0',
         '如果你需要「知识图谱 + 企业级安全性能」→ 选 Zep',
-        '如果你既需要记忆、又需要灵魂资产备份 → Moltable 是唯一选择（它两者都做）',
+        '如果你既需要记忆、又需要 Agent 在线同步 → Moltable 是唯一选择（它两者都做）',
       ],
     },
-    cta: '免费开始备份你的 Agent →',
+    cta: '免费开始同步你的 Agent →',
     footer: '以上对比基于 2026-08-22 各平台公开信息。功能和定价可能随时更新，请以各平台官网为准。',
   },
   en: {
     hero: {
-      title: 'Agent Soul Backup Platform Comparison 2026',
-      subtitle: 'Moltable vs mem0 vs Zep — memory layer, or soul backup?',
+      title: 'Agent Online Sync Platform Comparison 2026',
+      subtitle: 'Moltable vs mem0 vs Zep — memory layer, or the online sync layer?',
       updated: '2026-08-22',
     },
-    intro: 'Moltable and mem0/Zep are not in the same lane: mem0 and Zep build a "memory layer" (storing and retrieving AI conversation memory), while Moltable does "soul backup" (packaging your tuned agents — SOUL, Skills, MCP configs — into versioned, cross-framework-migratable assets). Overlap is limited; this comparison is for technical reference only.',
+    intro: 'Moltable and mem0/Zep are not in the same lane: mem0 and Zep build a "memory layer" (storing and retrieving AI conversation memory), while Moltable is the "online sync layer" (one account that syncs your tuned agent identity, memories, personas, and projects across devices and agents, with auto_provision restoring everything on a new device in one call). Overlap is limited; this comparison is for technical reference only.',
     overview: {
       title: 'Platform Overview',
       moltable: {
         name: 'Moltable.ai',
-        positioning: 'Agent Soul Asset Repository — switch agents, keep your soul',
+        positioning: 'Agent Online Sync Layer — Your AI, always in sync',
         founded: '2026',
         license: 'MIT',
         protocol: 'MCP Native',
@@ -165,11 +165,11 @@ const comparisonData = {
     features: {
       title: 'Feature Comparison',
       rows: [
-        { feature: 'Soul Backup (SOUL/Skills/MCP)', moltable: true, mem0: false, zep: false },
+        { feature: 'Online Sync (identity/memory/personas/projects)', moltable: true, mem0: false, zep: false },
         { feature: 'Versioning (snapshot + rollback)', moltable: true, mem0: false, zep: false },
         { feature: 'Cross-Framework Migration (LLM, coming soon)', moltable: true, mem0: false, zep: false },
         { feature: 'Reference Sync (knowledge bases)', moltable: true, mem0: false, zep: false },
-        { feature: 'Excludes chat logs (soul only)', moltable: true, mem0: false, zep: false },
+        { feature: 'Excludes chat logs (assets only)', moltable: true, mem0: false, zep: false },
         { feature: 'Semantic Memory Storage', moltable: true, mem0: true, zep: true },
         { feature: 'Vector Search', moltable: true, mem0: true, zep: true },
         { feature: 'MCP Server', moltable: true, mem0: true, zep: true },
@@ -183,24 +183,24 @@ const comparisonData = {
     },
     pricing: {
       title: 'Pricing Comparison',
-      moltable: { free: '3 backup sources / 500MB', pro: '10 sources / 10GB', team: 'Contact sales' },
+      moltable: { free: '1 Agent · 2 Personas · 100 memories', pro: '5 Agents · 10 Personas · 10K memories · 1GB backup storage', team: 'Contact sales' },
       mem0: { free: 'OSS free', pro: '$249/mo', team: 'Enterprise custom' },
       zep: { free: 'OSS free', pro: 'From $99/mo', team: 'Enterprise custom' },
     },
     architecture: {
       title: 'Architecture Comparison',
-      moltable: 'Profile (identity) → Soul (avatar) → Credential (proof) three layers. Soul assets as the backup atomic unit, snapshot + version number with content-addressed dedup, DID+VC signing soul provenance. Backs up only soul assets (SOUL/Skills/MCP/memory), auto-excluding chat logs.',
-      mem0: 'Memory → User → Agent three layers. Memory as the smallest unit, focused on storage, retrieval, and management. Pro tier adds team collaboration without soul backup or cross-framework migration.',
+      moltable: 'Profile (identity) → Soul (avatar) → Credential (proof) three layers. Agents are the sync unit: identity, memory, personas, and projects sync online via MCP, and auto_provision restores everything on a new device in one call. File-level backup (snapshot + versioning + rollback) is the safety net; DID+VC signs asset provenance, and chat logs are auto-excluded.',
+      mem0: 'Memory → User → Agent three layers. Memory as the smallest unit, focused on storage, retrieval, and management. Pro tier adds team collaboration without online agent sync or cross-framework migration.',
       zep: 'Memory → Graph → User. Core is memory + knowledge graph, building entity relationship graphs on top of memories. Suitable for complex context reasoning but has a steeper learning curve.',
     },
     strengths: {
       title: 'Key Strengths',
       moltable: [
-        'Only platform doing "soul asset backup" — solves "switching framework/machine loses your tuning"',
+        'Only platform doing "online agent sync" — solves "switching framework/machine loses your tuning"',
         'Versioning: snapshot + version number, roll back to any point anytime',
-        'Cross-framework migration: use your own LLM to translate a Hermes soul into OpenClaw/Claude',
-        'Reference sync: knowledge bases and content sources backed up too',
-        'Soul-only backup: 39MB soul vs 1.2GB chat logs — 30x compression',
+        'Cross-framework migration: use your own LLM to translate a Hermes setup into OpenClaw/Claude',
+        'Reference sync: knowledge bases and content sources synced too',
+        'Assets-only sync: 39MB assets vs 1.2GB chat logs — 30x compression',
         'MIT open-source + DID verifiable identity (coming soon)',
       ],
       mem0: [
@@ -224,7 +224,7 @@ const comparisonData = {
         'Power users running multiple Agent frameworks (Hermes + OpenClaw + Claude)',
         'People who invest heavily in tuning AI and fear losing it when switching machines/frameworks',
         'Individuals/teams who want their tuning versioned and rollback-able',
-        'Developers who will need verifiable identity for soul provenance',
+        'Developers who will need verifiable identity for agent provenance',
       ],
       mem0: [
         'Developers building AI products: need to embed memory capabilities',
@@ -242,13 +242,13 @@ const comparisonData = {
     verdict: {
       title: 'How to Choose?',
       lines: [
-        'Want "switch agents, keep your soul" — back up, version, and migrate your tuning across frameworks → Choose Moltable',
+        'Want "Your AI, always in sync" — one account, cross-device sync, versioned safety net → Choose Moltable',
         'Building AI products, need embeddable memory with strong community → Choose mem0',
         'Need knowledge graph + enterprise security and performance → Choose Zep',
-        'Need both memory AND soul backup → Moltable is the only option (it does both)',
+        'Need both memory AND online agent sync → Moltable is the only option (it does both)',
       ],
     },
-    cta: 'Start backing up your Agent for free →',
+    cta: 'Start syncing your Agent for free →',
     footer: 'Comparison based on publicly available information as of 2026-08-22. Features and pricing may change; check each platform\'s official website.',
   },
 }

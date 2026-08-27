@@ -2,7 +2,7 @@ export const meta = {
   title: '2026 AI 开发者工具链全景：六层技术栈选型指南',
   date: '2026-08-01',
   description: '2026 年 AI 开发者技术栈已演化为六层架构：模型层、网关、编排、向量存储、身份与记忆层、MCP 工具层。一文梳理全景并给出每层选型建议。',
-  tags: ['开发者工具', '技术栈', 'LLM', 'MCP 协议', '灵魂资产备份', '选型'],
+  tags: ['开发者工具', '技术栈', 'LLM', 'MCP 协议', '在线同步', '选型'],
   slug: 'ai-developer-toolchain',
 }
 
@@ -91,11 +91,11 @@ RAG（检索增强生成）的底层存储：
 
 主流的身份和记忆方案已在 [记忆系统全景对比](/blog/agent-memory-landscape-2026) 中详细分析，这里做个速览：
 
-- **Moltable**：专攻灵魂资产备份。SOUL/Skills/记忆打包备份 + MCP 原生 + 中文一等公民
+- **Moltable**：Agent 在线同步层。SOUL/Skills/记忆在线同步 + 文件级备份兜底 + MCP 原生 + 中文一等公民
 - **mem0**：通用记忆层。向量 + 图架构。社区最大但 Pro 版 $249/月
 - **Zep**：企业级记忆。SOC2 合规，适合强监管行业
 
-Moltable 的独特价值在于**身份**而非**记忆**——它会记住"你是谁"（偏好、角色、行为规则），而不仅仅是"你说了什么"（对话记录）。这两者互补。
+Moltable 的独特价值在于**身份**而非**记忆**——它同步的是"你是谁"（偏好、角色、行为规则），而不仅仅是"你说了什么"（对话记录），并且这份身份跨设备、跨 Agent 保持在线。这两者互补。
 
 ## 第6层：MCP 工具层
 
@@ -114,12 +114,12 @@ MCP 协议让这些工具的接入变成标准化的"即插即用"。未来会�
 
 Moltable 定位在第5层——身份 & 记忆层。但它不是孤立的：
 
-- **向下**：通过 MCP 协议与编排层（LangChain/CrewAI）和 Gateway 层互联
+- **向下**：通过 MCP 同步接口（`search_memory` / `save_memory` / `auto_provision`）与编排层（LangChain/CrewAI）和 Gateway 层互联
 - **向上**：存储的记忆和 Persona 影响 Agent 如何使用第6层的工具
 - **横向**：与 mem0 / Zep 互补——Moltable 管身份，它们管通用记忆
 
-完整的 AI 技术栈，灵魂资产备份是不可或缺的一块拼图。2026 年，这块拼图终于被认真对待了。
+完整的 AI 技术栈，Agent 在线同步是不可或缺的一块拼图。2026 年，这块拼图终于被认真对待了。
 
-👉 [Moltable — 为你的技术栈补上灵魂资产备份](https://moltable.ai)
+👉 [Moltable — 为你的技术栈补上 Agent 在线同步](https://moltable.ai)
 
 </ArticleLayout>

@@ -1,8 +1,8 @@
 export const meta = {
   title: 'AI Agent 持久身份：arXiv 多锚点架构论文解读',
   date: '2026-08-04',
-  description: '解读 arXiv《Persistent Identity in AI Agents》：多锚点理论解释了 Agent 为何会「失忆」，以及 Moltable 如何用版本化备份保住你的调教成果。',
-  tags: ['arXiv', '持久身份', 'AI Agent 记忆', '多锚点', '论文解读', '灵魂资产备份'],
+  description: '解读 arXiv《Persistent Identity in AI Agents》：多锚点理论解释了 Agent 为何会「失忆」，以及 Moltable 如何用在线同步保住你的调教成果。',
+  tags: ['arXiv', '持久身份', 'AI Agent 记忆', '多锚点', '论文解读', 'Agent 在线同步'],
   slug: 'agent-persistent-identity-research',
 }
 
@@ -17,7 +17,7 @@ import Link from 'next/link'
 
 这篇论文提出了一个核心洞察：**人类能在严重记忆损伤后仍然保持身份认同，因为身份不是存储在大脑的某一个区域，而是分布式地锚定在多个系统中**——偏好、价值观、决策模式、人际关系、自我叙事。
 
-这个来自神经科学的启发，正在重塑 AI Agent 记忆系统的设计方向。而 Moltable 的灵魂资产备份思路——把多锚点的成果打包成版本化备份——恰好与论文提出的理论不谋而合。
+这个来自神经科学的启发，正在重塑 AI Agent 记忆系统的设计方向。而 Moltable 的在线同步思路——让多锚点的成果跨设备、跨 Agent 保持一致，再用文件级备份做版本兜底——恰好与论文提出的理论不谋而合。
 
 ## 论文核心发现：五个身份锚点
 
@@ -27,7 +27,7 @@ import Link from 'next/link'
 
 即使失忆患者不记得过去的经历，他们仍然知道自己喜欢什么音乐、讨厌什么食物。这些偏好深植于基底神经节，独立于海马体的情景记忆系统。
 
-**对 AI Agent 的启示**：偏好应该是记忆系统中最基础的存储单元，不依赖上下文窗口。你的 Agent 应该"天生"知道你用 TypeScript 而非 Python，用 tabs 而非 spaces——这些不需要每次重新声明，但需要被备份下来，才不会在换机器时重来一遍。
+**对 AI Agent 的启示**：偏好应该是记忆系统中最基础的存储单元，不依赖上下文窗口。你的 Agent 应该"天生"知道你用 TypeScript 而非 Python，用 tabs 而非 spaces——这些不需要每次重新声明，但需要被同步下来，才不会在换机器时重来一遍。
 
 ### 锚点二：决策轨迹（Decision History）
 
@@ -45,29 +45,29 @@ import Link from 'next/link'
 
 价值观是最稳定的身份锚点。论文指出，即使在严重痴呆症患者中，核心价值观（如诚实、家庭优先）仍然可以通过行为观察到。
 
-**对 AI Agent 的启示**：Agent 应该从用户的反馈中提取行为规则。例如："用户总是要求在代码审查中优先指出安全问题"→ 这是一条高优先级的行为规则。这些规则沉淀在 SOUL.md 里，是灵魂资产的核心。
+**对 AI Agent 的启示**：Agent 应该从用户的反馈中提取行为规则。例如："用户总是要求在代码审查中优先指出安全问题"→ 这是一条高优先级的行为规则。这些规则沉淀在 SOUL.md 里，是调教成果的核心。
 
 ### 锚点五：叙事连续性（Narrative Continuity）
 
 人类通过讲述关于自己的故事来维持身份。这些故事提供了时间上的连续性——"我是谁"依赖于"我曾经是谁"的故事。
 
-**对 AI Agent 的启示**：Agent 应该维护一个项目时间线——关键决策、重要里程碑、技术债务的来历。这不仅是记忆，更是可以传递给新 Agent 的知识遗产——而知识遗产要能传递，首先要被版本化地保存下来。
+**对 AI Agent 的启示**：Agent 应该维护一个项目时间线——关键决策、重要里程碑、技术债务的来历。这不仅是记忆，更是可以传递给新 Agent 的知识遗产——而知识遗产要能传递，首先要被在线同步、版本化地保存下来。
 
-## Moltable 如何实现多锚点备份
+## Moltable 如何实现多锚点同步
 
-论文的理论很美，但实现起来需要工程架构。Moltable 把五个锚点对应到备份包里的不同资产：
+论文的理论很美，但实现起来需要工程架构。Moltable 把五个锚点对应到同步内容里的不同资产：
 
-| 论文锚点 | Moltable 备份内容 | 说明 |
+| 论文锚点 | Moltable 同步内容 | 说明 |
 |---|---|---|
-| 偏好锚定 | memories/ 中的偏好记录 | 偏好跨机器/跨框架保留，不需要重新调教 |
+| 偏好锚定 | memories/ 中的偏好记录 | 偏好跨机器/跨框架在线同步，不需要重新调教 |
 | 决策轨迹 | memories/ 中的决策日志 | 决策历史随记忆一起版本化保存 |
-| 关系网络 | config.yaml（MCP 配置）+ add-ref 引用 | 工具配置与外部知识库一并备份，密钥自动脱敏 |
-| 价值观编码 | SOUL.md 行为规则 | 行为规则作为灵魂资产的一部分备份 |
+| 关系网络 | config.yaml（MCP 配置）+ add-ref 引用 | 工具配置与外部知识库一并同步，密钥自动脱敏 |
+| 价值观编码 | SOUL.md 行为规则 | 行为规则作为调教成果的一部分同步 |
 | 叙事连续性 | SOUL.md + memories/ 项目时间线 | 知识遗产可以传递给新 Agent |
 
-## 实战：一次备份保住五个锚点
+## 实战：一次同步保住五个锚点
 
-以下是一个完整的备份示例，展示如何用 Moltable 保存多锚点灵魂资产：
+以下是一个完整的示例，展示如何用 Moltable 同步多锚点调教成果：
 
 ```bash
 # 安装（开源 MIT）
@@ -86,7 +86,7 @@ moltable add-ref docs ~/Documents/knowledge-base
 moltable backup push
 ```
 
-备份包里有什么：
+文件级备份包里有什么：
 
 ```
 backup/
@@ -100,20 +100,20 @@ backup/
 └── skills/        # 技能与工作流
 ```
 
-每次 push 生成一个新版本，快照 + 版本号 + 回滚，sha256 增量去重。换电脑或换框架时，`moltable backup pull` 一键还原——五个锚点一个都不少。
+在线同步让五个锚点跨设备、跨 Agent 保持一致；每次 push 还会生成一个新版本，快照 + 版本号 + 回滚，sha256 增量去重。换电脑或换框架时，登录账号自动同步，`moltable backup pull` 文件级还原——五个锚点一个都不少。
 
 ## 为什么这个研究方向很重要
 
-2026年，AI Agent 赛道正在从"能做多少事"转向"能记多少东西"。mem0 从记忆切入拿下了 62K GitHub Stars，但记忆只是需要备份的调教成果的一部分。
+2026年，AI Agent 赛道正在从"能做多少事"转向"能记多少东西"。mem0 从记忆切入拿下了 62K GitHub Stars，但记忆只是需要同步的调教成果的一部分。
 
-论文作者的核心论点是：**记忆不等于身份，身份需要通过多个锚点来维持**。这意味着，仅仅给 Agent 加一个向量数据库是不够的——你调教的成果需要被当成资产来管理：版本化、可还原、可迁移。
+论文作者的核心论点是：**记忆不等于身份，身份需要通过多个锚点来维持**。这意味着，仅仅给 Agent 加一个向量数据库是不够的——你调教的成果需要被当成资产来管理：在线同步、版本化、可还原、可迁移。
 
-Moltable 从第一天起就按照这个理念设计。不是"更好的记忆"，而是"不丢的调教成果"——跨越 Agent、平台、设备的版本化灵魂资产备份。跨框架迁移（用自己的 LLM 把 Hermes 灵魂翻译成 OpenClaw/Claude/Codex 版本）正在路上，即将推出。
+Moltable 从第一天起就按照这个理念设计。不是"更好的记忆"，而是"不丢的调教成果"——跨越 Agent、平台、设备的在线同步层，文件级备份作为兜底。跨框架迁移（用自己的 LLM 把 Hermes 灵魂翻译成 OpenClaw/Claude/Codex 版本）正在路上，即将推出。
 
 "Identity is not stored in a single location. It is distributed across preferences, values, decisions, relationships, and the stories we tell about ourselves."
 — Persistent Identity in AI Agents, arXiv 2604.09588 (2026)
 
-👉 [免费体验 Moltable — 给你的 AI 调教成果一个不会丢的备份](/register)
+👉 [免费体验 Moltable — 你的 AI 永远顺手](/register)
 
 参考文献：Persistent Identity in AI Agents: A Multi-Anchor Architecture (arXiv 2604.09588, March 2026)
 

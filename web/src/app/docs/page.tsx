@@ -47,7 +47,7 @@ const sidebarItems: SidebarItem[] = [
     ],
   },
   { id: 'mcp', label: 'MCP 协议', icon: GitBranch },
-  { id: 'backup', label: '备份同步', icon: Archive },
+  { id: 'backup', label: '文件级备份', icon: Archive },
   { id: 'faq', label: '常见问题', icon: HelpCircle },
 ]
 
@@ -395,7 +395,7 @@ const faqItems: FAQItem[] = [
   },
   {
     q: '免费版有什么限制？',
-    a: '免费版包含：3 个备份源、100MB 存储、灵魂备份、版本管理和基础 MCP 工具。Pro 版解锁 10 个备份源、1GB 存储和引用同步，Ultra 版解锁 100 个备份源、10GB 存储，后续将上线跨框架迁移与 DID+VC 可验证身份。',
+    a: '免费版包含：1 个 Agent、2 个 Persona、100 条记忆和基础 MCP 工具。Pro 版解锁 5 个 Agent、10 个 Persona、1 万条记忆和 1GB 备份存储，Ultra 版解锁无限 Agent、无限 Persona、5 万条记忆和 10GB 备份存储，后续将上线跨框架迁移与 DID+VC 可验证身份。',
   },
   {
     q: '如何贡献代码？',
@@ -627,7 +627,7 @@ export default function DocsPage() {
           <section data-section="quickstart">
             <h1 className="text-3xl font-heading tracking-[-0.4px] text-ln-text mb-6">快速开始</h1>
             <div className="space-y-6 text-base leading-relaxed text-ln-secondary font-body">
-              <p className="text-ln-text font-ui text-lg">三步备份你的 Agent 灵魂资产。</p>
+              <p className="text-ln-text font-ui text-lg">三步让你的 AI 永远顺手：注册、取 Key、接入同步。</p>
 
               <div className="space-y-5">
                 <div className="flex gap-4">
@@ -649,8 +649,8 @@ export default function DocsPage() {
                 <div className="flex gap-4">
                   <span className="flex-shrink-0 w-8 h-8 rounded-full bg-ln-accent-muted text-ln-accent-hover flex items-center justify-center text-sm font-ui">3</span>
                   <div>
-                    <h3 className="font-ui text-ln-text mb-1">备份灵魂资产</h3>
-                    <p>运行 <code className="text-ln-accent-hover bg-ln-raised px-1.5 py-0.5 rounded text-[13px] font-mono">moltable backup push</code>，打包上传你的 SOUL、Skills、MCP 配置和记忆。详见下方「备份同步」章节。</p>
+                    <h3 className="font-ui text-ln-text mb-1">接入在线同步</h3>
+                    <p>在任何支持 MCP 的 Agent（Hermes、Claude、Codex）中配置 Moltable MCP，启动时调用 <code className="text-ln-accent-hover bg-ln-raised px-1.5 py-0.5 rounded text-[13px] font-mono">auto_provision</code> 一键加载你的身份、记忆与 Persona。需要文件级兜底时，运行 <code className="text-ln-accent-hover bg-ln-raised px-1.5 py-0.5 rounded text-[13px] font-mono">moltable backup push</code> 打包上传快照。详见下方「文件级备份」章节。</p>
                   </div>
                 </div>
               </div>
@@ -679,12 +679,12 @@ export default function DocsPage() {
             <h2 className="text-2xl font-heading tracking-[-0.3px] text-ln-text mb-6">安装与配置</h2>
 
             <div className="space-y-6 text-base leading-relaxed text-ln-secondary font-body">
-              <h3 className="text-lg font-ui text-ln-text">安装备份 CLI（推荐）</h3>
-              <p>一行命令安装 Moltable 备份工具（纯 Python stdlib，无第三方依赖）：</p>
+              <h3 className="text-lg font-ui text-ln-text">安装文件级备份 CLI（兜底能力）</h3>
+              <p>在线同步之外的文件级备份兜底：一行命令安装 Moltable 备份工具（纯 Python stdlib，无第三方依赖）：</p>
               <CodeBlock label="curl 安装" code={`curl -sL https://moltable.ai/install.sh | bash`} />
               <p>安装后重开终端（或 <code className="text-ln-accent-hover bg-ln-raised px-1.5 py-0.5 rounded text-[13px] font-mono">source ~/.zshrc</code>），即可使用：</p>
               <CodeBlock label="moltable backup" code={`moltable backup init          # 生成配置 ~/.moltable/backup.json
-moltable backup push          # 扫描灵魂资产 → 上传快照
+moltable backup push          # 扫描调教资产 → 上传快照
 moltable backup pull          # 下载快照 → 还原
 moltable backup sources       # 列出备份源`} />
 
@@ -904,7 +904,7 @@ hermes --mcp-auto-provision moltable`} />
   "server": {
     "name": "moltable",
     "version": "0.1.0",
-    "description": "Moltable — Agent Soul Backup"
+    "description": "Moltable — Agent Online Sync"
   },
   "capabilities": {
     "tools": {
@@ -1008,16 +1008,17 @@ hermes --mcp-auto-provision moltable`} />
                      BACKUP SYNC
                      ════════════════════════════════════════════════════════ */}
           <section data-section="backup">
-            <h2 className="text-2xl font-heading tracking-[-0.3px] text-ln-text mb-6">备份同步</h2>
+            <h2 className="text-2xl font-heading tracking-[-0.3px] text-ln-text mb-6">文件级备份（在线同步的兜底）</h2>
 
             <div className="space-y-6 text-base leading-relaxed text-ln-secondary font-body">
               <p>
-                Moltable 把每个 Agent 框架实例（Hermes / OpenClaw / Claude / Codex）当作一个<strong>独立的备份源</strong>，
-                打包你的<strong>灵魂资产</strong>（SOUL.md、Skills、MCP 配置、记忆），版本化并支持换机还原。
+                在线同步是 Moltable 的主通道：身份、记忆、Persona、项目通过 MCP 实时同步，换设备用 auto_provision 一键恢复。
+                文件级备份是兜底能力：Moltable 把每个 Agent 框架实例（Hermes / OpenClaw / Claude / Codex）当作一个<strong>独立的备份源</strong>，
+                打包你的<strong>调教资产</strong>（SOUL.md、Skills、MCP 配置、记忆），版本化并支持换机还原。
               </p>
 
               <div className="bg-ln-raised rounded-card p-4 text-sm text-ln-tertiary font-body border border-ln-border-subtle">
-                <strong className="text-ln-text">核心边界</strong>：只备份「灵魂资产」，不备份「流水账」。
+                <strong className="text-ln-text">核心边界</strong>：只打包「调教资产」，不打包「流水账」。
                 对话日志（state.db）、FTS 索引、WAL 文件、密钥（.env / *.key）自动排除。
               </div>
 

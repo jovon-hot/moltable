@@ -136,7 +136,7 @@ export default function OnboardingPage() {
         type: "http",
         url: `${API_BASE}/mcp`,
         headers: { "X-API-Key": apiKey },
-        description: "Moltable — Agent Soul Backup"
+        description: "Moltable — Agent Online Sync"
       }
     }
   }, null, 2) : '// 请先输入你的 Moltable API Key'
@@ -228,8 +228,8 @@ Content-Type: application/json`
                 </h2>
                 <p className="text-sm mb-0" style={{ color: '#888888', lineHeight: 1.6 }}>
                   {lang === 'zh'
-                    ? '下方是你的专属 API Key，复制即可开始备份你的 Agent 灵魂资产。'
-                    : 'Your dedicated API key is below — copy it to start backing up your Agent soul assets.'}
+                    ? '下方是你的专属 API Key，复制即可接入 MCP，开始在线同步你的 Agent。'
+                    : 'Your dedicated API key is below — copy it to connect via MCP and start syncing your Agent.'}
                 </p>
               </div>
             </div>
@@ -240,8 +240,8 @@ Content-Type: application/json`
         </h1>
         <p className="text-base mb-12 max-w-xl" style={{ color: '#888888', lineHeight: 1.7 }}>
           {lang === 'zh'
-            ? '备份你的 Agent 灵魂资产，通过 MCP 一键接入任意 AI。SOUL、技能、记忆、偏好——换 AI 不丢、不重来。'
-            : 'Back up your Agent soul assets and connect any AI via MCP. Your SOUL, skills, and memories carry over — no more re-introducing yourself.'
+            ? '一个账号，你的 AI 永远顺手：通过 MCP 一键接入任意 AI，身份、记忆、Persona、项目自动在线同步——换 AI 不丢、不重来。'
+            : 'Sync your tuned AI across devices and agents, and connect any AI via MCP. Your identity, memories, and personas carry over — no more re-introducing yourself.'
           }
         </p>
 

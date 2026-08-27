@@ -1,8 +1,8 @@
 export const meta = {
   title: 'Moltable vs mem0: Soul Backup vs Memory Layer for AI Agents',
   date: '2026-08-05',
-  description: "Your AI remembers plenty, yet everything you taught it can vanish with a laptop change. That's the real difference between a memory layer and a soul-asset backup repository.",
-  tags: ['comparison', 'mem0', 'soul backup', 'AI agent memory', 'MCP protocol', 'agent context'],
+  description: "Your AI remembers plenty, yet everything you taught it can vanish with a laptop change. That's the real difference between a memory layer and an agent online-sync layer.",
+  tags: ['comparison', 'mem0', 'agent sync', 'AI agent memory', 'MCP protocol', 'agent context'],
   slug: 'moltable-vs-mem0-identity-vs-memory',
 }
 
@@ -12,9 +12,9 @@ import ArticleLayout from '../_components/ArticleLayout'
 
 **你的 AI Agent 已经「记住」了很多东西——它知道你用 TypeScript、你部署到 Railway、你喜欢 tab 缩进。但你换一台电脑，它还是不认识你。更糟的是：你花几个月调教出来的 SOUL、Skills、MCP 配置，可能随硬盘一起消失。**
 
-这就是 Memory Layer 和灵魂资产备份仓库的核心差异。而大多数开发者还没意识到这两个概念的区别。
+这就是 Memory Layer 和 Agent 在线同步层的核心差异。而大多数开发者还没意识到这两个概念的区别。
 
-mem0（62K+ GitHub Stars）是目前最成功的 AI Memory OSS 项目。Moltable 则选择了不同的路径——不做 Memory Layer，做灵魂资产备份仓库。这两者有什么区别？什么时候该用哪个？本文给你答案。
+mem0（62K+ GitHub Stars）是目前最成功的 AI Memory OSS 项目。Moltable 则选择了不同的路径——不做 Memory Layer，做 Agent 在线同步层。这两者有什么区别？什么时候该用哪个？本文给你答案。
 
 ---
 
@@ -48,11 +48,11 @@ mem0: → 提取事实 "user is refactoring auth module, using JWT"
 
 ---
 
-## 灵魂资产备份仓库做了什么
+## Agent 在线同步层做了什么
 
 Moltable 的核心理念：**记忆是运行时的东西，调教成果是需要版本化的资产。**
 
-mem0 解决「Agent 记住了什么」；Moltable 解决「你调教出来的东西会不会丢」。Moltable 不运行你的 Agent——它是「保险箱」，不是记忆层、也不是状态机。它把你调教 AI 的成果打包成版本化、去重的备份：
+mem0 解决「Agent 记住了什么」；Moltable 解决「你调教出来的东西会不会丢、能不能跟着你走」。Moltable 不运行你的 Agent——它是你的 Agent 在线同步层，不是记忆层、也不是状态机。一个账号，你调教的身份、记忆、Persona、项目跨设备、跨 Agent 在线同步；同时提供文件级备份兜底，把你调教 AI 的成果打包成版本化、去重的快照：
 
 - `SOUL.md`（人格与行为准则）
 - `AGENTS.md` / `USER.md`（项目与用户上下文）
@@ -62,10 +62,10 @@ mem0 解决「Agent 记住了什么」；Moltable 解决「你调教出来的东
 对话流水账（state.db / WAL / FTS）和密钥（.env / *.key）会被自动排除——备份的是「调教成果」，不是原始日志。
 
 ```
-换 Agent，不换灵魂:
-  换电脑？  → moltable pull → SOUL/Skills/配置/记忆全部还原
-  误操作？  → 回滚到任意历史版本（每源独立版本库）
-  换框架？  → 备份在云端，跨框架迁移即将推出
+你的 AI，永远顺手:
+  换电脑？  → auto_provision 一键同步 → SOUL/Skills/配置/记忆全部还原
+  误操作？  → 回滚到任意历史版本（文件级备份，每 Agent 独立版本库）
+  换框架？  → 云端在线同步，跨框架迁移即将推出
 ```
 
 开始使用只需要两行：
@@ -78,14 +78,15 @@ moltable backup init   # 生成配置 → push 打包上传 → pull 还原
 Moltable 的架构是：
 
 - **Profile 层**：你的本体——账号与数据所有权
-- **Soul 层**：Agent 化身——人格 + 记忆，可备份
+- **Soul 层**：Agent 化身——人格 + 记忆，在线同步
 - **凭证层**：DID + VC 可验证身份（即将推出）
 
 **Moltable 擅长什么：**
-- 支持 Hermes / OpenClaw / Claude / Codex，每实例一个备份源
-- 版本管理——每源独立版本库，快照 + 版本号 + 回滚
+- 支持 Hermes / OpenClaw / Claude / Codex，每实例一个 Agent
+- 版本管理——文件级备份，每 Agent 独立版本库，快照 + 版本号 + 回滚
+- **MCP 在线同步**：`search_memory` / `save_memory` 实时读写记忆，`auto_provision` 换设备一键同步上下文
 - 增量去重（sha256 内容寻址）——重复内容不重复存储
-- `moltable add-ref <名> <路径>`——把外部知识库一并纳入备份
+- `moltable add-ref <名> <路径>`——把外部知识库一并纳入同步
 - 开源、MIT 协议；数据随时导出/删除，不用来训练
 
 ---
@@ -94,11 +95,11 @@ Moltable 的架构是：
 
 | 维度 | mem0 | Moltable |
 |------|------|----------|
-| 定位 | Memory Layer | 灵魂资产备份仓库 |
-| 核心功能 | 对话记忆提取+检索 | SOUL/Skills/MCP 配置/记忆打包备份+版本管理 |
+| 定位 | Memory Layer | Agent 在线同步层 |
+| 核心功能 | 对话记忆提取+检索 | SOUL/Skills/MCP 配置/记忆在线同步 + 文件级备份/版本管理 |
 | 接入方式 | Python/TS SDK | CLI + HTTP MCP |
-| 框架支持 | 同平台记忆共享 | Hermes/OpenClaw/Claude/Codex（每实例一个备份源） |
-| 换机恢复 | ❌ | ✅ moltable pull 一键还原 |
+| 框架支持 | 同平台记忆共享 | Hermes/OpenClaw/Claude/Codex（每实例一个 Agent） |
+| 换机恢复 | ❌ | ✅ auto_provision 一键同步恢复 |
 | 版本回滚 | ❌ | ✅ 快照+版本号 |
 | 增量去重 | ✅ 自动 | ✅ sha256 内容寻址 |
 | Dashboard | Web 管理 | Web 管理 |
@@ -119,17 +120,17 @@ Moltable 的架构是：
 - 你在 **多个 Agent 框架** 之间切换（Hermes + Claude + Codex + OpenClaw）
 - 你经常 **换电脑、重装系统**，不想重新调教一遍
 - 你花了很多时间打磨 **SOUL、Skills、MCP 配置**，想给它们上保险
-- 你想要一个 **开源、MIT 协议** 的备份基础设施
-- 你重视 **数据所有权**——备份数据归你，随时导出/删除
+- 你想要一个 **开源、MIT 协议** 的在线同步基础设施
+- 你重视 **数据所有权**——数据归你，随时导出/删除
 
 ---
 
-**它们不是替代关系。mem0 是最优秀的 Memory Layer，Moltable 是给 Agent 调教成果上保险的备份仓库。**
+**它们不是替代关系。mem0 是最优秀的 Memory Layer，Moltable 是让 Agent 调教成果在线同步、永不丢失的同步层。**
 
-最佳实践：**mem0 管对话记忆，Moltable 管灵魂资产备份。** 两者可以同时使用——mem0 让 Agent 在对话中「记住」，Moltable 让你调教出来的 SOUL、Skills、配置在换机、换框架后「不丢」。
+最佳实践：**mem0 管对话记忆，Moltable 管 Agent 在线同步。** 两者可以同时使用——mem0 让 Agent 在对话中「记住」，Moltable 让你的 SOUL、Skills、配置跨设备、跨 Agent 在线同步，换机、换框架后「不丢」。
 
 ---
 
-[免费注册 Moltable](https://moltable.ai/register) — Free 层永久免费（3 备份源/100MB），Pro $3/月，无需信用卡。
+[免费注册 Moltable](https://moltable.ai/register) — Free 层永久免费（3 个 Agent/100MB），Pro $3/月，无需信用卡。
 
 </ArticleLayout>

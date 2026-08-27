@@ -1,7 +1,7 @@
 export const meta = {
   title: 'AI 记忆系统 2026 横评：mem0、Zep、Moltable',
   date: '2026-07-10',
-  description: '2026 年 AI Agent 记忆层横评：mem0、Zep、Cognee、Letta 四款记忆系统对比，以及为什么记忆层解决不了「调教成果丢失」——你需要 Moltable 这样的灵魂资产版本仓库。',
+  description: '2026 年 AI Agent 记忆层横评：mem0、Zep、Cognee、Letta 四款记忆系统对比，以及为什么记忆层解决不了「调教成果丢失」——你需要 Moltable 这样的 Agent 在线同步层。',
   tags: ['AI Agent 记忆', 'mem0', 'Zep', 'Moltable', 'MCP 协议', '对比'],
   slug: 'agent-memory-landscape-2026',
 }
@@ -12,7 +12,7 @@ import ArticleLayout from '../_components/ArticleLayout'
 
 如果你在 2025 年构建过 AI Agent，你一定遇到过这个问题：Agent 聊完就忘。今天告诉它你的 API Key 前缀是 `molt_`，明天它就不记得了。记忆系统——Agent Memory——是 2026 年 AI 基础设施最热的赛道之一。
 
-但选哪个？mem0 还是 Zep？Cognee 还是 Letta？以及——Moltable 到底算不算记忆系统？这篇文章从架构、定价、MCP 支持和中文适配四个维度，做一次完整的横向对比。先说结论：**Moltable 不是记忆系统，它是灵魂资产版本仓库——它解决的问题，记忆系统解决不了。**
+但选哪个？mem0 还是 Zep？Cognee 还是 Letta？以及——Moltable 到底算不算记忆系统？这篇文章从架构、定价、MCP 支持和中文适配四个维度，做一次完整的横向对比。先说结论：**Moltable 不是记忆系统，它是 Agent 在线同步层——它解决的问题，记忆系统解决不了。**
 
 ## 为什么 Agent 需要记忆系统
 
@@ -23,7 +23,7 @@ LLM 本质上是无状态的。每次 API 调用都是一张白纸。要让 Agen
 - **语义记忆**：向量化的知识检索（RAG 的基础）
 - **角色记忆**："我是谁、我喜欢什么、我做过什么"
 
-大多数记忆系统只做前三种。但请注意：**记忆系统解决的是「AI 记得什么」，而 2026 年真正让开发者崩溃的是另一件事——「我调教出来的成果丢不丢」。** 你花三个月调教的 SOUL、攒的 20 个 skill、调试了一下午的 MCP 配置，一次换机、一次框架迁移就全部清零。这不是记忆问题，这是资产备份问题。
+大多数记忆系统只做前三种。但请注意：**记忆系统解决的是「AI 记得什么」，而 2026 年真正让开发者崩溃的是另一件事——「我调教出来的成果丢不丢」。** 你花三个月调教的 SOUL、攒的 20 个 skill、调试了一下午的 MCP 配置，一次换机、一次框架迁移就全部清零。这不是记忆问题，这是资产同步问题。
 
 ## 五大系统横向对比
 
@@ -45,7 +45,7 @@ Letta（前 MemGPT）是最早探索"操作系统式记忆管理"的项目。它
 
 ### Moltable（Free $0 起步）
 
-Moltable 不做通用记忆，也不是记忆层——**它是灵魂资产版本仓库**。它把 SOUL.md、AGENTS.md、USER.md、config.yaml（MCP 配置，密钥脱敏）、memories/、skills/ 打包成版本化、去重的备份，自动排除对话流水账（state.db/WAL/FTS）和密钥（.env/*.key）。支持 Hermes、OpenClaw、Claude、Codex，每个实例一个备份源，独立版本库，快照 + 版本号 + 回滚；sha256 内容寻址增量去重；`add-ref` 可以把外部知识库一并纳入备份。MCP 原生支持（HTTP MCP，`https://api.moltable.ai/mcp` + `X-API-Key`，不是 npx/stdio），中文是一等公民。定价：**Free $0**（3 备份源 / 100MB）、**Pro $3/月**（10 备份源 / 1GB）、**Ultra $5/月**（100 备份源 / 10GB），仅月付。
+Moltable 不做通用记忆，也不是记忆层——**它是 Agent 在线同步层**：一个账号，你调教 AI 的身份、记忆、Persona、项目跨设备、跨 Agent 在线同步。它把 SOUL.md、AGENTS.md、USER.md、config.yaml（MCP 配置，密钥脱敏）、memories/、skills/ 纳入同步，自动排除对话流水账（state.db/WAL/FTS）和密钥（.env/*.key）；同步之外，文件级备份负责版本管理——快照 + 版本号 + 回滚，sha256 内容寻址增量去重，`add-ref` 可以把外部知识库一并纳入备份。支持 Hermes、OpenClaw、Claude、Codex，每个 Agent 一个同步单位，独立版本库。MCP 原生支持（HTTP MCP，`https://api.moltable.ai/mcp` + `X-API-Key`，不是 npx/stdio）——`search_memory`/`save_memory` 同步记忆、`auto_provision` 一键恢复上下文，中文是一等公民。定价：**Free $0**（3 个 Agent / 100MB）、**Pro $3/月**（10 个 Agent / 1GB）、**Ultra $5/月**（100 个 Agent / 10GB），仅月付。
 
 ## 架构对比一览
 
@@ -55,7 +55,7 @@ Moltable 不做通用记忆，也不是记忆层——**它是灵魂资产版本
 | Zep | 记忆层：向量 + 时序 | 企业版 | 一般 | $125/月 |
 | Cognee | 记忆层：知识图谱 | ❌ | 一般 | 免费开源 |
 | Letta | 记忆层：虚拟内存 | ❌ | 一般 | $20/月 |
-| **Moltable** | 灵魂资产版本仓库（非记忆层） | ✅ 原生（HTTP MCP） | 一等公民 | Free $0 / Pro $3/月 |
+| **Moltable** | Agent 在线同步层（非记忆层） | ✅ 原生（HTTP MCP） | 一等公民 | Free $0 / Pro $3/月 |
 
 ## 选型建议
 
@@ -63,18 +63,18 @@ Moltable 不做通用记忆，也不是记忆层——**它是灵魂资产版本
 - **企业合规 → Zep**：SOC2、GDPR、审计日志，合规团队的最爱
 - **深度推理 → Cognee**：图结构让关系推理变得直观
 - **轻量记忆 → Letta**：$20/月，个人开发者友好
-- **灵魂资产备份 → Moltable**：如果你关心的是「换机、换框架后调教成果丢不丢」而不是「AI 记不记得某段对话」，Moltable 是目前唯一的选择
+- **Agent 在线同步 → Moltable**：如果你关心的是「换机、换 Agent 后调教成果丢不丢」而不是「AI 记不记得某段对话」，Moltable 是目前唯一的选择
 
-更妙的是，Moltable 可以和 mem0 或 Zep 组合使用——**记忆层负责「AI 记得什么」，Moltable 负责「你的调教成果丢不丢」**，各司其职。先用 mem0 让 Agent 有运行时记忆，再用 Moltable 把包括记忆层配置在内的灵魂资产打包备份，双保险。
+更妙的是，Moltable 可以和 mem0 或 Zep 组合使用——**记忆层负责「AI 记得什么」，Moltable 负责「你的调教成果丢不丢」**，各司其职。先用 mem0 让 Agent 有运行时记忆，再用 Moltable 把包括记忆层配置在内的整套 Agent 资产在线同步，双保险。
 
 ## 一个实际例子
 
 假设你是 FOST 集团的 CTO，团队的 Agent 分布在 Claude（架构评审）、Hermes（日常运维）、Codex（代码审查）三个框架上，每个实例都调教出了不同的 SOUL 和技能集。mem0 解决不了你的问题——它管的是运行时记忆，管不了"换电脑时这些调教成果怎么办"。
 
-Moltable 可以：给每个实例建一个备份源（每个实例独立版本库），把 SOUL、skills、MCP 配置、记忆全部版本化。某天你手滑把 Codex 审查员的 system prompt 覆盖了——mem0 帮不了你，Moltable 一条命令回滚到上一版本；下个月全员换新电脑——`moltable backup pull`，全部还原。
+Moltable 可以：给每个实例建一个同步单位（每个实例独立版本库），把 SOUL、skills、MCP 配置、记忆全部在线同步，文件级备份提供版本化兜底。某天你手滑把 Codex 审查员的 system prompt 覆盖了——mem0 帮不了你，Moltable 一条命令回滚到上一版本；下个月全员换新电脑——`moltable backup pull`，全部还原。
 
-这就是"记忆"和"备份"的区别：**记忆是 AI 运行时的事，备份是你资产的事。** 前者让 AI 更聪明，后者让你不心疼。
+这就是"记忆"和"同步"的区别：**记忆是 AI 运行时的事，同步是你资产的事。** 前者让 AI 更聪明，后者让你不心疼。
 
-👉 [开始备份你的灵魂资产 — 免费版即可用](https://moltable.ai)
+👉 [开始在线同步你的 Agent — 免费版即可用](https://moltable.ai)
 
 </ArticleLayout>

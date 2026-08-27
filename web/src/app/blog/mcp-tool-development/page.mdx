@@ -200,7 +200,7 @@ curl -X POST http://localhost:8000/messages/ \\
 
 如果你不需要从零构建，也可以直接用现成的 MCP Server。但对于想深入理解 MCP 协议的开发者来说，自己写一个是很好的学习方式。
 
-写完别忘了一件事：你辛苦调教的这套资产——SOUL.md、skills/、config.yaml（MCP 配置）、memories/——值得一个版本化的保险箱。Moltable 就是干这个的：
+写完别忘了一件事：你辛苦调教的这套资产——SOUL.md、skills/、config.yaml（MCP 配置）、memories/——应该跨设备、跨 Agent 在线同步，并保留文件级备份兜底。Moltable 就是干这个的：
 
 ```
 curl -sL https://moltable.ai/install.sh | bash
@@ -211,10 +211,10 @@ moltable backup sources # 查看备份源
 moltable add-ref <名> <路径>  # 引用外部知识库一并备份
 ```
 
-Moltable 不运行你的 Agent，只备份你的调教成果：SOUL / Skills / MCP 配置（密钥自动脱敏）/ memories，换电脑、换框架（Hermes、OpenClaw、Claude、Codex 每实例一个备份源）都不丢。备份管理也支持 HTTP MCP 接入（https://api.moltable.ai/mcp，X-API-Key 认证）。开源 MIT。
+Moltable 不运行你的 Agent，只做 Agent 在线同步：一个账号，SOUL / Skills / MCP 配置（密钥自动脱敏）/ memories 跨设备、跨框架（Hermes、OpenClaw、Claude、Codex 每实例一个同步单位）永远顺手；`moltable backup` 是同步之外的文件级备份兜底（版本管理 + 回滚）。同步接口走 HTTP MCP（https://api.moltable.ai/mcp，X-API-Key 认证），`auto_provision` 一键恢复上下文。开源 MIT。
 
 相关阅读：[AI 为什么总「失忆」？根因剖析与实操修复指南](/blog/ai-forgetfulness-fix)
 
-👉 [Moltable — 换 Agent，不换灵魂：备份你的调教成果](https://moltable.ai)
+👉 [Moltable — 你的 AI 永远顺手：在线同步你的调教成果](https://moltable.ai)
 
 </ArticleLayout>

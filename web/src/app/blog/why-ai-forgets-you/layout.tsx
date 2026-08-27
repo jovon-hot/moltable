@@ -3,23 +3,23 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: '为什么你的 AI 每次都不记得你是谁 —— 以及 2026 年的终极解决方案',
   description:
-    '每天早上打开 Claude，它都像第一次见你。不是 AI 笨，是你的调教成果从没被真正备份过。本文剖析 AI「失忆」的五个根因——偏好重置、项目上下文丢失、工具配置消失、Persona 被遗忘、无限自我介绍，并给出 Moltable 的灵魂资产备份解决方案：一次配置，所有 Agent 共享。',
+    '每天早上打开 Claude，它都像第一次见你。不是 AI 笨，是你的调教成果从没被真正同步过。本文剖析 AI「失忆」的五个根因——偏好重置、项目上下文丢失、工具配置消失、Persona 被遗忘、无限自我介绍，并给出 Moltable 的 Agent 在线同步解决方案：一次配置，所有 Agent 共享。',
   keywords: [
     'AI失忆',
     'AI记忆',
     'AI身份',
-    'Soul Backup',
+    'Agent Online Sync',
     'AI偏好管理',
     'Claude记忆',
     'Agent 化身',
-    'Agent灵魂备份',
+    'Agent在线同步',
     'AI持久化',
     'Moltable',
   ],
   openGraph: {
     title: '为什么你的 AI 每次都不记得你是谁 —— 以及 2026 年的终极解决方案',
     description:
-      '你的 AI 每天像第一次见你？本文剖析 AI「失忆」的五个根因，并给出 Moltable 的灵魂资产备份解决方案——一次配置，所有 Agent 共享。',
+      '你的 AI 每天像第一次见你？本文剖析 AI「失忆」的五个根因，并给出 Moltable 的 Agent 在线同步解决方案——一次配置，所有 Agent 共享。',
     url: 'https://www.moltable.ai/blog/why-ai-forgets-you',
     siteName: 'Moltable.ai',
     type: 'article',
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: '为什么你的 AI 每次都不记得你是谁',
-    description: '不是 AI 笨，是你的调教成果从没被真正备份过。AI 失忆的五个根因与终极解决方案。',
+    description: '不是 AI 笨，是你的调教成果从没被真正同步过。AI 失忆的五个根因与终极解决方案。',
     images: ['/logo-horizontal.svg'],
   },
   alternates: {
@@ -55,7 +55,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             '@type': 'Article',
             headline: '为什么你的 AI 每次都不记得你是谁 —— 以及 2026 年的终极解决方案',
             description:
-              '每天早上打开 Claude，它都像第一次见你。本文剖析 AI「失忆」的五个根因，并给出 Moltable 的灵魂资产备份解决方案——一次配置，所有 Agent 共享。',
+              '每天早上打开 Claude，它都像第一次见你。本文剖析 AI「失忆」的五个根因，并给出 Moltable 的 Agent 在线同步解决方案——一次配置，所有 Agent 共享。',
             datePublished: '2026-08-05',
             author: { '@type': 'Organization', name: 'Moltable' },
             publisher: {

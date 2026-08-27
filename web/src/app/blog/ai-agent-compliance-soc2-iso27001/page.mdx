@@ -135,20 +135,20 @@ check_access()   # 10. 最小特权 + 定期权限评审
 
 ## 五、Moltable 的立场
 
-Moltable 做的是「灵魂资产备份」——把 Agent 的身份、记忆、偏好打包成可版本化、可跨框架迁移的 bundle。这个定位决定了合规不是附加项，而是架构约束：
+Moltable 做的是「Agent 在线同步层」——一个账号，你调教 AI 的身份、记忆、Persona 跨设备、跨 Agent 在线同步，换设备时用 auto_provision 一键恢复。「文件级备份」是其中的能力点：版本管理、快照、回滚、兜底。这个定位决定了合规不是附加项，而是架构约束：
 
-- **数据在你手里**：bundle 文件级打包 + manifest + 哈希校验，本地或自托管，数据驻留由你决定
-- **身份不锁死**：API Key 可接任意 MCP 客户端，换框架时 bundle 跟着走
+- **数据在你手里**：在线同步之外，文件级备份兜底——bundle 打包 + manifest + 哈希校验，本地或自托管，数据驻留由你决定
+- **身份不锁死**：MCP 是同步接口（search_memory / save_memory / auto_provision / list_personas），API Key 可接任意 MCP 客户端，换设备、换 Agent 时 auto_provision 一键同步上下文、一键恢复
 - **可删、可验、可携带**：级联删除、审计日志、标准格式导出——GDPR 篇的承诺在这里落地
 
 企业级采购问的三个问题——「可信吗」「数据在哪」「删得掉吗」——答案都在架构里。
 
-> 下一篇预告：换框架不换灵魂——把 Hermes 调教的 Agent 迁移到 OpenClaw 的完整复盘（第一人称真实迁移）。
+> 下一篇预告：跨 Agent 在线同步实战——把 Hermes 调教的 Agent 迁移到 OpenClaw 的完整复盘（第一人称真实迁移）。
 
 ---
 
 相关阅读：[AI Agent 记忆的数据主权：GDPR 实操与自托管合规清单](/blog/ai-memory-data-sovereignty-gdpr) · [Moltable 自托管部署指南：从零到生产](/blog/moltable-self-host-deployment) · [MCP 实战进阶：多租户记忆隔离](/blog/mcp-multi-tenant-isolation)
 
-👉 [Moltable — 你的数据，你的身份](https://moltable.ai)
+👉 [Moltable — 你的 AI 永远顺手](https://moltable.ai)
 
 </ArticleLayout>

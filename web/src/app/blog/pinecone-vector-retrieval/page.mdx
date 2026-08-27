@@ -1,7 +1,7 @@
 export const meta = {
-  title: 'Pinecone Hands-On: Adding Managed Vector Search to Agent Soul Backup',
+  title: 'Pinecone Hands-On: Adding Managed Vector Search to Agent Sync',
   date: '2026-08-17',
-  description: 'Pinecone 实战：如何给 Moltable 备份的记忆资产加一层托管向量检索——384 维 embedding、namespace 租户隔离、metadata 过滤，与 pgvector 的混合分层，附完整可照抄代码。',
+  description: 'Pinecone 实战：在 Moltable 在线同步的记忆资产之上加一层托管向量检索——384 维 embedding、namespace 租户隔离、metadata 过滤，与 pgvector 的混合分层，附完整可照抄代码。',
   tags: ['Pinecone', '向量检索', '教程', '集成', 'RAG', 'AI Memory'],
   slug: 'pinecone-vector-retrieval',
 }
@@ -12,7 +12,7 @@ import ArticleLayout from '../_components/ArticleLayout'
 
 # Pinecone 实战：给 Moltable 加一层托管向量检索
 
-上一篇《[AI Agent Memory 全家桶](/blog/agent-memory-stack-comparison)》给了结论：**检索层与备份层是两个正交问题**——Pinecone 解决「大规模语义检索」，Moltable 解决「把检索背后这些记忆资产版本化备份，换电脑/换框架不丢」。两者不冲突，反而该组合。这篇把「检索层」真正接进来，手把手给你的记忆资产加一层 Pinecone 托管向量检索，附可直接照抄的代码。
+上一篇《[AI Agent Memory 全家桶](/blog/agent-memory-stack-comparison)》给了结论：**检索层与同步层是两个正交问题**——Pinecone 解决「大规模语义检索」，Moltable 解决「一个账号把检索背后这些记忆资产跨设备、跨 Agent 在线同步，换电脑/换框架不丢」。两者不冲突，反而该组合。这篇把「检索层」真正接进来，手把手给你的记忆资产加一层 Pinecone 托管向量检索，附可直接照抄的代码。
 
 先说清楚一件事：**加 Pinecone 不是为了「替换」现有的 pgvector 存储，而是为了「分层」**。这决定了后面所有设计选择。
 
@@ -33,11 +33,11 @@ Pinecone 把这三件事做成了免运维 SaaS：serverless 弹性扩容、低�
 ```
 PostgreSQL + pgvector      ← 主存储：记忆 / 项目 / 关系的事实源（归属关系在这里）
 Pinecone（托管向量云）      ← 检索层：大规模语义相似度，扛「海量 + 并发 + 免运维」
-Moltable（灵魂资产备份库）  ← 备份层：把 SOUL / Skills / config.yaml / memories/ 打包成
+Moltable（Agent 在线同步层）  ← 同步层：把 SOUL / Skills / config.yaml / memories/ 打包成
                               版本化、去重的 bundle，换电脑/换框架一条 pull 还原
 ```
 
-**事实源留在 Postgres，语义检索下沉到 Pinecone，整套调教成果交给 Moltable 备份。** 下面按这个架构动手。
+**事实源留在 Postgres，语义检索下沉到 Pinecone，整套调教成果交给 Moltable 在线同步。** 下面按这个架构动手。
 
 ## 二、四步接上 Pinecone
 
@@ -185,7 +185,7 @@ def recall(user_id, query, soul_id=None, category=None, top_k=5):
 | 主存储 | Postgres | RLS（`server/schema.sql` 已启用） | 谁的记忆、属于哪个 project、关系 |
 | 检索 | Pinecone | namespace + metadata filter | 大规模语义相似度 |
 | 嵌入 | 本地 MiniLM（384） | 模型一致 | 文本 → 向量 |
-| 备份 | Moltable | 每实例一个备份源 + CAS 去重 | 整套调教成果版本化，push/pull 还原 |
+| 同步/备份 | Moltable | 每实例一个 Agent + CAS 去重 | 整套调教成果在线同步 + 文件级备份兜底 |
 
 各层各司其职，任何一层替换或故障，其他层不受影响——这就是「分层」的意义。
 
@@ -197,18 +197,18 @@ def recall(user_id, query, soul_id=None, category=None, top_k=5):
 - **向量 10 万 ~ 100 万、检索 QPS 上升** → 先优化 pgvector（HNSW 参数、分区、只存 embedding 不存正文）。
 - **向量 > 100 万、或要 SLA / 弹性扩容 / 免运维** → 上 Pinecone，按本文四步接。
 
-一句话：**Pinecone 是 pgvector 的「生产升级路径」，不是它的替代品**。它接的是「检索」这一个环节；记忆资产的所有权与备份永远在你自己手里——Moltable 负责把它们版本化存好，随时导出/删除，不用来训练。
+一句话：**Pinecone 是 pgvector 的「生产升级路径」，不是它的替代品**。它接的是「检索」这一个环节；记忆资产的所有权永远在你自己手里——Moltable 负责把它们在线同步，文件级备份版本化存好，随时导出/删除，不用来训练。
 
 ## 总结
 
-- Pinecone 解决「检索 / facts」，Moltable 解决「灵魂资产备份」，两者是分层不是二选一。
+- Pinecone 解决「检索 / facts」，Moltable 解决「Agent 在线同步」，两者是分层不是二选一。
 - 接 Pinecone 四个关键点：**维度对齐 384、namespace=user_id 硬隔离、metadata 带 soul/category 供过滤、PG 仍是唯一事实源**。
-- 事实源留在 Postgres（RLS 隔离），语义检索下沉 Pinecone；调教成果（SOUL / Skills / config.yaml / memories/）交给 Moltable 做版本化备份——**检索再快，丢了等于零**。
+- 事实源留在 Postgres（RLS 隔离），语义检索下沉 Pinecone；调教成果（SOUL / Skills / config.yaml / memories/）交给 Moltable 在线同步，文件级备份兜底——**检索再快，丢了等于零**。
 - 规模没到之前别急着上托管云——pgvector 在中小规模下依然是最优解。
 
 想直接跑通？从 [自托管部署指南](/blog/moltable-self-host-deployment) 起步，把 `server/services/pinecone_adapter.py` 加进去，配上 `PINECONE_API_KEY` 即可。
 
-整套跑通后，给灵魂资产上份保险：
+整套跑通后，用文件级备份给调教成果兜个底（在线同步之外的保险）：
 
 ```
 curl -sL https://moltable.ai/install.sh | bash

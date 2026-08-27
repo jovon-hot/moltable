@@ -3,11 +3,11 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: '注册 Moltable — 免费开始',
   description:
-    '注册 Moltable，免费开始备份你的 Agent 灵魂资产。3 个备份源、500MB 存储，支持 Hermes、Claude、OpenClaw。',
+    '注册 Moltable，免费开始在线同步你的 Agent。1 Agent · 2 Persona · 100 记忆，支持 Hermes、Claude、OpenClaw。',
   openGraph: {
     title: '注册 Moltable — 免费开始',
     description:
-      '注册 Moltable，免费开始备份你的 Agent 灵魂资产。',
+      '注册 Moltable，免费开始在线同步你的 Agent。',
   },
 }
 

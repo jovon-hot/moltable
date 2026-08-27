@@ -219,7 +219,7 @@ def get_usage(user_id: str) -> dict:
         plan = _get_user_plan(user_id)
         limits = PLAN_LIMITS.get(plan, PLAN_LIMITS["free"])
 
-        # 备份源 + 存储用量（对齐「灵魂资产备份」新定位）
+        # 备份源 + 存储用量（「备份」能力兜底，对齐在线同步定位）
         from pricing_config import build_plan
         from services.backup_service import BackupService
         from services.bonus_service import get_bonus_gb

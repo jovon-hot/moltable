@@ -1,5 +1,5 @@
 #!/bin/bash
-# Moltable — Agent 灵魂资产备份 CLI 安装脚本
+# Moltable — Agent 在线同步 CLI 安装脚本
 # curl -sL https://moltable.ai/install.sh | bash
 #
 # 下载 moltable backup CLI（纯 Python stdlib，无第三方依赖）到 ~/.moltable/，
@@ -15,7 +15,7 @@ BIN_DIR="$INSTALL_DIR/bin"
 echo ""
 echo "  █▀▄▀█ █▀█ █   ▀█▀ ▄▀█ █▄▄ █   █▀▀"
 echo "  █ ▀ █ █▄█ █▄▄  █  █▀█ █▄█ █▄▄ ██▄"
-echo "  Moltable — Switch Agents, Keep Your Soul"
+echo "  Moltable — Your AI, Always in Sync"
 echo "  ─────────────────────────────────────────"
 echo ""
 
@@ -39,7 +39,7 @@ echo "✓ 已下载到 $INSTALL_DIR/"
 # ── 创建 moltable 命令 ─────────────────────────────
 cat > "$BIN_DIR/moltable" << 'EOF'
 #!/bin/bash
-# moltable — Agent 灵魂资产备份 CLI
+# moltable — Agent 文件级备份 CLI（在线同步兜底）
 # 用法: moltable backup <init|push|pull|sources> [options]
 #       moltable <init|push|pull|sources> [options]  （backup 可省略）
 args=("$@")

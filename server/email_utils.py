@@ -109,7 +109,7 @@ VERIFY_HTML = """<!DOCTYPE html>
   </p>
 
   <p style="font-size:11px; color:#5a5f68; text-align:center; margin-top:24px;">
-    This link expires in 30 minutes · moltable.ai · Switch Agents, Keep Your Soul
+    This link expires in 30 minutes · moltable.ai · Your AI, always in sync
   </p>
 </div>
 </body>
@@ -123,7 +123,7 @@ Confirm your email address to activate your Moltable account:
 
 This link expires in 30 minutes.
 
-moltable.ai · Switch Agents, Keep Your Soul
+moltable.ai · Your AI, always in sync
 """
 
 

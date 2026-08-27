@@ -1,7 +1,7 @@
 export const meta = {
   title: 'AI Agent Memory Stack Comparison: LangChain Memory vs Chroma vs Pinecone vs Moltable',
   date: '2026-08-14',
-  description: 'AI Agent 记忆与备份选型横评：LangChain Memory、Chroma、Pinecone 与 Moltable 四类方案在存储模型、持久化、跨框架还原、MCP 协议支持、自托管与成本上的全面对比，帮你一次选对方案。',
+  description: 'AI Agent 记忆与在线同步选型横评：LangChain Memory、Chroma、Pinecone 与 Moltable 四类方案在存储模型、持久化、跨框架还原、MCP 协议支持、自托管与成本上的全面对比，帮你一次选对方案。',
   tags: ['对比', 'LangChain', 'Chroma', 'Pinecone', 'AI Memory', '选型', 'MCP'],
   slug: 'agent-memory-stack-comparison',
 }
@@ -10,7 +10,7 @@ import ArticleLayout from '../_components/ArticleLayout'
 
 <ArticleLayout meta={meta}>
 
-**「给你的 AI Agent 加记忆」——这句话你已经听腻了。但真正动手选型时，你会发现搜出来的方案根本不是一回事：LangChain Memory 是会话缓冲，Chroma 是本地向量库，Pinecone 是托管向量云，Moltable 是灵魂资产备份仓库。**
+**「给你的 AI Agent 加记忆」——这句话你已经听腻了。但真正动手选型时，你会发现搜出来的方案根本不是一回事：LangChain Memory 是会话缓冲，Chroma 是本地向量库，Pinecone 是托管向量云，Moltable 是 Agent 在线同步层。**
 
 它们都自称「记忆」，却分别解决四个完全不同的问题。大多数人选错，不是不懂技术，而是没先回答一个前置问题：**你到底想让 Agent 记住什么——还是想让你调教出来的成果永不丢失？**
 
@@ -68,13 +68,13 @@ Pinecone 是 serverless 托管向量库，把 Chroma 那一套做成免运维的
 
 它是 Chroma 的「生产升级路径」——当你的 RAG 要上生产、要 SLA、要弹性扩容时，用 Pinecone 而不是自己运维 Chroma 集群。
 
-**局限与 Chroma 同源**：它仍然是「facts not backup」——规模再大、延迟再低，也回答不了「这是谁的调教成果、换机后怎么还原」。
+**局限与 Chroma 同源**：它仍然是「facts not sync」——规模再大、延迟再低，也回答不了「这是谁的调教成果、换机后怎么同步还原」。
 
 **什么时候用**：RAG 上生产、要托管运维、要稳定 SLA。
 
-### Moltable：灵魂资产的版本仓库
+### Moltable：Agent 在线同步层
 
-Moltable 走了一条和前三个都不一样的路——**它不是记忆层，是备份仓库**。它不运行你的 Agent，也不做向量检索，只做一件事：把你调教 AI 的成果打包成版本化、去重的备份，换电脑、换框架都不丢。
+Moltable 走了一条和前三个都不一样的路——**它不是记忆层，是 Agent 在线同步层**。它不运行你的 Agent，也不做向量检索，只做一件事：一个账号，把你调教 AI 的身份、记忆、Persona、项目跨设备、跨 Agent 在线同步，换电脑、换框架都不丢；并提供文件级备份（版本化、去重快照）作为兜底。
 
 开始只需要两行：
 
@@ -84,7 +84,7 @@ moltable backup init   # 生成备份配置
 moltable backup push   # 打包上传（增量、去重）
 ```
 
-备份内容：
+文件级备份内容：
 
 - `SOUL.md`（人格与行为准则）、`AGENTS.md` / `USER.md`（上下文）
 - `config.yaml`（MCP 配置，密钥自动脱敏）
@@ -92,14 +92,15 @@ moltable backup push   # 打包上传（增量、去重）
 
 对话流水账（state.db / WAL / FTS）和密钥（.env / *.key）自动排除——备份调教成果，不备份日志。
 
-- **原生跨框架**：Hermes / OpenClaw / Claude / Codex 每实例一个备份源
-- **版本回滚**：每源独立版本库，快照 + 版本号，`moltable backup pull` 一键还原
+- **原生跨框架**：Hermes / OpenClaw / Claude / Codex，每实例一个 Agent，在线同步 + 文件级备份
+- **版本回滚**：每 Agent 独立版本库，快照 + 版本号，`moltable backup pull` 一键还原（文件级兜底）
 - **增量去重**：sha256 内容寻址，重复内容不重复存储
+- **MCP 在线同步**：`search_memory` / `save_memory` 实时读写记忆，`auto_provision` 换设备一键同步上下文
 - **引用外部知识库**：`moltable add-ref <名> <路径>`
 - **数据归你**：随时导出/删除，不用来训练；开源 MIT
 - **跨框架迁移即将推出**：用自己的 LLM 把 Hermes 灵魂翻译成 OpenClaw/Claude/Codex 版本
 
-它的边界同样诚实：**它不替代向量搜索，也不替代记忆系统**。语义检索（文档问答、代码检索）仍要接 Chroma / Pinecone。Moltable 解决的是「不丢」，不是「记住」。
+它的边界同样诚实：**它不替代向量搜索，也不替代记忆系统**。语义检索（文档问答、代码检索）仍要接 Chroma / Pinecone。Moltable 解决的是「不丢、跟着你走」，不是「记住」。
 
 **什么时候用**：你花了很多时间调教 Agent，想让这份成果在换机、换框架、误操作后完整还原。
 
@@ -109,15 +110,15 @@ moltable backup push   # 打包上传（增量、去重）
 
 | 维度 | LangChain Memory | Chroma | Pinecone | Moltable |
 |------|------------------|--------|----------|----------|
-| 定位 | 会话缓冲 | 本地向量库 | 托管向量云 | 灵魂资产备份仓库 |
+| 定位 | 会话缓冲 | 本地向量库 | 托管向量云 | Agent 在线同步层 |
 | 管什么 | 对话历史 | 事实向量 | 事实向量 | SOUL/Skills/MCP 配置/记忆 |
 | 持久化 | ❌ 进程内 | ✅ 本地文件 | ✅ 云端 | ✅ 云端（可导出/删除） |
-| 跨框架还原 | ❌ | ❌ 需自搭 | ❌ 需自搭 | ✅ 原生（每实例一个备份源） |
+| 跨框架还原 | ❌ | ❌ 需自搭 | ❌ 需自搭 | ✅ 原生（每实例一个 Agent） |
 | 语义检索 | ❌ | ✅ | ✅ | ❌ 不替代向量库 |
 | 版本回滚 | ❌ | ❌ | ❌ | ✅ 快照+版本号 |
 | MCP 支持 | ⚠️ 需封装 | ⚠️ 需封装 | ⚠️ 需封装 | ✅ HTTP MCP |
 | 自托管 | ✅ | ✅ | ❌ 纯 SaaS | ✅ 开源 MIT |
-| 成本 | 免费（token 内耗） | 免费开源 | 按量付费 | Free $0 起（3 备份源/100MB） |
+| 成本 | 免费（token 内耗） | 免费开源 | 按量付费 | Free $0 起（3 个 Agent/100MB） |
 
 ---
 
@@ -129,22 +130,22 @@ moltable backup push   # 打包上传（增量、去重）
 | 本地做文档问答 / RAG 原型 | Chroma |
 | RAG 上生产、要 SLA 和免运维 | Pinecone |
 | 调教成果换机/换框架不丢 | Moltable |
-| 既要知识检索又要备份 | Chroma/Pinecone（知识）+ Moltable（备份） |
+| 既要知识检索又要在线同步 | Chroma/Pinecone（知识）+ Moltable（同步） |
 
-**最后一行才是大多数真实场景的答案。** 向量库和备份仓库不是竞争关系，是互补关系：向量库管「世界知识」，备份仓库管「你的调教成果」。硬用一个替代另一个，两边都做不好。
+**最后一行才是大多数真实场景的答案。** 向量库和同步层不是竞争关系，是互补关系：向量库管「世界知识」，同步层管「你的调教成果」。硬用一个替代另一个，两边都做不好。
 
 ---
 
 ## 诚实地说
 
-**向量搜索 ≠ 记忆，记忆 ≠ 备份。** 这是本文最想让你带走的一句话。
+**向量搜索 ≠ 记忆，记忆 ≠ 在线同步。** 这是本文最想让你带走的一句话。
 
 你把 100 万条向量塞进 Pinecone，Agent 检索得又快又准，但它还是不知道你是谁、你偏好什么、你此刻正在哪个项目里。而就算你接入了最完善的记忆系统——换台电脑、换个框架，几个月调教出来的 SOUL、Skills、MCP 配置也可能一夜归零。
 
 当你开始把 AI Agent 当作同事而不是工具时，你会先意识到两件事：它需要「认识你」，而你的调教成果需要「不丢」。后者恰恰是 LangChain Memory、Chroma、Pinecone 都没有覆盖的空白。
 
-备份仓库补上这一块。向量层管知识，记忆层管「记住」，备份层管「不丢」，三层都配上，你的 Agent 才第一次真正「属于你」。
+在线同步层补上这一块。向量层管知识，记忆层管「记住」，同步层管「不丢、跟着你走」，三层都配上，你的 Agent 才第一次真正「属于你」。
 
-> 想在 3 分钟内给 AI 调教成果上一份「灵魂保险」？试试 [Moltable](https://moltable.ai)——一条命令备份，换 Agent，不换灵魂。
+> 想让 AI 调教成果跨设备在线同步？试试 [Moltable](https://moltable.ai)——一个账号，你的 AI 永远顺手。
 
 </ArticleLayout>

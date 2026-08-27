@@ -1,8 +1,8 @@
 export const meta = {
-  title: 'Agent 灵魂备份指南：换电脑也不丢失调教成果',
+  title: 'Agent 在线同步指南：换电脑也不丢失调教成果',
   date: '2026-07-25',
-  description: '换新电脑后 AI 完全不认识你？对比传统「拷贝配置」方案的三大致命缺陷，详解灵魂资产备份：一条命令打包 SOUL、Skills、记忆与 MCP 配置，换机即还原。',
-  tags: ['灵魂资产', 'Agent 备份', 'MCP 协议', '换机', '指南'],
+  description: '换新电脑后 AI 完全不认识你？对比传统「拷贝配置」方案的三大致命缺陷，详解 Agent 在线同步：一个账号同步 SOUL、Skills、记忆与 MCP 配置，换机用 auto_provision 一键恢复。',
+  tags: ['在线同步', 'Agent 同步', 'MCP 协议', '换机', '指南'],
   slug: 'ai-identity-sync-guide',
 }
 
@@ -17,7 +17,7 @@ import Link from 'next/link'
 
 你在旧 Mac 上花了三个月"调教"好的 AI——你的代码风格偏好、项目的命名规范、每周五下午的复盘模板——全部归零。AI 又变成了出厂设置。
 
-这个痛点，2026 年有了系统级的解决方案：**Agent 灵魂资产备份**。
+这个痛点，2026 年有了系统级的解决方案：**Agent 在线同步**。
 
 ## 传统方案为什么不行
 
@@ -33,13 +33,13 @@ import Link from 'next/link'
 - **不完整**：你只能拷贝配置文件，无法带走"AI 在对话中积累的偏好"
 - **不可靠**：对话流水账（state.db）拷过去也没用，真正有价值的是调教产物，而不是流水账本身
 
-## Moltable 的灵魂资产备份方案
+## Moltable 的 Agent 在线同步方案
 
-核心思路：把你调教出来的资产——而不是对话流水账——打包成版本化的备份。任何框架实例都能从同一个备份源还原。
+核心思路：一个账号，把你调教出来的资产——而不是对话流水账——跨设备、跨 Agent 在线同步。任何框架实例都能从同一个 Agent 恢复；文件级打包备份作为版本管理与兜底。
 
-### 备份什么、排除什么
+### 同步什么、排除什么
 
-**备份**：SOUL.md、AGENTS.md、USER.md、config.yaml（MCP 配置，密钥脱敏）、memories/、skills/。
+**同步**：SOUL.md、AGENTS.md、USER.md、config.yaml（MCP 配置，密钥脱敏）、memories/、skills/。
 
 **自动排除**：对话流水账（state.db / WAL / FTS）和密钥（.env / *.key）——流水账占空间且无调教价值，密钥不该进云端。
 
@@ -54,7 +54,7 @@ import Link from 'next/link'
          │                       │
          ▼                       ▼
 ┌──────────────────────────────────────┐
-│      Moltable 灵魂资产版本仓库          │
+│      Moltable Agent 在线同步层          │
 │  ┌──────────────┐ ┌────────────────┐ │
 │  │ bundle+manifest│ │ CAS 内容寻址去重 │ │
 │  ├──────────────┤ ├────────────────┤ │
@@ -63,9 +63,9 @@ import Link from 'next/link'
 └──────────────────────────────────────┘
 ```
 
-三层架构：Profile（本体）→ Soul（化身：人格 + 记忆，可备份）→ 凭证（DID + VC，即将推出）。备份源管理通过 HTTP MCP 暴露：`https://api.moltable.ai/mcp` + `X-API-Key` 请求头。
+三层架构：Profile（本体）→ Soul（化身：人格 + 记忆，可同步）→ 凭证（DID + VC，即将推出）。Agent 管理通过 HTTP MCP 暴露：`https://api.moltable.ai/mcp` + `X-API-Key` 请求头——MCP 就是同步接口（search_memory / save_memory / auto_provision / list_personas），auto_provision 一键同步上下文、换机即恢复。
 
-## 实操步骤：十分钟完成换机备份与还原
+## 实操步骤：十分钟完成换机同步与恢复
 
 ### 1. 安装 CLI
 
@@ -73,7 +73,7 @@ import Link from 'next/link'
 curl -sL https://moltable.ai/install.sh | bash
 ```
 
-### 2. 在旧电脑上备份
+### 2. 在旧电脑上同步
 
 ```bash
 # 生成备份配置
@@ -86,9 +86,9 @@ moltable backup push
 moltable sources
 ```
 
-备份包含你三个月积累的全部调教成果：人格定义、技能、记忆、MCP 配置（密钥脱敏），自动排除对话流水账和密钥文件。
+这次打包包含你三个月积累的全部调教成果：人格定义、技能、记忆、MCP 配置（密钥脱敏），自动排除对话流水账和密钥文件——它是「在线同步之外」的文件级备份兜底，换机时一键还原。
 
-### 3. 在新电脑上还原
+### 3. 在新电脑上一键恢复
 
 ```bash
 curl -sL https://moltable.ai/install.sh | bash
@@ -97,30 +97,30 @@ moltable backup pull
 
 ### 4. 验证
 
-在新电脑上问 Agent："你知道我的 Python 项目日志级别偏好是什么吗？" 如果它回答正确，说明还原成功。每个备份源都带版本号，还原错了可以回滚。
+在新电脑上问 Agent："你知道我的 Python 项目日志级别偏好是什么吗？" 如果它回答正确，说明恢复成功。已接入 MCP 的 Agent 也可以用 `auto_provision` 一键同步上下文，换机即恢复。每个 Agent 都带版本号，恢复错了可以回滚。
 
 ## 跨平台实战：Mac → Windows → Linux
 
 一个真实工作流：
 
-- **办公室 Mac**：Hermes，白天积累代码审查偏好，收工前 `moltable backup push`
+- **办公室 Mac**：Hermes，白天积累代码审查偏好，收工前 `moltable backup push` 归档当天成果
 - **回家 Windows 台式机**：Claude，`moltable backup pull` 直接继承白天的调教成果
-- **服务器 Linux**：OpenClaw 跑自动化任务，从同一个备份源 `pull`
+- **服务器 Linux**：OpenClaw 跑自动化任务，从同一个 Agent `pull` 同步
 
-三台设备、多个框架实例，各自的调教成果都有版本历史，任何一台出问题都能完整还原。这不再是科幻。
+三台设备、多个框架实例，一个账号随时在线同步，各自的调教成果都有版本历史，任何一台出问题都能完整还原。这不再是科幻。
 
 ## 高级技巧
 
-- **多备份源管理**：每台设备、每个框架实例一个独立备份源，`sources` 随时查看，互不覆盖
+- **多 Agent 管理**：每台设备、每个框架实例一个独立 Agent，`sources` 随时查看，互不覆盖
 - **增量去重**：sha256 内容寻址，每次 push 只有变化的部分上传，回滚任意版本
-- **引用同步**：`add-ref <名> <路径>` 把外部知识库一并纳入备份，团队共享同一套资产
+- **引用同步**：`add-ref <名> <路径>` 把外部知识库一并纳入同步范围，团队共享同一套资产
 
 ## 定价
 
-Free $0（3 备份源 / 100MB）、Pro $3/月（10 备份源 / 1GB）、Ultra $5/月（100 备份源 / 10GB），仅月付。
+Free $0（3 Agent / 100MB）、Pro $3/月（10 Agent / 1GB）、Ultra $5/月（100 Agent / 10GB），仅月付。
 
 相关阅读：[你的 10 万条 AI 对话记录：该归谁？该存在哪？](/blog/ai-data-sovereignty)
 
-👉 [Moltable — 换 Agent，不换灵魂](https://moltable.ai)
+👉 [Moltable — 你的 AI 永远顺手](https://moltable.ai)
 
 </ArticleLayout>

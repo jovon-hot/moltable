@@ -36,9 +36,9 @@ ${categories}
   const rss = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
-    <title>Moltable Blog — Agent Soul Backup &amp; Infrastructure</title>
+    <title>Moltable Blog — Your AI, Always in Sync</title>
     <link>${escapeXml(baseUrl)}/blog</link>
-    <description>Agent 灵魂备份、MCP 协议、跨框架迁移 — 关于 AI Agent 灵魂资产基础设施的深度技术博客。Deep technical content about AI Agent soul backup infrastructure.</description>
+    <description>Agent 在线同步、MCP 协议、跨框架迁移 — 你的 AI 永远顺手。关于 AI Agent 在线同步层的深度技术博客。Your AI, always in sync. Deep technical content about the AI Agent online sync layer.</description>
     <language>zh-CN</language>
     <lastBuildDate>${now}</lastBuildDate>
     <atom:link href="${baseUrl}/blog/feed.xml" rel="self" type="application/rss+xml"/>

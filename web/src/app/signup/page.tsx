@@ -17,22 +17,22 @@ function SignupContent() {
       icon: Gift,
       title: zh ? '引用同步' : 'Reference Sync',
       desc: zh
-        ? '你引用的知识库、内容来源一并备份，换机完整还原工作环境'
-        : 'Knowledge bases and content sources you reference are backed up too',
+        ? '你引用的知识库、内容来源一并同步，换机完整还原工作环境'
+        : 'Knowledge bases and content sources you reference are synced too',
     },
     {
       icon: Zap,
-      title: zh ? '一条命令备份' : 'One-Command Backup',
+      title: zh ? '一键在线同步' : 'One-Click Sync',
       desc: zh
-        ? 'moltable backup push —— 打包上传你的 SOUL、Skills、MCP 配置和记忆'
-        : 'moltable backup push — pack and upload your SOUL, Skills, MCP configs, and memories',
+        ? '接入 MCP 即自动同步——身份、记忆、Persona、项目跨设备在线同步'
+        : 'Connect via MCP and sync automatically — identity, memories, and personas across devices',
     },
     {
       icon: Shield,
       title: zh ? '版本管理，可回滚' : 'Versioned & Rollback',
       desc: zh
-        ? '每个备份源独立版本库，快照 + 版本号，改坏了随时回滚'
-        : 'Each source has its own version history — roll back to any point anytime',
+        ? '每个 Agent 独立版本库，快照 + 版本号，改坏了随时回滚（文件级备份兜底）'
+        : 'Each agent has its own version history — roll back to any point anytime (file-level backup safety net)',
     },
   ]
 
@@ -53,13 +53,13 @@ function SignupContent() {
         )}
 
         <h1 className="text-3xl md:text-4xl font-extrabold mb-3 leading-tight" style={{ letterSpacing: '-1px' }}>
-          {zh ? '换 Agent，' : 'Switch agents, '}
-          <span style={{ color: '#FB6B4B' }}>{zh ? '不换灵魂' : 'keep your soul'}</span>
+          {zh ? '你的 AI，' : 'Your AI, '}
+          <span style={{ color: '#FB6B4B' }}>{zh ? '永远顺手' : 'always in sync'}</span>
         </h1>
         <p className="text-base mb-2" style={{ color: '#A8A5B8' }}>
           {zh
-            ? '备份你的 Agent 灵魂资产，换框架、换电脑都不丢失'
-            : 'Back up your agent soul — never lose your tuning when you switch frameworks or machines'}
+            ? '一个账号，你调教的 AI 跨设备、跨 Agent 在线同步——换框架、换电脑都不重来'
+            : 'One account keeps your tuned AI in sync across devices and agents — never start over when you switch frameworks or machines'}
         </p>
         <p className="text-sm mb-10" style={{ color: '#85829E' }}>
           {zh

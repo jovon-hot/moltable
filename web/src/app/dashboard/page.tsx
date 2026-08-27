@@ -113,7 +113,7 @@ export default function DashboardPage() {
           {lang === 'zh' ? '欢迎回来' : 'Welcome Back'}
         </h1>
         <p className="text-sm text-ln-tertiary font-body">
-          {lang === 'zh' ? '管理你的 Agent 灵魂资产与备份源' : 'Manage your Agent soul assets and backup sources'}
+          {lang === 'zh' ? '管理你的 Agent 在线同步与文件级备份' : 'Manage your Agent sync and file-level backups'}
         </p>
       </div>
 

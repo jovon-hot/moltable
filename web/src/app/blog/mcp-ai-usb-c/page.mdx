@@ -1,8 +1,8 @@
 export const meta = {
   title: 'MCP 协议：为什么它是 AI 的 USB-C',
   date: '2026-06-20',
-  description: 'AI 是手机，MCP 就是 USB-C。用类比讲清 Model Context Protocol 的 Tools、Resources、Prompts 三大概念，以及它为何是灵魂资产备份的理想协议。',
-  tags: ['MCP 协议', 'Model Context Protocol', 'A2A', 'AI 生态', '灵魂资产备份', '开发者工具'],
+  description: 'AI 是手机，MCP 就是 USB-C。用类比讲清 Model Context Protocol 的 Tools、Resources、Prompts 三大概念，以及它为何是 Agent 在线同步的理想协议。',
+  tags: ['MCP 协议', 'Model Context Protocol', 'A2A', 'AI 生态', '在线同步', '开发者工具'],
   slug: 'mcp-ai-usb-c',
 }
 
@@ -23,7 +23,7 @@ MCP 是 Anthropic 在 2024 年 11 月发布的开源协议，全称 Model Contex
 
 MCP 改变了这一点。它定义了三个核心概念：
 
-- **Tools**：AI 可以调用的外部功能（搜索记忆、保存偏好、查询数据库）
+- **Tools**：AI 可以调用的外部功能（如 Moltable 的 `search_memory` 搜索记忆、`save_memory` 保存偏好、查询数据库）
 - **Resources**：AI 可以读取的外部数据（文件、文档、API 响应）
 - **Prompts**：预定义的提示模板
 
@@ -38,18 +38,18 @@ MCP 改变了这一点。它定义了三个核心概念：
 
 ## Moltable 为什么选择 MCP
 
-Moltable 是你调教 AI 的「灵魂资产版本仓库」——它不执行任务、不生成内容，只负责把你调教的 SOUL、Skills、MCP 配置、记忆打包成版本化、去重的备份。这个定位天然适合 MCP：
+Moltable 是你调教 AI 的「Agent 在线同步层」——它不执行任务、不生成内容，只负责把你的 SOUL、Skills、MCP 配置、记忆跨设备、跨 Agent 在线同步；文件级备份（版本化、去重、可回滚）作为兜底能力。这个定位天然适合 MCP：
 
 - Agent 通过 MCP 连接 Moltable Server（HTTP 协议，一个 URL + API Key）
-- 一条命令 `moltable backup push` 把灵魂资产打包上传
-- 换机后 `moltable backup pull` 一条命令还原
-- `add-ref` 引用外部知识库一并备份
+- MCP 同步接口 `search_memory` / `save_memory` / `list_personas` 让 Agent 随时读写你的身份与记忆；`moltable backup push` 则把调教成果打包成文件级备份兜底
+- 换新设备时，`auto_provision` 一条命令把上下文与 Persona 一键同步恢复；`moltable backup pull` 走文件级备份兜底
+- `add-ref` 引用外部知识库一并纳入同步
 
-因为 MCP 是开放标准，任何支持 MCP 的 AI 客户端——Hermes、Claude、Cursor、Gemini CLI——都能直接接入 Moltable。不需要为每个平台写适配代码。
+因为 MCP 是开放标准，任何支持 MCP 的 AI 客户端——Hermes、Claude、Cursor、Gemini CLI——都能直接接入 Moltable，通过统一接口读写你的身份与记忆，不需要为每个平台写适配代码。
 
 ## 未来：Agent 的操作系统
 
-如果把 MCP 比作 USB-C，那 MCP Server 就是外设驱动程序——每个 MCP Server 暴露一组工具，Agent 通过标准协议调用它们。Moltable 是这个生态中的一个"驱动"：灵魂备份驱动。其他有：文件系统驱动、数据库驱动、浏览器驱动、邮件驱动……
+如果把 MCP 比作 USB-C，那 MCP Server 就是外设驱动程序——每个 MCP Server 暴露一组工具，Agent 通过标准协议调用它们。Moltable 是这个生态中的一个"驱动"：Agent 在线同步驱动。其他有：文件系统驱动、数据库驱动、浏览器驱动、邮件驱动……
 
 当足够多的"驱动"存在时，AI Agent 就真正拥有了操作系统的能力——像人类一样，通过统一的接口操作数字世界的各种工具。MCP 就是这个统一接口。
 

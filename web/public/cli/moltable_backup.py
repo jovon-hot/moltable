@@ -302,7 +302,7 @@ def cmd_remove_ref(config_path: str, logical: str) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(prog="moltable backup", description="Agent 灵魂资产备份同步")
+    parser = argparse.ArgumentParser(prog="moltable backup", description="Agent 文件级备份（打包·快照·回滚，在线同步兜底）")
     parser.add_argument("--config", default=os.path.expanduser("~/.moltable/backup.json"), help="配置文件路径")
     sub = parser.add_subparsers(dest="cmd")
 

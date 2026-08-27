@@ -1,8 +1,8 @@
 export const meta = {
-  title: '跨平台化身备份：一个身份，多种人格',
+  title: '跨平台化身同步：一个身份，多种人格',
   date: '2026-07-05',
-  description: 'Persona 不是 Prompt 模板：SOUL、Skills、记忆与 MCP 配置才是真正的灵魂资产。跨平台、换电脑不丢调教成果，附实战对比。',
-  tags: ['Persona', '跨平台', 'MCP 协议', '灵魂资产', '人格管理', '实战'],
+  description: 'Persona 不是 Prompt 模板：SOUL、Skills、记忆与 MCP 配置才是真正需要跨设备同步的调教成果。一个账号，让 AI 人格跨平台、跨设备在线同步，附实战对比。',
+  tags: ['Persona', '跨平台', 'MCP 协议', '在线同步', '人格管理', '实战'],
   slug: 'cross-platform-persona',
 }
 
@@ -32,17 +32,20 @@ import Link from 'next/link'
 
 Prompt 模板只是其中一行，丢了可以重写；数月积累的记忆和技能，重写不出来。
 
-## 灵魂资产：给调教成果上保险
+## 在线同步：让调教成果跟着你走
 
-Moltable 的定位很明确：**不运行你的 Agent，只备份你的调教成果**。它是你的灵魂资产版本仓库——一个"保险箱"，不是记忆层，也不是状态机。
+Moltable 的定位很明确：**不运行你的 Agent，只在线同步你的调教成果**。一个账号，你在 Claude 里调教的 Persona、在 Hermes 里沉淀的记忆与项目上下文，跨设备、跨 Agent 实时同步；文件级备份（版本管理、快照、回滚）作为兜底能力，确保任何一步都不丢。
 
-- **灵魂备份**：一条命令把 SOUL.md、AGENTS.md、USER.md、config.yaml（MCP 配置，密钥脱敏）、memories/、skills/ 打包成 bundle + manifest，上传到对象存储
-- **版本管理**：每份调教成果有独立版本库，快照 + 版本号，随时回滚
+- **在线同步**：登录一个账号，SOUL.md、AGENTS.md、USER.md、config.yaml（MCP 配置，密钥脱敏）、memories/、skills/ 跨设备、跨 Agent 自动保持同步
+- **文件级备份兜底**：`moltable backup push` 把调教成果打包成 bundle + manifest 上传到对象存储，作为在线同步之外的保险
+- **版本管理**：每个 Agent 的调教成果有独立版本库，快照 + 版本号，随时回滚
 - **增量去重**：sha256 内容寻址，只有变化的部分才上传，存储成本极低
-- **引用同步**：`add-ref` 把外部知识库一并纳入备份
+- **引用同步**：`add-ref` 把外部知识库一并纳入同步
 - **你拥有数据**：随时导出、随时删除，你的调教成果不会用来训练任何模型
 
-## 实战：备份两份调教成果
+Agent 端通过 MCP 同步接口接入：`search_memory` / `save_memory` / `list_personas` / `auto_provision`。换新设备时，`auto_provision` 一条命令把上下文与 Persona 一键恢复到位。
+
+## 实战：同步两份调教成果
 
 一条命令安装 CLI：
 
@@ -50,7 +53,7 @@ Moltable 的定位很明确：**不运行你的 Agent，只备份你的调教成
 curl -sL https://moltable.ai/install.sh | bash
 ```
 
-然后为"战略顾问"和"保守审核员"各建一个备份源（每个框架实例就是一个备份源，Hermes、OpenClaw、Claude、Codex 均支持）：
+然后为"战略顾问"和"保守审核员"各登记一个 Agent（每个框架实例就是一个 Agent，Hermes、OpenClaw、Claude、Codex 均支持）：
 
 ```bash
 # 初始化备份配置
@@ -67,7 +70,7 @@ moltable sources
 
 ## 实际效果：同一问题，两种视角
 
-以"是否进入东南亚市场"为例——这正好说明为什么两种人格资产都值得备份：
+以"是否进入东南亚市场"为例——这正好说明为什么两种人格资产都值得在线同步：
 
 #### 战略顾问的视角
 
@@ -81,9 +84,9 @@ moltable sources
 要求本地合资且外方持股不超过 49%；② 物流基础设施不均衡；
 ③ 汇率波动风险（印尼盾 2024 年贬值 8%）；④……建议先做 6 个月试点。
 
-两个回答同时存在。你不是在两个 AI 之间切换——是两份经过长期调教的视角，每一份都有备份、有版本号、可回滚。
+两个回答同时存在。你不是在两个 AI 之间切换——是两份经过长期调教的视角，每一份都在线同步、有版本号、可回滚。
 
-## 跨平台：一次备份，处处还原
+## 跨平台：一次同步，处处就位
 
 换电脑、换框架时，你不需要重新调教：
 
@@ -95,15 +98,15 @@ curl -sL https://moltable.ai/install.sh | bash
 moltable backup pull
 ```
 
-`pull` 会把备份源里的 SOUL、Skills、记忆、MCP 配置还原到新环境。还原前可以查看快照，还原错了可以回滚。
+`auto_provision` 会在新电脑上一键同步你的上下文与 Persona；`moltable backup pull` 则走文件级备份兜底，把 Agent 的 SOUL、Skills、记忆、MCP 配置还原到新环境。还原前可以查看快照，还原错了可以回滚。
 
-这解决了 AI 时代最棘手的问题之一：**数据孤岛**。你的 ChatGPT 有对话历史，你的 Claude 有偏好，你的 Hermes 有项目记忆——它们天然是分离的。Moltable 不试图把它们合并成一个"大脑"，而是把每一份都打包、版本化、去重备份，让你在任何设备上都能找回自己的调教成果。
+这解决了 AI 时代最棘手的问题之一：**数据孤岛**。你的 ChatGPT 有对话历史，你的 Claude 有偏好，你的 Hermes 有项目记忆——它们天然是分离的。Moltable 不试图把它们合并成一个"大脑"，而是通过一个账号把每一份调教成果在线同步，跨设备、跨 Agent 保持一致；再用文件级备份（版本化、去重、可回滚）兜底，让你在任何设备上都能找回自己的调教成果。
 
-支持框架：Hermes、OpenClaw、Claude、Codex（每个实例一个备份源）。备份源通过 HTTP MCP 暴露：`https://api.moltable.ai/mcp` + `X-API-Key` 请求头。
+支持框架：Hermes、OpenClaw、Claude、Codex（每个实例一个 Agent）。同步接口通过 HTTP MCP 暴露：`https://api.moltable.ai/mcp` + `X-API-Key` 请求头，`search_memory` / `save_memory` / `list_personas` / `auto_provision` 随取随用。
 
 ## 未来：跨框架迁移与可验证身份
 
 - **跨框架迁移**（即将推出）：用自己的 LLM 把 Hermes 灵魂翻译成 OpenClaw / Claude / Codex 版本——同一份调教成果，换框架不再从零开始
-- **DID + VC 可验证身份**（即将推出）：Moltable 三层架构的顶层——Profile（本体）→ Soul（化身，人格 + 记忆，可备份）→ 凭证（DID + VC）——为灵魂资产加上可验证的归属
+- **DID + VC 可验证身份**（即将推出）：Moltable 三层架构的顶层——Profile（本体）→ Soul（化身，人格 + 记忆，在线同步）→ 凭证（DID + VC）——为你的 AI 身份加上可验证的归属
 
 </ArticleLayout>

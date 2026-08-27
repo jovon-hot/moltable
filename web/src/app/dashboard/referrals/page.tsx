@@ -35,8 +35,8 @@ export default function ReferralsPage() {
 
   const shareUrl = code && typeof window !== 'undefined' ? `${window.location.origin}/signup?ref=${code}` : ''
   const shareText = zh
-    ? `用我的邀请码 ${code} 注册 Moltable，备份你的 Agent 灵魂资产！`
-    : `Sign up for Moltable with my invite code ${code} — back up your agent's soul!`
+    ? `用我的邀请码 ${code} 注册 Moltable，让 AI 跨设备、跨 Agent 在线同步！`
+    : `Sign up for Moltable with my invite code ${code} — keep your AI in sync across devices!`
 
   const loadStats = useCallback(async (uid: string) => {
     const data = await apiFetch<ReferralStats>(`/api/referrals/stats/${uid}`)
@@ -252,7 +252,7 @@ export default function ReferralsPage() {
                   </li>
                   <li className="flex items-start gap-2">
                     <Check size={14} className="text-emerald-400 mt-0.5 flex-shrink-0" />
-                    {zh ? '好友接受邀请并完成首次备份 → 再 +1GB（无上限）' : 'Friend joins + completes first backup → +1GB more (unlimited)'}
+                    {zh ? '好友接受邀请并完成首次同步 → 再 +1GB（无上限）' : 'Friend joins + completes first sync → +1GB more (unlimited)'}
                   </li>
                   <li className="flex items-start gap-2">
                     <Check size={14} className="text-emerald-400 mt-0.5 flex-shrink-0" />

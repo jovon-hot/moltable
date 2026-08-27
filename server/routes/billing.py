@@ -103,7 +103,7 @@ async def get_subscription(request: Request, user_id: str = Depends(get_user)):
 def get_plans(request: Request):
     """返回当前可用计划。Stripe 已接入则返回真实 USD 价格，否则订阅暂不可用。
 
-    配额（备份源/存储）来自 pricing_config，后台环境变量可配置。
+    配额（备份源/存储，备份能力兜底）来自 pricing_config，后台环境变量可配置。
     """
     pricing = get_pricing()
     free_plan = build_plan("free")

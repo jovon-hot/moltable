@@ -79,7 +79,7 @@ function ShareCard() {
     // Tagline
     ctx.fillStyle = '#888888'
     ctx.font = '28px Inter, system-ui, sans-serif'
-    ctx.fillText(lang === 'zh' ? 'Agent 灵魂备份 · 换 Agent 不换灵魂' : 'Agent Soul Backup · Switch Agents, Keep Your Soul', 80, 170)
+    ctx.fillText(lang === 'zh' ? 'Agent 在线同步 · 你的 AI 永远顺手' : 'Agent Online Sync · Your AI, Always in Sync', 80, 170)
 
     // Stats grid
     const statsData = [

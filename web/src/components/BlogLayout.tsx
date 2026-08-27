@@ -79,10 +79,10 @@ export default function BlogLayout({ children }: { children: React.ReactNode }) 
           <div className="p-6 rounded-card text-center" style={{ background: '#14141E', boxShadow: '0 0 0 1px rgba(99,102,241,0.12)' }}>
             <div className="text-2xl mb-2">⚡</div>
             <h3 className="text-lg font-heading mb-2 font-semibold">
-              换 Agent，不换灵魂
+              你的 AI 永远顺手
             </h3>
             <p className="text-sm text-ln-secondary mb-5 max-w-sm mx-auto">
-              3 分钟备份你的 Agent 灵魂 — SOUL、Skills、记忆打包备份，换框架不丢失。
+              3 分钟接入在线同步 — 身份、记忆、Persona 跨设备同步，换框架不丢失。
             </p>
             <Link
               href="/register"

@@ -32,8 +32,8 @@ export default function BlogPage() {
           </h1>
           <p className="text-base text-ln-secondary max-w-md mx-auto">
             {isEn
-              ? 'AI Identity, MCP protocol, cross-platform Persona — deep content about AI Agent identity infrastructure.'
-              : 'Agent 灵魂资产备份、MCP 协议、跨 Agent 化身管理 — 关于 AI Agent 灵魂资产备份的深度内容。'}
+              ? 'AI Identity, MCP protocol, cross-platform Persona — deep content about the AI Agent online sync layer. Your AI, always in sync.'
+              : 'Agent 在线同步、MCP 协议、跨 Agent 化身管理 — 你的 AI 永远顺手。关于 AI Agent 在线同步层的深度内容。'}
           </p>
         </div>
 

@@ -1,8 +1,8 @@
 export const meta = {
-  title: 'Moltable vs Letta: Stateful Memory Blocks vs Agent Soul Backup',
+  title: 'Moltable vs Letta: Stateful Memory Blocks vs Agent Sync',
   date: '2026-08-25',
-  description: 'Letta gives agents self-editing memory blocks; Moltable backs up your agent\'s soul across frameworks. Memory state machine vs soul asset backup, compared.',
-  tags: ['comparison', 'Letta', 'MemGPT', 'AI agent memory', 'soul backup', 'MCP protocol'],
+  description: 'Letta gives agents self-editing memory blocks; Moltable keeps your agent\'s soul in sync across frameworks. Memory state machine vs agent online sync layer, compared.',
+  tags: ['comparison', 'Letta', 'MemGPT', 'AI agent memory', 'agent sync', 'MCP protocol'],
   slug: 'moltable-vs-letta-stateful-memory',
 }
 
@@ -10,27 +10,27 @@ import ArticleLayout from '../_components/ArticleLayout'
 
 <ArticleLayout meta={meta}>
 
-**谈到「Agent 记忆」，Letta 和 Moltable 都被摆上过同一张对比表。但如果你真的把两者放进生产，会发现它们回答的是两个完全不同的问题：Letta 给 Agent 一个会自我编辑的工作记忆，Moltable 给你一份可版本化、可跨框架迁移的灵魂资产备份。前者是 Agent 的内部状态机，后者是你的外部保险箱。**
+**谈到「Agent 记忆」，Letta 和 Moltable 都被摆上过同一张对比表。但如果你真的把两者放进生产，会发现它们回答的是两个完全不同的问题：Letta 给 Agent 一个会自我编辑的工作记忆，Moltable 让你的身份、记忆、Persona 跨设备、跨 Agent 在线同步（换机 auto_provision 一键恢复）。前者是 Agent 的内部状态机，后者是你的在线同步层。**
 
-> **English summary**: Letta (f.k.a. MemGPT) and Moltable both claim the "memory" label, but they solve different problems. Letta runs *stateful agents* whose context window is organized into self-editing **memory blocks** — the agent rewrites its own memory to stay consistent. Moltable doesn't run your agent at all: it **backs up your agent's soul** (SOUL, Skills, MCP configs, memories) into versioned, portable, cross-framework-migratable snapshots. One is the agent's internal memory state machine; the other is your external backup vault. They are complementary, not competing.
+> **English summary**: Letta (f.k.a. MemGPT) and Moltable both claim the "memory" label, but they solve different problems. Letta runs *stateful agents* whose context window is organized into self-editing **memory blocks** — the agent rewrites its own memory to stay consistent. Moltable doesn't run your agent at all: it **keeps your agent's soul in sync** (SOUL, Skills, MCP configs, memories) across devices and agents, with versioned, portable, cross-framework-migratable file-level snapshots as insurance. One is the agent's internal memory state machine; the other is your online sync layer. They are complementary, not competing.
 
 这是竞品矩阵的最后一篇。此前我们对比过 [mem0](https://www.moltable.ai/blog/moltable-vs-mem0-identity-vs-memory)、[Zep](https://www.moltable.ai/blog/moltable-vs-zep-temporal-memory)，也发过 [2026 Agent 记忆全景盘点](https://www.moltable.ai/blog/agent-memory-landscape-2026)。Letta 是那个最「像 Moltable」、也最容易被误读为直接竞品的玩家——因为它是唯一一个把「身份」「人格」这些词写进产品里的开源记忆框架。所以这篇要把话说透：**像在哪，根本不像在哪。**
 
-先给结论：**如果你在构建一个需要长期自我进化的 Agent 运行时，选 Letta；如果你已经用着 Hermes / OpenClaw / Claude / Codex / Cursor 这些 Agent、不想再换框架、只想把调教成果安全地备份和带走，选 Moltable。两者不冲突，可以一起用。**
+先给结论：**如果你在构建一个需要长期自我进化的 Agent 运行时，选 Letta；如果你已经用着 Hermes / OpenClaw / Claude / Codex / Cursor 这些 Agent、不想再换框架、只想让调教成果在线同步、走到哪跟到哪，选 Moltable。两者不冲突，可以一起用。**
 
 ---
 
 ## 为什么它们都被叫「记忆」，却不是一回事
 
-「记忆」这个词被用滥了。一个向量库叫记忆，一个 RAG 管线叫记忆，一个备份系统也叫记忆。但拆开看，市面上的「Agent 记忆」其实分三件事：
+「记忆」这个词被用滥了。一个向量库叫记忆，一个 RAG 管线叫记忆，一个在线同步系统也叫记忆。但拆开看，市面上的「Agent 记忆」其实分三件事：
 
 1. **运行时上下文管理**：对话进行中，Agent 当前「看到」什么、记住什么。
 2. **持久化记忆存储**：对话结束后，哪些事实被沉淀下来供下次检索。
-3. **资产的备份与迁移**：你调教的整套 Agent（技能、人格、配置、记忆）怎么不丢、怎么带走。
+3. **资产的在线同步与迁移**：你调教的整套 Agent（技能、人格、配置、记忆）怎么不丢、怎么跟着你走。
 
-mem0 和 Zep 主要做第 2 件。**Letta 是第 1 件的极致**——它把「Agent 怎么管理自己的上下文」做成了操作系统。**Moltable 是第 3 件的唯一玩家**——它根本不运行你的 Agent，只负责把你调教出来的「灵魂」打包、版本化、跨框架迁移。
+mem0 和 Zep 主要做第 2 件。**Letta 是第 1 件的极致**——它把「Agent 怎么管理自己的上下文」做成了操作系统。**Moltable 是第 3 件的唯一玩家**——它根本不运行你的 Agent，只负责把你调教出来的「灵魂」跨设备、跨 Agent 在线同步，并提供版本化文件级备份与跨框架迁移。
 
-把「管理 Agent 内部状态」和「备份你的外部资产」放在同一张对比表里比优劣，本身就是个伪命题。它们应该在同一份技术栈里，而不是同一张 PK 表里。
+把「管理 Agent 内部状态」和「同步你的外部资产」放在同一张对比表里比优劣，本身就是个伪命题。它们应该在同一份技术栈里，而不是同一张 PK 表里。
 
 ---
 
@@ -66,11 +66,11 @@ Letta 最超前的一招是 **dreaming（睡眠时间计算，来自其 sleep-ti
 
 ---
 
-## Round 2: Moltable 的灵魂资产备份
+## Round 2: Moltable 的 Agent 在线同步层
 
-Moltable 走的是另一条路。它**不运行你的 Agent**——你继续用你的 Hermes、OpenClaw、Claude、Codex、Cursor，Moltable 只做一件事：把你调教出来的整套「灵魂资产」打包、版本化、跨框架迁移。
+Moltable 走的是另一条路。它**不运行你的 Agent**——你继续用你的 Hermes、OpenClaw、Claude、Codex、Cursor，Moltable 只做一件事：让你调教出来的整套「灵魂资产」跨设备、跨 Agent 在线同步——一个账号，走到哪跟到哪；同时提供文件级备份（版本化快照、回滚）作为兜底。
 
-### 备份的原子单位是「灵魂」，不是「对话」
+### 同步的原子单位是「灵魂」，不是「对话」
 
 ```
 curl -sL https://moltable.ai/install.sh | bash   # 一行安装
@@ -78,19 +78,21 @@ moltable backup push                       # 打包上传你的 Agent 灵魂资�
 moltable backup pull                       # 换机/换框架后还原
 ```
 
-备份的内容是 SOUL（人格 + 记忆）、Skills、MCP 配置、以及你引用的知识库——**自动排除对话流水账**。这个「只备份灵魂、不备份流水账」的取舍很关键：实测一个调教成熟的 Agent，灵魂 39MB，而对话日志 1.2GB，压缩比 30 倍。你备份的是「你是谁」，不是「你昨天聊了 800 条天」。
+文件级备份的内容是 SOUL（人格 + 记忆）、Skills、MCP 配置、以及你引用的知识库——**自动排除对话流水账**。这个「只备份灵魂、不备份流水账」的取舍很关键：实测一个调教成熟的 Agent，灵魂 39MB，而对话日志 1.2GB，压缩比 30 倍。你备份的是「你是谁」，不是「你昨天聊了 800 条天」。
+
+同步则走 MCP 接口：`search_memory` / `save_memory` 让 Agent 实时读写你的记忆，`auto_provision` 在新设备上一键同步完整上下文——配合文件级备份，双保险。
 
 ### 三层架构：Profile → Soul → 凭证
 
 - **Profile（本体）**：客观事实，不可复制。
-- **Soul（化身）**：人格 + 记忆，可备份，跨框架迁移即将推出。
+- **Soul（化身）**：人格 + 记忆，在线同步，跨框架迁移即将推出。
 - **凭证（身份证明）**：DID+VC，给灵魂签出处（即将推出）——这个灵魂是谁调的、是不是正版、授权给谁，密码学可验证。
 
 ### 版本管理 + 跨框架迁移
 
-每个备份源是独立的版本库，快照 + 版本号，改坏了随时回滚到任意历史版本。而**跨框架迁移**是 Moltable 最独特的承诺：用你自己的 LLM，把一份 Hermes 灵魂翻译成 OpenClaw / Claude / Codex 版本——这是「备份」之上的「迁移」，是 Moltable 与所有记忆产品的根本分界线。
+每个 Agent 都有独立的文件级版本库（快照 + 版本号），改坏了随时回滚到任意历史版本。而**跨框架迁移**是 Moltable 最独特的承诺：用你自己的 LLM，把一份 Hermes 灵魂翻译成 OpenClaw / Claude / Codex 版本——这是「在线同步」之上的「迁移」，是 Moltable 与所有记忆产品的根本分界线。
 
-**小结：Moltable 是一台「保险箱」——它不管你的 Agent 怎么运行、怎么记忆，它只保证你花了几百小时调教出来的那个「你」永远丢不了、永远带得走。**
+**小结：Moltable 是一条「同步层」——它不管你的 Agent 怎么运行、怎么记忆，它只保证你花了几百小时调教出来的那个「你」永远在线、永远带得走。**
 
 ---
 
@@ -98,10 +100,10 @@ moltable backup pull                       # 换机/换框架后还原
 
 | 维度 | Letta | Moltable |
 |------|-------|----------|
-| 定位 | Stateful agent 运行时 / 记忆状态机 | Agent 灵魂资产版本仓库 |
-| 回答的问题 | Agent 怎么记住、怎么自我进化 | 你的调教成果怎么不丢、怎么带走 |
-| 是否运行你的 Agent | ✅ 是（你在这个框架上构建 Agent） | ❌ 否（备份你现有的 Agent） |
-| 记忆模型 | Memory blocks（human/persona），自编辑 | SOUL/Skills/MCP/记忆，文件级打包 |
+| 定位 | Stateful agent 运行时 / 记忆状态机 | Agent 在线同步层 |
+| 回答的问题 | Agent 怎么记住、怎么自我进化 | 你的调教成果怎么不丢、怎么跟着你走 |
+| 是否运行你的 Agent | ✅ 是（你在这个框架上构建 Agent） | ❌ 否（同步你现有的 Agent） |
+| 记忆模型 | Memory blocks（human/persona），自编辑 | SOUL/Skills/MCP/记忆，在线同步 + 文件级打包 |
 | 版本化 | ✅ MemFS（git-backed） | ✅ 快照 + 版本号 + 回滚 |
 | 后台整理 | ✅ Dreaming（sleep-time compute） | ✅ 版本快照，无需后台 Agent |
 | 跨框架迁移 | ❌ 绑定 Letta 运行时 | ✅ 用你自己的 LLM 翻译（即将推出） |
@@ -113,15 +115,15 @@ moltable backup pull                       # 换机/换框架后还原
 
 ---
 
-## Round 3: 架构哲学——运行时 vs 仓库
+## Round 3: 架构哲学——运行时 vs 同步层
 
 这是两者最深的分野，值得单独说。
 
 **Letta 是一座「活的房子」。** 你的 Agent 住进去，房子自己会打扫（dreaming）、会重新装修（self-editing memory）、会记日记（MemFS）。但代价是——你得搬进去住。Agent 必须构建在 Letta 的运行时上，记忆也锁在这个框架里。
 
-**Moltable 是一间「仓库」。** 你不住在里面。你继续住在 Hermes、Claude、Cursor 这些「房子」里，仓库负责把你在每间房子里调教出来的灵魂资产收好、编号、随时能搬到下一间房子——甚至搬到另一种「房型」（框架）。
+**Moltable 是一条「同步层」。** 你不住在里面。你继续住在 Hermes、Claude、Cursor 这些「房子」里，同步层负责让你在每间房子里调教出来的灵魂资产跨设备、跨 Agent 在线同步，同时收好、编号，随时能搬到下一间房子——甚至搬到另一种「房型」（框架）。
 
-「运行时」和「仓库」不是竞争关系，是上下游关系。一个 Letta Agent 的 SOUL、Skills、MemFS 快照，本身就是一份可以交给 Moltable 备份的「灵魂资产」。**最优解不是二选一，而是让 Moltable 备份你的 Letta Agent。**
+「运行时」和「同步层」不是竞争关系，是上下游关系。一个 Letta Agent 的 SOUL、Skills、MemFS 快照，本身就是一份可以交给 Moltable 在线同步的「灵魂资产」。**最优解不是二选一，而是让 Moltable 同步你的 Letta Agent。**
 
 ---
 
@@ -129,9 +131,9 @@ moltable backup pull                       # 换机/换框架后还原
 
 **Letta**：框架开源（Apache 2.0），自托管免费；托管云 **Letta Cloud $20/月**，负责把 Agent 的记忆、身份、对话在多台设备间同步。
 
-**Moltable**：**Free $0**（3 个备份源 · 100MB · 始终免费）；**Pro $3/月**（10 个备份源 · 1GB · 引用同步 · 跨框架迁移即将推出）；**Ultra $5/月**（100 个备份源 · 10GB）。MIT 开源，自托管免费。
+**Moltable**：**Free $0**（3 个 Agent · 100MB · 始终免费）；**Pro $3/月**（10 个 Agent · 1GB · 引用同步 · 跨框架迁移即将推出）；**Ultra $5/月**（100 个 Agent · 10GB）。MIT 开源，自托管免费。
 
-一个是「给 Agent 租个脑子」的月费，一个是「给你的灵魂买份保险」的月费。用途不同，很难直接比价；但如果你的痛点是「调教成果会丢」，$3/月 和 $20/月 的分量其实差得很远。
+一个是「给 Agent 租个脑子」的月费，一个是「让灵魂永远在线」的月费。用途不同，很难直接比价；但如果你的痛点是「调教成果会丢、换设备全没」，$3/月 和 $20/月 的分量其实差得很远。
 
 ---
 
@@ -147,24 +149,24 @@ moltable backup pull                       # 换机/换框架后还原
 - 继续用 Hermes / OpenClaw / Claude / Codex / Cursor，不想换框架
 - 花了大量时间调教 Agent，担心换机器、换框架就全丢
 - 想把调教成果版本化、可回滚、可跨框架迁移
-- 只备份灵魂不备份流水账（30 倍压缩），数据 100% 归你、MIT 开源
+- 文件级备份只打包灵魂不打包流水账（30 倍压缩），数据 100% 归你、MIT 开源
 - 未来需要 DID+VC 给灵魂签出处
 
-**以及——两个都要：** 用 Letta 构建你的 Agent，用 Moltable 备份你的 Letta Agent 的灵魂资产。它们在同一份技术栈里各司其职。
+**以及——两个都要：** 用 Letta 构建你的 Agent，用 Moltable 同步你的 Letta Agent 的灵魂资产。它们在同一份技术栈里各司其职。
 
 ---
 
 ## 结论
 
-把 Letta 和 Moltable 当作竞品，是「记忆」这个标签制造的最大误会。Letta 是一台记忆状态机——它让 Agent 的记忆活起来、会自我进化；Moltable 是一间灵魂仓库——它让你的调教成果死不了、永远带得走。一个管 Agent 的「脑子」，一个管你的「遗产」。
+把 Letta 和 Moltable 当作竞品，是「记忆」这个标签制造的最大误会。Letta 是一台记忆状态机——它让 Agent 的记忆活起来、会自我进化；Moltable 是一条在线同步层——它让你的调教成果永远在线、永远带得走。一个管 Agent 的「脑子」，一个管你的「遗产」。
 
-竞品矩阵到此收齐：mem0 做记忆层、Zep 做知识图谱、Letta 做状态机、Moltable 做灵魂资产备份。**这场「Agent 记忆」的竞赛，真正的分野不是谁存得多，而是谁回答了「我的调教成果凭什么不丢」这个问题——在这个问题上，Moltable 是唯一的答案。**
+竞品矩阵到此收齐：mem0 做记忆层、Zep 做知识图谱、Letta 做状态机、Moltable 做在线同步层。**这场「Agent 记忆」的竞赛，真正的分野不是谁存得多，而是谁回答了「我的调教成果凭什么不丢、凭什么跟着我走」这个问题——在这个问题上，Moltable 是唯一的答案。**
 
 ---
 
-**准备好给你的 Agent 上一份「丢不了」的保险了吗？**
+**准备好让你的 Agent 永远在线、永远顺手了吗？**
 
-- [免费注册 Moltable](https://moltable.ai/register) — Free 版 3 个备份源 · 100MB，始终免费，无需信用卡。
+- [免费注册 Moltable](https://moltable.ai/register) — Free 版 3 个 Agent · 100MB，始终免费，无需信用卡。
 - [查看源码](https://github.com/jovon-hot/moltable) — MIT 开源，可自托管，北京造。
 - [看我们其他对比](https://www.moltable.ai/blog) — Moltable vs mem0、Moltable vs Zep，以及 2026 记忆全景盘点。
 

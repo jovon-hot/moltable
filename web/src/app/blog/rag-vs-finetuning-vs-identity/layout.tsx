@@ -2,11 +2,11 @@ import type { Metadata } from 'next'
 import BlogLayout from '@/components/BlogLayout'
 
 export const metadata: Metadata = {
-  title: 'RAG vs Fine-Tuning vs 灵魂备份：AI 个性化的不可能三角与破局之道',
-  description: 'RAG 喂文档，Fine-Tuning 改模型，灵魂备份保底——三种 AI 个性化方案深度对比。2026 年正确的技术选型是什么？',
+  title: 'RAG vs Fine-Tuning vs 在线同步：AI 个性化的不可能三角与破局之道',
+  description: 'RAG 喂文档，Fine-Tuning 改模型，在线同步兜底——三种 AI 个性化方案深度对比。2026 年正确的技术选型是什么？',
   alternates: { canonical: 'https://www.moltable.ai/blog/rag-vs-finetuning-vs-identity' },
   openGraph: {
-    title: 'RAG vs Fine-Tuning vs 灵魂备份 — AI 个性化不可能三角',
+    title: 'RAG vs Fine-Tuning vs 在线同步 — AI 个性化不可能三角',
     description: '为什么 AI 还是不记得你？三种方案的架构对比、成本分析和最佳实践组合。',
     url: 'https://www.moltable.ai/blog/rag-vs-finetuning-vs-identity',
     type: 'article',

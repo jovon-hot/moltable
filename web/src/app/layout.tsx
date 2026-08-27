@@ -12,20 +12,20 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.moltable.ai'),
   title: {
-    default: 'Moltable.ai — Switch Agents, Keep Your Soul',
+    default: 'Moltable.ai — Your AI, Always in Sync',
     template: '%s | Moltable.ai',
   },
   description:
-    'Back up, version, and migrate your tuned AI agents across frameworks. Pack your SOUL, Skills, and MCP configs — never lose your tuning when you switch machines or frameworks.',
+    'One account that syncs your tuned AI identity, memories, personas, and projects across devices and agents — with file-level backup and cross-framework migration as a safety net. Your AI, always in sync.',
   keywords: [
-    'AI agent backup',
-    'agent soul',
-    'soul backup',
+    'AI agent sync',
+    'online agent memory',
     'cross-framework migration',
     'AI agent versioning',
     'MCP tools',
     'agent environment',
-    'AI tuning backup',
+    'auto provision',
+    'agent identity sync',
   ],
   robots: {
     index: true,
@@ -39,9 +39,9 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: 'Moltable — Switch Agents, Keep Your Soul',
+    title: 'Moltable — Your AI, Always in Sync',
     description:
-      'Back up, version, and migrate your tuned AI agents across frameworks. Hermes · OpenClaw · Claude · Codex.',
+      'Sync your tuned AI across devices and agents — identity, memory, personas, projects. Hermes · OpenClaw · Claude · Codex.',
     url: 'https://www.moltable.ai',
     siteName: 'Moltable.ai',
     locale: 'en_US',
@@ -51,15 +51,15 @@ export const metadata: Metadata = {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Moltable — Switch Agents, Keep Your Soul',
+        alt: 'Moltable — Your AI, Always in Sync',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Moltable — Switch Agents, Keep Your Soul',
+    title: 'Moltable — Your AI, Always in Sync',
     description:
-      'Back up, version, and migrate your tuned AI agents across frameworks.',
+      'Sync your tuned AI identity, memory, personas, and projects across devices and agents.',
     images: ['/og-image.png'],
   },
 }
@@ -74,7 +74,7 @@ const jsonLd = {
       logo: 'https://www.moltable.ai/logo-icon.svg',
       sameAs: ['https://github.com/jovon-hot/moltable'],
       description:
-        'Agent soul asset repository — back up, version, and migrate your tuned AI agents across frameworks.',
+        'Agent online sync layer — sync, version, and migrate your tuned AI agents across frameworks.',
     },
     {
       '@type': 'SoftwareApplication',
@@ -87,7 +87,7 @@ const jsonLd = {
         priceCurrency: 'USD',
       },
       description:
-        'Back up, version, and migrate your tuned AI agents (SOUL, Skills, MCP) across Hermes, OpenClaw, Claude, Codex and MCP-compatible agents.',
+        'Sync, version, and migrate your tuned AI agents (identity, memory, personas, projects) across Hermes, OpenClaw, Claude, Codex and MCP-compatible agents.',
       url: 'https://www.moltable.ai',
     },
   ],

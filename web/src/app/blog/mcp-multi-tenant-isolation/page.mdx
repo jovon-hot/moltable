@@ -287,12 +287,12 @@ except PermissionError:
 - **多租户记忆隔离的核心不是「存储怎么分桶」，而是「身份从哪来」**：`tenant_id` 必须来自服务端认证层，永不信客户端。
 - **三层都要隔离**：文件层散列目录、数据库层 RLS、向量层 namespace，缺一层就是一个洞；RLS 是最后的兜底。
 - **隔离要能证明**：用「租户 B 读不到租户 A」的断言测试，而不是靠肉眼「看起来没串」。
-- 这套模式和 [自托管部署指南](/blog/moltable-self-host-deployment) 里的「API 层强制隔离」一脉相承：**Moltable 的备份源按实例隔离——Hermes / OpenClaw / Claude / Codex 每实例一个源，`moltable add-ref` 引用的外部知识库独立成源；`push` / `pull` / 回滚永远在源边界内进行**——多租户场景下，这条边界必须由后端强制，客户端自觉只是体验优化，不是安全手段。
+- 这套模式和 [自托管部署指南](/blog/moltable-self-host-deployment) 里的「API 层强制隔离」一脉相承：**Moltable 的同步按实例隔离——Hermes / OpenClaw / Claude / Codex 每实例一个同步单位，`moltable add-ref` 引用的外部知识库独立成源；文件级备份的 `push` / `pull` / 回滚永远在源边界内进行**——多租户场景下，这条边界必须由后端强制，客户端自觉只是体验优化，不是安全手段。
 
 想自己跑通？从 [自托管部署指南](/blog/moltable-self-host-deployment) 起步，把本文的 `storage.py` / `db.py` / `vector.py` 加进去，配上 `PINECONE_API_KEY` 即可。
 
 → [GitHub: jovon-hot/moltable](https://github.com/jovon-hot/moltable)
-→ [Moltable — 换 Agent，不换灵魂: moltable.ai](https://www.moltable.ai)
+→ [Moltable — 你的 AI 永远顺手: moltable.ai](https://www.moltable.ai)
 
 ---
 

@@ -1,7 +1,7 @@
 export const meta = {
   title: "Vector Search Isn't Memory: How Identity Graphs Fix AI Agents",
   date: '2026-08-06',
-  description: 'Vector DBs store facts; identity graphs store context. That\'s why vector search alone can\'t give AI agents persistent identity — and why the identity assets you tune deserve a versioned backup.',
+  description: 'Vector DBs store facts; identity graphs store context. That\'s why vector search alone can\'t give AI agents persistent identity — and why the identity assets you tune deserve an online sync layer.',
   tags: ['identity graph', 'vector search', 'AI agent memory', 'persistent identity', 'RAG', 'architecture'],
   slug: 'identity-graph-vs-vector-search',
 }
@@ -172,7 +172,7 @@ We have not yet published a controlled benchmark measuring context relevance bet
 
 Here's the part the memory-architecture debates usually skip: everything above — the 10,000 memories, the scoping rules, the Persona routing, the temporal filters — is the product of months of tuning, and it all lives inside one running system. The day you switch frameworks, get a new machine, or wipe a broken config, it's gone.
 
-That's why Moltable approaches this from a different direction. Moltable doesn't run a memory layer or a state machine — it's a **soul asset version repository** for your agents. One command packages the assets you've actually tuned — SOUL.md, AGENTS.md, USER.md, config.yaml (MCP configuration, secrets masked), memories/, skills/ — into a versioned, deduplicated backup. Conversation logs (state.db/WAL/FTS) and secrets (.env/*.key) are excluded automatically.
+That's why Moltable approaches this from a different direction. Moltable doesn't run a memory layer or a state machine — it's the **online sync layer** for your agents. One account keeps the assets you've actually tuned — SOUL.md, AGENTS.md, USER.md, config.yaml (MCP configuration, secrets masked), memories/, skills/ — in sync across devices and agents; MCP is the sync interface (search_memory / save_memory / auto_provision / list_personas), and `auto_provision` restores your context on a new machine with one call. File-level packaging into a versioned, deduplicated backup acts as the safety net. Conversation logs (state.db/WAL/FTS) and secrets (.env/*.key) are excluded automatically.
 
 ```bash
 curl -sL https://moltable.ai/install.sh | bash
@@ -181,26 +181,26 @@ moltable backup push   # package & upload
 moltable backup pull   # restore on any machine
 ```
 
-Every backup is a bundle + manifest over content-addressed storage, so identical content is stored once (sha256 dedup) and every source gets its own version history — snapshot, version number, rollback. Point `moltable add-ref <name> <path>` at an external knowledge base to back it up alongside your soul.
+Every file-level backup is a bundle + manifest over content-addressed storage, so identical content is stored once (sha256 dedup) and every agent gets its own version history — snapshot, version number, rollback. Point `moltable add-ref <name> <path>` at an external knowledge base to include it in the sync alongside your identity assets.
 
-Whatever context architecture you settle on — flat vectors, an identity graph, or a hybrid — the assets that make it *yours* deserve the same treatment as your source code: versioned, restorable, portable. That's the "switch agents, keep your soul" guarantee.
+Whatever context architecture you settle on — flat vectors, an identity graph, or a hybrid — the assets that make it *yours* deserve the same treatment as your source code: versioned, restorable, portable — and, above all, in sync across every device and agent you run. That's the "Your AI, always in sync" guarantee.
 
 ---
 
 ## Why Now: Three Converging Trends
 
-1. **MCP Protocol Maturation** — A shared protocol means your tool configs are portable assets — and portable assets need a backup home.
-2. **Multi-Agent Workflows** — Flat memory systems break down at N>1 agents; per-instance backup sources (one per framework install) keep each agent's tuning independently recoverable.
-3. **Context Window Economics** — Larger windows make filtering *more* important, not less — and your carefully tuned filters are exactly what a backup preserves.
+1. **MCP Protocol Maturation** — A shared protocol means your tool configs are portable assets — and portable assets need a sync home.
+2. **Multi-Agent Workflows** — Flat memory systems break down at N>1 agents; per-instance agents (one per framework install) keep each agent's tuning independently synced and recoverable.
+3. **Context Window Economics** — Larger windows make filtering *more* important, not less — and your carefully tuned filters are exactly what sync preserves.
 
 ---
 
 ## Learn More
 
-- 📖 [Moltable Backup Documentation](https://moltable.ai/docs)
+- 📖 [Moltable Sync Documentation](https://moltable.ai/docs)
 - 🔬 [Persistent Identity in AI Agents (arXiv 2604.09588)](https://arxiv.org/html/2604.09588)
 - ⭐ [Moltable on GitHub](https://github.com/jovon-hot/moltable) — MIT licensed
-- 🚀 [Start Free — 3 backup sources / 100MB](https://moltable.ai/register)
+- 🚀 [Start Free — 3 agents / 100MB](https://moltable.ai/register)
 
 ---
 

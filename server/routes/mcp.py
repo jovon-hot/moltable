@@ -182,7 +182,7 @@ MCP_TOOLS = [
     },
     {
         "name": "auto_provision",
-        "description": "一键获取用户完整上下文。返回用户画像、行为规则、可用Persona、活跃项目、核心知识。AI Agent 连接后应优先调用此工具。",
+        "description": "一键同步用户完整上下文。返回用户画像、行为规则、可用Persona、活跃项目、核心知识。AI Agent 连接后应优先调用此工具。",
         "inputSchema": {
             "type": "object",
             "properties": {
@@ -1128,7 +1128,7 @@ async def mcp_discovery(request: Request):
         "server": {
             "name": "moltable",
             "version": "0.1.0",
-            "description": "Moltable — Agent Soul Backup: back up and migrate your agent's soul assets (SOUL.md, skills, MCP config, memories)",
+            "description": "Moltable — Agent Sync: sync and migrate your agent's identity, memory, personas and soul assets (SOUL.md, skills, MCP config, memories)",
         },
         "capabilities": {
             "tools": {

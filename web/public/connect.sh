@@ -13,7 +13,7 @@ AUTO_ADD_SKILL="${AUTO_ADD_SKILL:-true}"
 echo ""
 echo "  █▀▄▀█ █▀█ █   ▀█▀ ▄▀█ █▄▄ █   █▀▀"
 echo "  █ ▀ █ █▄█ █▄▄  █  █▀█ █▄█ █▄▄ ██▄"
-echo "  Moltable.ai — Switch Agents, Keep Your Soul"
+echo "  Moltable.ai — Your AI, Always in Sync"
 echo "  ─────────────────────────────────"
 echo ""
 
