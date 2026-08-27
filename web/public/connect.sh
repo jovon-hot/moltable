@@ -4,6 +4,9 @@
 
 set -e
 
+# 支持位置参数传入 API Key：curl -sL https://moltable.ai/connect.sh | bash -s -- <KEY>
+MOLTABLE_KEY="${1:-$MOLTABLE_KEY}"
+
 MOLTABLE_API="${MOLTABLE_API:-https://api.moltable.ai}"
 AUTO_ADD_SKILL="${AUTO_ADD_SKILL:-true}"
 

@@ -224,12 +224,12 @@ Content-Type: application/json`
               <Sparkles size={22} style={{ color: '#4338CA', marginTop: 2 }} />
               <div>
                 <h2 className="text-lg mb-1" style={{ fontWeight: 600, color: '#ffffff' }}>
-                  {lang === 'zh' ? '🎉 注册成功！请验证你的邮箱' : '🎉 Registered! Please Verify Your Email'}
+                  {lang === 'zh' ? '🎉 注册成功！你的 API Key 已生成' : '🎉 Registered! Your API Key Is Ready'}
                 </h2>
                 <p className="text-sm mb-0" style={{ color: '#888888', lineHeight: 1.6 }}>
                   {lang === 'zh'
-                    ? '我们已向你的邮箱发送验证链接，请点击确认。下方是你的专属 API Key，可立即开始备份你的 Agent 灵魂。'
-                    : 'We sent a verification link to your email — click it to confirm. Your API key is below, ready to start backing up your Agent soul.'}
+                    ? '下方是你的专属 API Key，复制即可开始备份你的 Agent 灵魂资产。'
+                    : 'Your dedicated API key is below — copy it to start backing up your Agent soul assets.'}
                 </p>
               </div>
             </div>
@@ -240,8 +240,8 @@ Content-Type: application/json`
         </h1>
         <p className="text-base mb-12 max-w-xl" style={{ color: '#888888', lineHeight: 1.7 }}>
           {lang === 'zh'
-            ? '你的 AI 助手会通过 MCP 协议自动获取你的身份、偏好和记忆。不必每换个 AI 就重新介绍自己。'
-            : 'Your AI assistants get your identity, preferences, and memories via MCP. Stop re-introducing yourself to every new AI.'
+            ? '备份你的 Agent 灵魂资产，通过 MCP 一键接入任意 AI。SOUL、技能、记忆、偏好——换 AI 不丢、不重来。'
+            : 'Back up your Agent soul assets and connect any AI via MCP. Your SOUL, skills, and memories carry over — no more re-introducing yourself.'
           }
         </p>
 
@@ -368,11 +368,11 @@ Content-Type: application/json`
           <div className="relative group">
             <pre className="p-4 rounded-lg text-sm font-mono overflow-x-auto" style={{ background: '#0D0D14', color: '#4338CA', lineHeight: 1.6 }}>
               {apiKey
-                ? `curl -sL moltable.ai/connect.sh | bash -s -- ${apiKey}`
-                : 'curl -sL moltable.ai/connect.sh | bash -s -- <你的API-KEY>'}
+                ? `curl -sL https://moltable.ai/connect.sh | bash -s -- ${apiKey}`
+                : 'curl -sL https://moltable.ai/connect.sh | bash -s -- <你的API-KEY>'}
             </pre>
             <button
-              onClick={() => handleCopy(`curl -sL moltable.ai/connect.sh | bash -s -- ${apiKey || '<你的API-KEY>'}`, 'oneline')}
+              onClick={() => handleCopy(`curl -sL https://moltable.ai/connect.sh | bash -s -- ${apiKey || '<你的API-KEY>'}`, 'oneline')}
               className="absolute top-3 right-3 p-1.5 rounded-md transition-all"
               style={{ background: 'rgba(255,255,255,0.06)', color: copied === 'oneline' ? '#4338CA' : '#888888' }}
             >
