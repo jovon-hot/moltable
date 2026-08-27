@@ -45,7 +45,7 @@ export async function apiFetch<T = any>(
   return res.json()
 }
 
-export async function createCheckout(plan: 'pro' | 'team' = 'pro', period: 'monthly' | 'quarterly' | 'yearly' = 'monthly'): Promise<{url: string}> {
+export async function createCheckout(plan: 'pro' | 'ultra' = 'pro', period: 'monthly' = 'monthly'): Promise<{url: string}> {
   const token = await getToken()
   if (!token) throw new Error('Login required to subscribe')
 
@@ -95,9 +95,9 @@ export interface PlansResponse {
   mode: 'paid' | 'unavailable'
   currency: string | null
   message: string | null
-  free: { name: string; price_monthly: number; price_yearly: number; features: string[]; limits: Record<string, number> }
-  pro: { name: string; price_monthly: number; price_quarterly?: number; price_yearly: number; badge?: string; features: string[]; limits: Record<string, number>; note?: string | null }
-  team: { name: string; price_monthly: number; price_quarterly?: number; price_yearly: number; features: string[]; limits: Record<string, number>; note?: string | null }
+  free: { name: string; price_monthly: number; features: string[]; limits: Record<string, number> }
+  pro: { name: string; price_monthly: number; badge?: string; features: string[]; limits: Record<string, number>; note?: string | null }
+  ultra: { name: string; price_monthly: number; features: string[]; limits: Record<string, number>; note?: string | null }
 }
 
 export async function getPlans(): Promise<PlansResponse> {

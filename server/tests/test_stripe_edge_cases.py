@@ -400,14 +400,15 @@ class TestCheckoutEdge:
             resp = client.post("/api/billing/checkout", json={"plan": "pro", "period": "weekly"})
         assert resp.status_code == 422
 
-    def test_checkout_team_plan_ok(self, client):
-        """team 计划也允许 checkout。"""
+    def test_checkout_ultra_plan_ok(self, client):
+        """ultra 计划也允许 checkout。"""
         mock_stripe = MagicMock()
-        mock_stripe.checkout.Session.create.return_value = MagicMock(url="https://checkout.stripe.com/team")
-        with patch("routes.billing.get_stripe", return_value=mock_stripe):
-            resp = client.post("/api/billing/checkout", json={"plan": "team", "period": "yearly"})
+        mock_stripe.checkout.Session.create.return_value = MagicMock(url="https://checkout.stripe.com/ultra")
+        with patch("routes.billing.get_stripe", return_value=mock_stripe), \
+             patch("routes.billing.PRICE_IDS", {("ultra", "monthly"): "price_ultra_m"}):
+            resp = client.post("/api/billing/checkout", json={"plan": "ultra", "period": "monthly"})
         assert resp.status_code == 200
-        assert resp.json()["url"] == "https://checkout.stripe.com/team"
+        assert resp.json()["url"] == "https://checkout.stripe.com/ultra"
 
     def test_checkout_price_not_found_400(self, client):
         """PRICE_IDS 中找不到 (plan, period) 组合 → 400 Invalid plan or period。"""
@@ -487,21 +488,21 @@ class TestSubscriptionGuard:
         assert result == "free"
         users.update.assert_not_called()
 
-    def test_subscription_protects_team_plan_too(self):
-        """订阅保护同样适用于 team 计划。"""
+    def test_subscription_protects_ultra_plan_too(self):
+        """订阅保护同样适用于 ultra 计划。"""
         from services import quota
 
         past = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
         users = MagicMock()
         users.select.return_value = _make_mock_chain(
-            [{"plan": "team", "expires_at": past, "stripe_subscription_id": "sub_team"}]
+            [{"plan": "ultra", "expires_at": past, "stripe_subscription_id": "sub_ultra"}]
         )
         mock_supabase = _make_supabase(users)
 
         with patch("app_state.supabase", mock_supabase):
             result = quota.check_trial_expiry("user-1")
 
-        assert result == "team"
+        assert result == "ultra"
         users.update.assert_not_called()
 
 

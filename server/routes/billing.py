@@ -21,11 +21,7 @@ router = APIRouter(prefix="/api/billing", tags=["billing"])
 # ── Stripe Price ID 映射（可用环境变量覆盖）────────────────────
 PRICE_IDS = {
     ("pro", "monthly"): os.getenv("STRIPE_PRICE_PRO_MONTHLY", "price_1U4YZjLkDZlUqAEdFsjo33iT"),
-    ("pro", "quarterly"): os.getenv("STRIPE_PRICE_PRO_QUARTERLY", "price_1U8r3iLkDZlUqAEdEzNv4fF9"),
-    ("pro", "yearly"): os.getenv("STRIPE_PRICE_PRO_YEARLY", "price_1U4YZkLkDZlUqAEdGqojLR3r"),
-    ("team", "monthly"): os.getenv("STRIPE_PRICE_TEAM_MONTHLY", "price_1U4YZnLkDZlUqAEdEntKfvAC"),
-    ("team", "quarterly"): os.getenv("STRIPE_PRICE_TEAM_QUARTERLY", "price_1U8r3jLkDZlUqAEdhq1b6MKh"),
-    ("team", "yearly"): os.getenv("STRIPE_PRICE_TEAM_YEARLY", "price_1U4YZpLkDZlUqAEd7GvNU3kr"),
+    ("ultra", "monthly"): os.getenv("STRIPE_PRICE_ULTRA_MONTHLY", ""),
 }
 
 
@@ -86,7 +82,7 @@ async def get_subscription(request: Request, user_id: str = Depends(get_user)):
             plan = resp.data.get("plan", "free")
             return {
                 "plan": plan,
-                "plan_name": "Pro" if plan == "pro" else "Free",
+                "plan_name": {"free": "Free", "pro": "Pro", "ultra": "Ultra"}.get(plan, "Free"),
                 "status": "active",
             }
     except Exception:
@@ -109,7 +105,7 @@ def get_plans(request: Request):
     pricing = get_pricing()
     free_plan = build_plan("free")
     pro_plan = build_plan("pro")
-    team_plan = build_plan("team")
+    ultra_plan = build_plan("ultra")
     return {
         "mode": "paid" if pricing else "unavailable",
         "currency": "usd" if pricing else None,
@@ -117,28 +113,23 @@ def get_plans(request: Request):
         "free": {
             "name": "Free",
             "price_monthly": 0,
-            "price_yearly": 0,
             "features": free_plan["features"],
             "limits": free_plan["limits"],
         },
         "pro": {
             "name": "Pro",
             "price_monthly": pricing["pro_monthly"]["amount"] / 100 if pricing else 0,
-            "price_quarterly": pricing["pro_quarterly"]["amount"] / 100 if pricing and pricing.get("pro_quarterly") else 0,
-            "price_yearly": pricing["pro_yearly"]["amount"] / 100 if pricing else 0,
             "badge": None,
             "features": pro_plan["features"],
             "limits": pro_plan["limits"],
             "note": None if pricing else "Stripe 接入后即可按 USD 订阅。",
         },
-        "team": {
-            "name": "Team",
-            "price_monthly": pricing["team_monthly"]["amount"] / 100 if pricing else 0,
-            "price_quarterly": pricing["team_quarterly"]["amount"] / 100 if pricing and pricing.get("team_quarterly") else 0,
-            "price_yearly": pricing["team_yearly"]["amount"] / 100 if pricing else 0,
-            "features": team_plan["features"],
-            "limits": team_plan["limits"],
-            "note": "联系 hi@moltable.ai 开通团队订阅",
+        "ultra": {
+            "name": "Ultra",
+            "price_monthly": pricing["ultra_monthly"]["amount"] / 100 if pricing and pricing.get("ultra_monthly") else 0,
+            "features": ultra_plan["features"],
+            "limits": ultra_plan["limits"],
+            "note": None if pricing else "Stripe 接入后即可按 USD 订阅。",
         },
     }
 
@@ -148,8 +139,8 @@ def get_plans(request: Request):
 # ═══════════════════════════════════════════════════
 
 class CheckoutRequest(BaseModel):
-    plan: str = Field(default="pro", pattern=r"^(pro|team)$")
-    period: str = Field(default="monthly", pattern=r"^(monthly|quarterly|yearly)$")
+    plan: str = Field(default="pro", pattern=r"^(pro|ultra)$")
+    period: str = Field(default="monthly", pattern=r"^(monthly)$")
 
 
 @router.post("/checkout")

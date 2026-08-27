@@ -37,7 +37,7 @@ _DEFAULT_PLAN_LIMITS = {
         "agents": 5,
         "api_calls_per_day": 500,
     },
-    "team": {
+    "ultra": {
         "identities": 10,
         "personas": 999_999,
         "memories": 50_000,
@@ -70,7 +70,7 @@ PLAN_LIMITS = _load_plan_limits()
 PLAN_NAMES = {
     "free": "免费版",
     "pro": "Pro",
-    "team": "Team",
+    "ultra": "Ultra",
 }
 
 PLAN_FEATURES = {
@@ -89,7 +89,7 @@ PLAN_FEATURES = {
         "浏览器插件",
         "优先支持",
     ],
-    "team": [
+    "ultra": [
         "10 个 AI 身份",
         "无限 Persona",
         "50,000 条记忆",
@@ -134,7 +134,7 @@ def check_trial_expiry(user_id: str) -> Optional[str]:
         return None
 
     plan = row.get("plan", "free")
-    if plan not in ("pro", "team"):
+    if plan not in ("pro", "ultra"):
         return plan
 
     # 已付费订阅：不受试用期限制，直接返回当前 plan

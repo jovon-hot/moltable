@@ -25,9 +25,7 @@ class TestNoAuthEndpoints:
         client = TestClient(app)
         fake_pricing = {
             "pro_monthly": {"amount": 300, "currency": "usd", "price_id": "price_x"},
-            "pro_yearly": {"amount": 2000, "currency": "usd", "price_id": "price_y"},
-            "team_monthly": {"amount": 600, "currency": "usd", "price_id": "price_z"},
-            "team_yearly": {"amount": 5500, "currency": "usd", "price_id": "price_w"},
+            "ultra_monthly": {"amount": 500, "currency": "usd", "price_id": "price_z"},
         }
         with patch("routes.billing.get_pricing", return_value=fake_pricing):
             resp = client.get("/api/billing/plans")
@@ -36,8 +34,7 @@ class TestNoAuthEndpoints:
         assert data["mode"] == "paid"
         assert data["currency"] == "usd"
         assert data["pro"]["price_monthly"] == 3.0
-        assert data["pro"]["price_yearly"] == 20.0
-        assert data["team"]["price_monthly"] == 6.0
+        assert data["ultra"]["price_monthly"] == 5.0
 
     def test_health(self):
         """GET /health returns ok."""
@@ -64,4 +61,4 @@ class TestNoAuthEndpoints:
         data = resp.json()
         assert "free" in data
         assert "pro" in data
-        assert "team" in data
+        assert "ultra" in data

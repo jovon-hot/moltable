@@ -26,7 +26,7 @@ export default function LandingPage() {
   const pricingPlans = [
     { name: p.free.name, price: p.free.price, period: '', desc: p.free.desc, cta: p.free.cta, href: '/register', features: pricingFeatures.free || [] },
     { name: p.pro.name, price: p.pro.priceMonthly, period: '', desc: p.pro.desc, cta: p.pro.cta, badge: p.pro.badge, accent: true, features: pricingFeatures.pro || [] },
-    { name: p.team.name, price: p.team.price, period: '', desc: p.team.descShort || p.team.desc, cta: p.team.cta, href: 'mailto:hi@moltable.ai', features: pricingFeatures.team || [] },
+    { name: p.ultra.name, price: p.ultra.priceMonthly, period: '', desc: p.ultra.descShort || p.ultra.desc, cta: p.ultra.cta, href: '/register?plan=pro', features: pricingFeatures.ultra || [] },
   ]
 
   return (

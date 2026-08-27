@@ -37,8 +37,8 @@ export default function TermsPage() {
             {lang === 'zh' ? '3. 使用限制' : '3. Usage Limits'}
           </h2>
           <p>{lang === 'zh'
-            ? '各套餐有明确的使用配额（Free: 10 个备份源 + 2GB 存储，Pro: 100 个备份源 + 50GB 存储，Team: 无限）。超出配额可能导致服务降级。禁止滥用 API、反向工程或非法用途。'
-            : 'Each plan has defined usage quotas (Free: 10 backup sources + 2GB storage, Pro: 100 sources + 50GB, Team: unlimited). Exceeding quotas may result in service degradation. API abuse, reverse engineering, or illegal use is prohibited.'
+            ? '各套餐有明确的使用配额（Free: 3 个备份源 + 100MB 存储，Pro: 10 个备份源 + 1GB 存储，Ultra: 100 个备份源 + 10GB 存储）。超出配额可能导致服务降级。禁止滥用 API、反向工程或非法用途。'
+            : 'Each plan has defined usage quotas (Free: 3 backup sources + 100MB storage, Pro: 10 sources + 1GB, Ultra: 100 sources + 10GB). Exceeding quotas may result in service degradation. API abuse, reverse engineering, or illegal use is prohibited.'
           }</p>
         </section>
 
@@ -47,8 +47,8 @@ export default function TermsPage() {
             {lang === 'zh' ? '4. 退款政策' : '4. Refund Policy'}
           </h2>
           <p>{lang === 'zh'
-            ? 'Pro 和 Team 套餐支持 7 天无理由退款。退款申请请发送至 hi@moltable.ai。'
-            : 'Pro and Team plans come with a 7-day no-questions-asked refund policy. Send refund requests to hi@moltable.ai.'
+            ? 'Pro 和 Ultra 套餐支持 7 天无理由退款。退款申请请发送至 hi@moltable.ai。'
+            : 'Pro and Ultra plans come with a 7-day no-questions-asked refund policy. Send refund requests to hi@moltable.ai.'
           }</p>
         </section>
 
