@@ -1,5 +1,5 @@
 export const meta = {
-  title: 'MCP Multi-Tenant Memory Isolation: Keep Every Tenant\'s Memory in Its Own Lane',
+  title: "MCP Multi-Tenant Memory Isolation: Keep Every Tenant\'s Memory in Its Own Lane",
   date: '2026-08-18',
   description: 'Hands-on: build a multi-tenant MCP memory server that keeps each tenant\'s memory strictly isolated — file scoping, Postgres RLS, and vector namespace, with complete runnable Python code.',
   tags: ['MCP', '多租户', '隔离', '教程', '安全', 'Postgres', 'RLS'],
@@ -71,7 +71,7 @@ def resolve_tenant(api_key: str) -> str:
 | 层 | 存什么 | 隔离手段 | 一句话 |
 |----|--------|----------|--------|
 | 文件 | 项目约定、review 记录 | `tenant_id` 散列目录 | 每个租户一个物理目录 |
-| 数据库 | 记忆、Persona、关系 | Postgres RLS | 行级安全，数据库兜底 |
+| 数据库 | 记忆、Soul、关系 | Postgres RLS | 行级安全，数据库兜底 |
 | 向量 | 语义检索 embedding | namespace = tenant_id | 向量子空间硬隔离 |
 
 三层的关系和 [Pinecone 实战](/blog/pinecone-vector-retrieval) 里的分层一致：**文件层和向量层是「方便」，数据库层（RLS）是「兜底的事实源」**。哪怕上两层配置写错了，RLS 也能拦住最后的越权。
@@ -99,13 +99,13 @@ def tenant_dir(tenant_id: str) -> Path:
     return d
 
 
-def save_memory(tenant_id: str, key: str, value: dict) -> None:
+def write_memory(tenant_id: str, key: str, value: dict) -> None:
     (tenant_dir(tenant_id) / f"{key}.json").write_text(
         json.dumps(value, ensure_ascii=False, indent=2)
     )
 
 
-def load_memory(tenant_id: str, key: str) -> dict | None:
+def read_memory(tenant_id: str, key: str) -> dict | None:
     f = tenant_dir(tenant_id) / f"{key}.json"
     return json.loads(f.read_text()) if f.exists() else None
 ```
@@ -120,7 +120,7 @@ def load_memory(tenant_id: str, key: str) -> dict | None:
 CREATE TABLE memories (
     id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id   text NOT NULL,
-    persona_id  text,
+    soul_id     text,
     content     text NOT NULL,
     embedding   vector(384)
 );
@@ -151,7 +151,7 @@ def add_memory(db: Session, tenant_id: str, content: str, embedding: list[float]
     ), {"t": tenant_id, "c": content, "e": embedding})
     db.commit()
 
-def search_memory(db: Session, tenant_id: str, query_vec: list[float], top_k: int = 5):
+def search_vectors(db: Session, tenant_id: str, query_vec: list[float], top_k: int = 5):
     set_tenant(db, tenant_id)
     rows = db.execute(text(
         "SELECT content FROM memories "
@@ -199,8 +199,8 @@ import storage, db, vector
 
 # 演示用：api_key → tenant_id 映射。生产环境换成 JWT / IdP / 数据库。
 API_KEY_TO_TENANT = {
-    "sk-tenant-alpha": "tenant_alpha",
-    "sk-tenant-beta":  "tenant_beta",
+    "«redacted:sk-…»": "tenant_alpha",
+    "«redacted:sk-…»":  "tenant_beta",
 }
 
 mcp = FastMCP("Multi-Tenant Memory")
@@ -217,7 +217,7 @@ def resolve_tenant(api_key: str) -> str:
 def remember(api_key: str, key: str, content: str) -> str:
     """把一条记忆写入当前租户的私有空间。"""
     tenant_id = resolve_tenant(api_key)      # 身份来自认证层
-    storage.save_memory(tenant_id, key, {"content": content})
+    storage.write_memory(tenant_id, key, {"content": content})
     return f"✅ 已写入 tenant={tenant_id} 的私有记忆: {key}"
 
 
@@ -225,7 +225,7 @@ def remember(api_key: str, key: str, content: str) -> str:
 def recall(api_key: str, key: str) -> str:
     """读取当前租户的私有记忆。"""
     tenant_id = resolve_tenant(api_key)
-    mem = storage.load_memory(tenant_id, key)
+    mem = storage.read_memory(tenant_id, key)
     if mem is None:
         return "❌ 未找到该记忆（或不属于你的租户）"
     return mem["content"]
@@ -236,7 +236,7 @@ def semantic_search(api_key: str, query: str, db_session: Session) -> str:
     """语义检索当前租户的记忆（走 RLS + namespace 双重隔离）。"""
     tenant_id = resolve_tenant(api_key)
     vec = embed(query)                        # 用你的 embedding 模型
-    hits = db.search_memory(db_session, tenant_id, vec)
+    hits = db.search_vectors(db_session, tenant_id, vec)
     return "\n".join(f"• {h}" for h in hits)
 
 
@@ -254,14 +254,14 @@ if __name__ == "__main__":
 
 ```python
 # 租户 alpha 写入一条记忆
-storage.save_memory("tenant_alpha", "roadmap", {"content": "Q3 上线 A 产品的跨境支付"})
+storage.write_memory("tenant_alpha", "roadmap", {"content": "Q3 上线 A 产品的跨境支付"})
 
 # 租户 beta 尝试读取 alpha 的 key —— 应该拿到 None
-assert storage.load_memory("tenant_beta", "roadmap") is None
+assert storage.read_memory("tenant_beta", "roadmap") is None
 
 # beta 用 alpha 的 api_key 越权 —— 认证层直接拒绝
 try:
-    resolve_tenant("sk-tenant-alpha")   # beta 拿着 alpha 的 key 就是 alpha
+    resolve_tenant("«redacted:sk-…»")   # beta 拿着 alpha 的 key 就是 alpha
     # 真正的越权测试是「伪造 tenant_id」，而我们的 API 根本收不到这个参数
 except PermissionError:
     pass
@@ -287,12 +287,12 @@ except PermissionError:
 - **多租户记忆隔离的核心不是「存储怎么分桶」，而是「身份从哪来」**：`tenant_id` 必须来自服务端认证层，永不信客户端。
 - **三层都要隔离**：文件层散列目录、数据库层 RLS、向量层 namespace，缺一层就是一个洞；RLS 是最后的兜底。
 - **隔离要能证明**：用「租户 B 读不到租户 A」的断言测试，而不是靠肉眼「看起来没串」。
-- 这套模式和 [自托管部署指南](/blog/moltable-self-host-deployment) 里的「API 层强制隔离」一脉相承：**Moltable 用 Persona + Project 两层做数据分桶，Memory 检索永远被 project 边界约束**——多租户场景下，这条边界必须由后端强制，前端过滤只是体验优化，不是安全手段。
+- 这套模式和 [自托管部署指南](/blog/moltable-self-host-deployment) 里的「API 层强制隔离」一脉相承：**Moltable 的备份源按实例隔离——Hermes / OpenClaw / Claude / Codex 每实例一个源，`moltable add-ref` 引用的外部知识库独立成源；`push` / `pull` / 回滚永远在源边界内进行**——多租户场景下，这条边界必须由后端强制，客户端自觉只是体验优化，不是安全手段。
 
 想自己跑通？从 [自托管部署指南](/blog/moltable-self-host-deployment) 起步，把本文的 `storage.py` / `db.py` / `vector.py` 加进去，配上 `PINECONE_API_KEY` 即可。
 
 → [GitHub: jovon-hot/moltable](https://github.com/jovon-hot/moltable)
-→ [Moltable Identity Sync: moltable.ai](https://www.moltable.ai)
+→ [Moltable — 换 Agent，不换灵魂: moltable.ai](https://www.moltable.ai)
 
 ---
 

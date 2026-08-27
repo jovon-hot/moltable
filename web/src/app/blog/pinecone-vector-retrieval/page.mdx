@@ -1,7 +1,7 @@
 export const meta = {
   title: 'Pinecone Hands-On: Adding Managed Vector Search to Moltable Identity Layer',
   date: '2026-08-17',
-  description: 'Pinecone 实战：如何给 Moltable 的身份图谱加一层托管向量检索——384 维 embedding、namespace 租户隔离、metadata 过滤，与 pgvector 的混合分层，附完整可照抄代码。',
+  description: 'Pinecone 实战：如何给 Moltable 备份的记忆资产加一层托管向量检索——384 维 embedding、namespace 租户隔离、metadata 过滤，与 pgvector 的混合分层，附完整可照抄代码。',
   tags: ['Pinecone', '向量检索', '教程', '集成', 'RAG', 'AI Memory'],
   slug: 'pinecone-vector-retrieval',
 }
@@ -12,39 +12,38 @@ import ArticleLayout from '../_components/ArticleLayout'
 
 # Pinecone 实战：给 Moltable 加一层托管向量检索
 
-上一篇《[AI Agent Memory 全家桶](/blog/agent-memory-stack-comparison)》给了结论：**Pinecone 是「知识层」，Moltable 是「身份层」**——两者不冲突，反而该组合。这篇把「知识层」真正接进来，手把手给 Moltable 的 identity graph 加一层 Pinecone 托管向量检索，附可直接照抄的代码。
+上一篇《[AI Agent Memory 全家桶](/blog/agent-memory-stack-comparison)》给了结论：**检索层与备份层是两个正交问题**——Pinecone 解决「大规模语义检索」，Moltable 解决「把检索背后这些记忆资产版本化备份，换电脑/换框架不丢」。两者不冲突，反而该组合。这篇把「检索层」真正接进来，手把手给你的记忆资产加一层 Pinecone 托管向量检索，附可直接照抄的代码。
 
-先说清楚一件事：**加 Pinecone 不是为了「替换」Moltable 现有的向量存储，而是为了「分层」**。这决定了后面所有设计选择。
+先说清楚一件事：**加 Pinecone 不是为了「替换」现有的 pgvector 存储，而是为了「分层」**。这决定了后面所有设计选择。
 
 ## 一、先想清楚：为什么是「分层」而不是「替换」
 
-Moltable 现在的语义检索链路是：**本地 embedding（MiniLM-L6-v2，384 维）+ pgvector（HNSW 余弦）**。这套在单机、中小规模下完全够用，零外部依赖。但到一定规模会出现三类典型瓶颈：
+现在的语义检索链路是：**本地 embedding（MiniLM-L6-v2，384 维）+ pgvector（HNSW 余弦）**。这套在单机、中小规模下完全够用，零外部依赖。但到一定规模会出现三类典型瓶颈：
 
 | 瓶颈 | pgvector 自托管的表现 |
 |------|----------------------|
 | HNSW 重建 | 批量写入后索引重建会短暂锁表，写入放大 |
 | 并发检索 | 向量相似度在 PG 里是 CPU 密集操作，高并发下与业务查询抢资源 |
-| 多租户过滤 | 每个查询都要 `WHERE user_id = ... AND persona_id = ...`，索引过滤效率随租户数下降 |
+| 多租户过滤 | 每个查询都要 `WHERE user_id = ... AND soul_id = ...`，索引过滤效率随租户数下降 |
 
 Pinecone 把这三件事做成了免运维 SaaS：serverless 弹性扩容、低延迟、SLA、内置 metadata 过滤和 namespace 隔离。
 
-但 Pinecone 的边界也很诚实——它仍然是「facts not identity」：**它能飞快地告诉你「哪条记忆最像这个问题」，却回答不了「这条记忆属于谁、他此刻在哪个项目里」**。所以正确的姿势是：
+但 Pinecone 的边界也很诚实：**它能飞快地告诉你「哪条记忆最像这个问题」，却回答不了「这条记忆属于谁、此刻在哪个项目里」**——归属关系始终由主存储（Postgres）负责。所以正确的姿势是：
 
 ```
-PostgreSQL + pgvector      ← 身份图谱（personas / projects / relationships / decisions）
-        ▲ 这一层 Moltable 已经做好，别动
-────────────────────────────────────────────────
-Pinecone（托管向量云）      ← 知识检索（大规模语义相似度，facts 层）
-        ▲ 这一层是新加的，扛「海量 + 并发 + 免运维」
+PostgreSQL + pgvector      ← 主存储：记忆 / 项目 / 关系的事实源（归属关系在这里）
+Pinecone（托管向量云）      ← 检索层：大规模语义相似度，扛「海量 + 并发 + 免运维」
+Moltable（灵魂资产备份库）  ← 备份层：把 SOUL / Skills / config.yaml / memories/ 打包成
+                              版本化、去重的 bundle，换电脑/换框架一条 pull 还原
 ```
 
-**身份图谱留在 Postgres，语义检索下沉到 Pinecone。** 下面按这个架构动手。
+**事实源留在 Postgres，语义检索下沉到 Pinecone，整套调教成果交给 Moltable 备份。** 下面按这个架构动手。
 
 ## 二、四步接上 Pinecone
 
 ### Step 1：建 index（维度必须对齐 384）
 
-Moltable 的 embedding 服务输出 **384 维**（`all-MiniLM-L6-v2`，见 `server/services/embedding.py`）。Pinecone index 的维度必须和写入的向量维度一致，否则直接报错。用 cosine 度量，和 pgvector 的 `vector_cosine_ops` 保持一致：
+embedding 服务输出 **384 维**（`all-MiniLM-L6-v2`，见 `server/services/embedding.py`）。Pinecone index 的维度必须和写入的向量维度一致，否则直接报错。用 cosine 度量，和 pgvector 的 `vector_cosine_ops` 保持一致：
 
 ```python
 from pinecone import Pinecone, ServerlessSpec
@@ -63,7 +62,7 @@ pc.create_index(
 
 ### Step 2：写一个 PineconeAdapter，镜像 VectorStore 接口
 
-Moltable 的 `server/services/vector_store.py` 已经定义了一套清晰的接口：`insert / get / list / search / delete / stats`。我们写一个 `PineconeAdapter` 实现同样的方法签名，这样上层调用方几乎无感知地切换：
+`server/services/vector_store.py` 已经定义了一套清晰的接口：`insert / get / list / search / delete / stats`。我们写一个 `PineconeAdapter` 实现同样的方法签名，这样上层调用方几乎无感知地切换：
 
 ```python
 # server/services/pinecone_adapter.py
@@ -76,7 +75,7 @@ class PineconeAdapter:
         self.index = Pinecone(api_key=api_key).Index(index_name)
 
     def insert(self, user_id: str, content: str, embedding: list[float],
-               category: str = "fact", persona_id: str | None = None,
+               category: str = "fact", soul_id: str | None = None,
                memory_id: str | None = None, **meta) -> dict:
         mid = memory_id or f"{user_id}:{_short_uuid()}"
         vector = {
@@ -85,7 +84,7 @@ class PineconeAdapter:
             "metadata": {
                 "user_id": user_id,
                 "category": category,
-                "persona_id": persona_id or "",
+                "soul_id": soul_id or "",
                 "content": content[:2000],  # 只存前 2000 字符，正文回 PG 取
             },
         }
@@ -98,12 +97,12 @@ class PineconeAdapter:
     def search(self, user_id: str, query_embedding: list[float],
                top_k: int = 5, threshold: float = 0.5,
                category: str | None = None,
-               persona_id: str | None = None) -> list[dict]:
+               soul_id: str | None = None) -> list[dict]:
         filter_ = {"user_id": {"$eq": user_id}}
         if category:
             filter_["category"] = {"$eq": category}
-        if persona_id:
-            filter_["persona_id"] = {"$eq": persona_id}
+        if soul_id:
+            filter_["soul_id"] = {"$eq": soul_id}
 
         resp = self.index.query(
             vector=query_embedding,
@@ -121,7 +120,7 @@ class PineconeAdapter:
                 "content": m["metadata"].get("content", ""),
                 "similarity": round(m["score"], 4),
                 "category": m["metadata"].get("category"),
-                "persona_id": m["metadata"].get("persona_id"),
+                "soul_id": m["metadata"].get("soul_id"),
             })
         return results
 
@@ -137,21 +136,21 @@ class PineconeAdapter:
 
 1. **`namespace=user_id` 是硬隔离的第一道墙**。Pinecone 的 namespace 是物理隔离的向量子空间，query 时指定 namespace 就从根上杜绝了「查串租户」——比只靠 metadata filter 更稳。metadata 里再带一层 `user_id` 是双保险（防止 namespace 配置写错时静默串库）。
 
-2. **`content` 只存前 2000 字符作为回显**，正文始终回 Postgres 取。向量库的 metadata 不该存大字段，既费钱又拖慢检索。这也是「facts（Pinecone）↔ identity（PG）」分层在实现上的体现：Pinecone 只负责「哪条最像」，PG 负责「这条的完整内容 + 归属关系」。
+2. **`content` 只存前 2000 字符作为回显**，正文始终回 Postgres 取。向量库的 metadata 不该存大字段，既费钱又拖慢检索。这也是「检索（Pinecone）↔ 事实源（PG）」分层在实现上的体现：Pinecone 只负责「哪条最像」，PG 负责「这条的完整内容 + 归属关系」。
 
 ### Step 3：写入路径——memory 落库时同步 upsert
 
-在记忆写入的 service 层加一个钩子，PG 写入成功后异步同步到 Pinecone（`persona_id` / `category` 一并带过去，供检索时过滤）：
+在记忆写入的 service 层加一个钩子，PG 写入成功后异步同步到 Pinecone（`soul_id` / `category` 一并带过去，供检索时过滤）：
 
 ```python
 # 伪代码：在 memory 创建流程中追加
-async def create_memory(user_id, content, category, persona_id):
+async def create_memory(user_id, content, category, soul_id):
     embedding = embed(content)                       # 384 维，本地 MiniLM
-    memory = await pg_repo.insert(...)               # ① 身份层：写 PG（事实源）
+    memory = await pg_repo.insert(...)               # ① 事实源：写 PG（主存储）
     asyncio.create_task(
-        pinecone_adapter.insert(                     # ② 知识层：异步同步 Pinecone
+        pinecone_adapter.insert(                     # ② 检索层：异步同步 Pinecone
             user_id, content, embedding,
-            category=category, persona_id=persona_id,
+            category=category, soul_id=soul_id,
             memory_id=memory["id"],
         )
     )
@@ -162,50 +161,60 @@ async def create_memory(user_id, content, category, persona_id):
 
 ### Step 4：检索路径——带 namespace + filter 查询
 
-检索时从身份上下文里带上 `persona_id` / `category`，让 Pinecone 的 filter 帮你在语义相似的候选里，再做一层「这是谁的、什么类型的」硬过滤：
+检索时从当前 Soul 上下文里带上 `soul_id` / `category`，让 Pinecone 的 filter 帮你在语义相似的候选里，再做一层「这是谁的、什么类型的」硬过滤：
 
 ```python
-def recall(user_id, query, persona_id=None, category=None, top_k=5):
+def recall(user_id, query, soul_id=None, category=None, top_k=5):
     q_emb = embed(query)
     hits = pinecone_adapter.search(
         user_id, q_emb, top_k=top_k,
-        category=category, persona_id=persona_id,
+        category=category, soul_id=soul_id,
     )
-    # 回 PG 取完整正文 + 身份图谱关系（belongs_to persona / project）
+    # 回 PG 取完整正文 + 归属关系（belongs_to soul / project）
     return [enrich_from_pg(h["id"]) for h in hits]
 ```
 
-这一步的价值在于：**Pinecone 的语义召回 + Moltable 的身份过滤**，得到的不是「泛泛相关的知识片段」，而是「当前这个 persona、这个项目语境下，最相关的记忆」。
+这一步的价值在于：**Pinecone 的语义召回 + 主存储的归属过滤**，得到的不是「泛泛相关的知识片段」，而是「当前这个 Soul、这个项目语境下，最相关的记忆」。
 
-## 三、隔离：三层边界
+## 三、隔离：四层边界
 
 把前面的设计收拢成一个明确的分层模型：
 
 | 层 | 用什么 | 隔离手段 | 负责什么 |
 |----|--------|----------|----------|
-| 身份图谱 | Postgres | RLS（`server/schema.sql` 已启用） | 谁是谁、属于哪个 project、关系 |
-| 知识检索 | Pinecone | namespace + metadata filter | 大规模语义相似度 |
+| 主存储 | Postgres | RLS（`server/schema.sql` 已启用） | 谁的记忆、属于哪个 project、关系 |
+| 检索 | Pinecone | namespace + metadata filter | 大规模语义相似度 |
 | 嵌入 | 本地 MiniLM（384） | 模型一致 | 文本 → 向量 |
+| 备份 | Moltable | 每实例一个备份源 + CAS 去重 | 整套调教成果版本化，push/pull 还原 |
 
-三层各司其职，任何一层替换或故障，另外两层不受影响——这就是「分层」的意义。
+各层各司其职，任何一层替换或故障，其他层不受影响——这就是「分层」的意义。
 
 ## 四、什么时候该上 Pinecone（而不是继续 pgvector）
 
-不是所有 Moltable 部署都要接 Pinecone。给一个诚实的判断标准：
+不是所有部署都要接 Pinecone。给一个诚实的判断标准：
 
 - **向量 < 10 万、单机、低并发** → 继续用 pgvector，零成本零运维，别过度设计。
 - **向量 10 万 ~ 100 万、检索 QPS 上升** → 先优化 pgvector（HNSW 参数、分区、只存 embedding 不存正文）。
 - **向量 > 100 万、或要 SLA / 弹性扩容 / 免运维** → 上 Pinecone，按本文四步接。
 
-一句话：**Pinecone 是 pgvector 的「生产升级路径」，不是它的替代品**。在 Moltable 里，它接的是「知识检索」这一个环节，身份层永远在你自己手里。
+一句话：**Pinecone 是 pgvector 的「生产升级路径」，不是它的替代品**。它接的是「检索」这一个环节；记忆资产的所有权与备份永远在你自己手里——Moltable 负责把它们版本化存好，随时导出/删除，不用来训练。
 
 ## 总结
 
-- Pinecone 解决「知识 / facts」，Moltable 解决「身份 / identity」，两者是分层不是二选一。
-- 接 Pinecone 四个关键点：**维度对齐 384、namespace=user_id 硬隔离、metadata 带 persona/category 供过滤、PG 仍是唯一事实源**。
-- 身份图谱留在 Postgres（RLS 隔离），语义检索下沉 Pinecone，混合使用才是完整形态。
+- Pinecone 解决「检索 / facts」，Moltable 解决「灵魂资产备份」，两者是分层不是二选一。
+- 接 Pinecone 四个关键点：**维度对齐 384、namespace=user_id 硬隔离、metadata 带 soul/category 供过滤、PG 仍是唯一事实源**。
+- 事实源留在 Postgres（RLS 隔离），语义检索下沉 Pinecone；调教成果（SOUL / Skills / config.yaml / memories/）交给 Moltable 做版本化备份——**检索再快，丢了等于零**。
 - 规模没到之前别急着上托管云——pgvector 在中小规模下依然是最优解。
 
 想直接跑通？从 [自托管部署指南](/blog/moltable-self-host-deployment) 起步，把 `server/services/pinecone_adapter.py` 加进去，配上 `PINECONE_API_KEY` 即可。
+
+整套跑通后，给灵魂资产上份保险：
+
+```
+curl -sL https://moltable.ai/install.sh | bash
+moltable backup init    # 生成备份配置
+moltable backup push    # 打包上传（bundle + manifest + sha256 增量去重）
+moltable backup pull    # 换电脑/换框架时一键还原
+```
 
 </ArticleLayout>

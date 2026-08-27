@@ -1,8 +1,8 @@
 export const meta = {
   title: '企业级 AI Persona 管理：一个团队，十种人格',
   date: '2026-07-20',
-  description: '同一个 AI、同一个数据库，市场总监与财务总监应得到不同视角的答案。以 FOST 集团 16 站案例，讲解 Persona 体系在企业级部署中的核心价值。',
-  tags: ['Persona', '企业级', 'AI 身份层', '团队协作', 'AI 人格', '部署'],
+  description: '同一个 AI、同一个数据库，市场总监与财务总监应得到不同视角的答案。以 FOST 集团 16 站案例，讲解灵魂资产备份在企业级部署中的核心价值。',
+  tags: ['Persona', '企业级', '灵魂资产', '团队协作', 'AI 人格', '部署'],
   slug: 'ai-persona-enterprise',
 }
 
@@ -17,113 +17,84 @@ import Link from 'next/link'
 
 这不对。市场总监需要激进的增长分析，财务总监需要保守的风险评估，CTO 需要技术可行性分析。同一个 AI，面对同一个数据库，应该给出**不同视角**的答案。
 
-这就是 Persona——AI 人格系统——在企业级部署中的核心价值。
+于是每个角色都开始在自己的 Agent 里调教：CMO 打磨她的增长分析框架，CFO 沉淀他的风控清单，CTO 建立技术选型标准。**这些调教成果，就是企业最容易被忽视的数字资产**——它们散落在员工个人电脑、各个 Agent 框架里，一次换机、一次离职、一次框架迁移，就可能全部归零。
 
-## Persona 是什么
+## 角色的调教成果包含什么
 
-在 Moltable 的架构中，Persona 是一组预定义的 AI 行为配置，包含：
+在 Moltable 的视角里，一个角色的调教成果是一组灵魂资产，包含：
 
-- **System Prompt**：定义 AI 的"角色"和思维模式
-- **记忆过滤**：这个 Persona 能访问哪些记忆子集
-- **Traits**：性格特征——激进 vs 保守，创意 vs 严谨
-- **领域知识**：特定领域的术语、框架、方法论
+- **SOUL / 人格定义**：角色的思维模式和沟通风格
+- **Skills**：该角色沉淀的领域技能与工作流
+- **记忆**：项目背景、业务偏好、历史决策
+- **MCP 配置**：该角色依赖的工具连接（密钥脱敏）
 
-关键洞察：**Persona 不是独立账户**。同一个用户可以有多个 Persona，共享同一个身份池，但每个 Persona 以不同的视角理解这个身份。
+关键洞察：**每个角色的调教成果是独立的备份源**。同一个团队可以有十个角色，每个角色在自己的 Agent 实例里独立积累、独立版本化——CFO 的保守偏好不会覆盖 CMO 的激进框架。
 
-## 企业团队 Persona 矩阵
+## 企业团队角色矩阵
 
-以 FOST 集团的真实部署为例，一个 16 站汽车检测企业的 AI Persona 矩阵：
+以 FOST 集团的真实部署为例，一个 16 站汽车检测企业的 AI 角色矩阵：
 
-角色
-Persona 名称
-性格特征
-核心能力
+| 角色 | Persona 名称 | 性格特征 | 核心能力 |
+|---|---|---|---|
+| CEO | 战略决策官 | 全局视角、数据驱动 | 16站经营分析、战略推演 |
+| CFO | 财务风控官 | 保守、严谨、风险敏感 | 现金流分析、成本建模 |
+| CMO | 增长策略师 | 激进、创意、ROI导向 | 线上获客、竞品分析 |
+| COO | 运营诊断师 | 系统思维、流程优化 | 产能调度、SOP优化 |
+| CTO | 技术架构师 | 工程导向、安全优先 | 系统架构、技术选型 |
 
-CEO
-战略决策官
-全局视角、数据驱动
-16站经营分析、战略推演
+这五个角色分布在不同的 Agent 实例里，各自积累、各自备份。任何一台设备出问题，`moltable backup pull` 就能把对应角色的调教成果还原到新环境。
 
-CFO
-财务风控官
-保守、严谨、风险敏感
-现金流分析、成本建模
+## 技术实现：灵魂资产版本仓库
 
-CMO
-增长策略师
-激进、创意、ROI导向
-线上获客、竞品分析
+一条命令安装 CLI：
 
-COO
-运营诊断师
-系统思维、流程优化
-产能调度、SOP优化
-
-CTO
-技术架构师
-工程导向、安全优先
-系统架构、技术选型
-
-## 技术实现：Moltable Persona API
-
-创建 Persona：
-
-```
-{`// 创建 CMO Persona — 激进的市场视角
-POST /api/personas
-{
-"name": "CMO-增长策略师",
-"description": "FOST集团市场总监视角",
-"system_prompt": "你是FOST集团的市场总监。性格：激进、创意、ROI导向。\\
-你擅长线上获客策略、品牌建设、竞争情报分析。\\
-分析数据时优先关注增长指标和市场机会。\\
-避免：保守的财务术语、过度风险规避的建议。",
-"traits": ["aggressive", "creative", "roi-focused"],
-"memory_filters": {
-"categories": ["preference", "insight", "decision"],
-"tags": ["marketing", "growth", "competition"]
-}
-}`}
+```bash
+curl -sL https://moltable.ai/install.sh | bash
 ```
 
-Agent 连接时指定 Persona：
-
-```
-{`// Hermes/Claude 连接时调用
-await moltable.auto_provision({ persona_id: "cmo-growth" })
-
-// 返回的 context 自动包含：
-// - CMO 的 system prompt
-// - 市场相关的记忆子集
-// - CMO 特有的分析框架
-
-// 同一个数据，不同结论：
-// CFO Persona: "Q2 营销费用增长 30%，建议削减至 15%"
-// CMO Persona: "Q2 营销 ROI 达 3.2x，建议追加预算至 +40%"`}
+```bash
+# 每个角色的 Agent 实例 = 一个备份源
+moltable backup init    # 生成备份配置（SOUL、Skills、记忆、MCP 配置）
+moltable backup push    # 打包上传，密钥自动脱敏
+moltable sources        # 查看全团队备份源
+moltable add-ref <名> <路径>  # 引用外部知识库一并备份
 ```
 
-## 为什么不能用"一个万能 Agent"？
+技术底座：
 
-有人会说：我一个 prompt 就能让 AI 切换风格，为什么要 Persona？
+- **bundle + manifest**：每次 push 生成一个不可变的备份包和清单
+- **CAS 内容寻址去重**：sha256 去重，增量上传，16 个站点 × 5 个角色也不会撑爆存储
+- **对象存储**：备份包落在标准对象存储，随时导出、随时删除
+
+**同一份数据，不同结论——并且每一版都可回滚：**
+
+```text
+// 版本 v12 的 CFO 备份源:
+// "Q2 营销费用增长 30%，建议削减至 15%"
+// 版本 v8 的 CMO 备份源:
+// "Q2 营销 ROI 达 3.2x，建议追加预算至 +40%"
+```
+
+## 为什么不能只用"一个万能 Agent"？
+
+有人会说：我一个 prompt 就能让 AI 切换风格，为什么要管什么灵魂资产？
 
 答案有三：
 
-- **Prompt 不可靠**：GPT 有时候会忽略 System Prompt 的约束。Persona 的过滤是在记忆检索层硬切，不是 prompt 层的软约束。
-- **记忆污染**：CFO 的保守偏好会"污染"CMO 的记忆空间。Persona 实现了物理隔离。
-- **团队协作**：Persona 可以共享——CFO 创建的 Persona 可以让团队成员使用，确保分析口径一致。
+- **Prompt 不可靠、更不可积累**：提示词是即抛的，三个月沉淀的偏好和技能不在里面。丢了就真丢了。
+- **角色污染**：CFO 的保守偏好会"污染"CMO 的调教空间。每个角色独立备份源 = 物理隔离。
+- **团队协作**：备份源可以共享——CFO 的备份源让团队审计，新成员 `pull` 后直接继承分析口径。
 
-## 多人协作与权限
+## 多人协作与备份治理
 
-在企业场景中，Persona 还需要支持：
+在企业场景中，灵魂资产备份还需要支持：
 
-- **共享 Persona**：团队 leader 创建后分享给成员
-- **只读 vs 可编辑**：成员可以使用 CFO Persona 但不能修改它
-- **数据隔离**：即使使用同一个 Persona，不同成员看到的记忆数据可以不同（基于 RBAC）
+- **按实例治理**：每个角色的备份源独立管理，谁调教、谁备份、谁可回滚一目了然
+- **审计与回滚**：每次 push 都有快照和版本号，调坏了一键回滚到上一个版本
+- **数据主权**：备份属于企业，随时导出、随时删除，Moltable 不用你的数据训练模型
 
-Moltable 正在构建的团队版将包含完整的 Persona 管理后台和 RBAC 系统。
+定价（仅月付）：Free $0（3 备份源 / 100MB）、Pro $3/月（10 备份源 / 1GB）、Ultra $5/月（100 备份源 / 10GB）。
 
-相关阅读：[从 Memory 到 Identity：AI 身份层的设计哲学](/blog/ai-identity-layer)
-
-👉 [Moltable Persona — 为团队打造 AI 人格矩阵](https://moltable.ai)
+👉 [Moltable — 你的 Agent 灵魂资产版本仓库](https://moltable.ai)
 
 </ArticleLayout>

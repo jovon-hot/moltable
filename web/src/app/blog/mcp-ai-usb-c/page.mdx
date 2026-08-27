@@ -38,18 +38,18 @@ MCP 改变了这一点。它定义了三个核心概念：
 
 ## Moltable 为什么选择 MCP
 
-Moltable 是 AI 身份层——它不执行任务，不生成内容。它的职责是让 AI Agent 在任何平台上都能加载用户的身份、偏好和记忆。这个定位天然适合 MCP：
+Moltable 是你调教 AI 的「灵魂资产版本仓库」——它不执行任务、不生成内容，只负责把你调教的 SOUL、Skills、MCP 配置、记忆打包成版本化、去重的备份。这个定位天然适合 MCP：
 
-- Agent 通过 MCP 连接 Moltable Server
-- 调用 auto_provision() 一键加载用户完整上下文
-- 通过 search_memory / save_memory 读写记忆
-- 通过 list_personas / consult_persona 切换人格
+- Agent 通过 MCP 连接 Moltable Server（HTTP 协议，一个 URL + API Key）
+- 一条命令 `moltable backup push` 把灵魂资产打包上传
+- 换机后 `moltable backup pull` 一条命令还原
+- `add-ref` 引用外部知识库一并备份
 
 因为 MCP 是开放标准，任何支持 MCP 的 AI 客户端——Hermes、Claude、Cursor、Gemini CLI——都能直接接入 Moltable。不需要为每个平台写适配代码。
 
 ## 未来：Agent 的操作系统
 
-如果把 MCP 比作 USB-C，那 MCP Server 就是外设驱动程序——每个 MCP Server 暴露一组工具，Agent 通过标准协议调用它们。Moltable 是这个生态中的一个"驱动"：身份驱动。其他有：文件系统驱动、数据库驱动、浏览器驱动、邮件驱动……
+如果把 MCP 比作 USB-C，那 MCP Server 就是外设驱动程序——每个 MCP Server 暴露一组工具，Agent 通过标准协议调用它们。Moltable 是这个生态中的一个"驱动"：灵魂备份驱动。其他有：文件系统驱动、数据库驱动、浏览器驱动、邮件驱动……
 
 当足够多的"驱动"存在时，AI Agent 就真正拥有了操作系统的能力——像人类一样，通过统一的接口操作数字世界的各种工具。MCP 就是这个统一接口。
 

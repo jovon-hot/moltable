@@ -1,8 +1,8 @@
 export const meta = {
   title: 'RAG vs Fine-Tuning vs 身份层：个性化破局之道',
   date: '2026-08-06',
-  description: 'RAG 实时但碎片化，Fine-Tuning 深入但僵化，Identity Layer 是第三条路——让 AI 在对话前就知道你是谁、什么角色、按什么标准工作。',
-  tags: ['对比', 'RAG', 'Fine-Tuning', 'AI 身份层', '架构', 'AI Agent'],
+  description: 'RAG 实时但碎片化，Fine-Tuning 深入但僵化，灵魂资产备份是第三条路——把你调教 AI 的成果版本化保存，换框架/换电脑都不丢。',
+  tags: ['对比', 'RAG', 'Fine-Tuning', '灵魂资产备份', '架构', 'AI Agent'],
   slug: 'rag-vs-finetuning-vs-identity',
 }
 
@@ -16,7 +16,7 @@ import Link from 'next/link'
 
 这不是 AI 模型的问题。GPT-5、Claude 4、Gemini 3 都足够聪明。问题出在——**我们用了三种错误的方式来让 AI「记住」我们**。
 
-RAG 喂文档，Fine-Tuning 改模型，Memory Layer 存对话。但它们都解决不了一个根本问题：**「我是谁」这个信息，该存放在架构的哪一层？**
+RAG 喂文档，Fine-Tuning 改模型，Memory Layer 存对话。但它们都解决不了一个根本问题：**「你调教好的成果」，该存放在哪里才不会丢？**
 
 这篇文章不会重复「RAG vs Fine-Tuning」的入门对比。我们要讨论的是 2026 年 AI Agent 开发者面临的一个更深层的困境——
 
@@ -40,7 +40,7 @@ RAG 喂文档，Fine-Tuning 改模型，Memory Layer 存对话。但它们都解
 - **时效性**：个人偏好发生变化时，能立即反映到 AI 行为中
 - **准确度**：AI 输出的个性化程度与用户真实偏好一致
 
-RAG、Fine-Tuning、Identity Layer 各占一角。没有一个方案能同时拿满分——但组合使用可以逼近最优。
+RAG、Fine-Tuning、灵魂资产备份各占一角。没有一个方案能同时拿满分——但组合使用可以逼近最优。
 
 ## 方案一：RAG —「喂文档，赌检索」
 
@@ -58,7 +58,7 @@ RAG（Retrieval Augmented Generation）是过去两年最常见的 AI 个性化�
 - **无结构化推理**：RAG 不理解「偏好」和「事实」的区别。「我的 API Key 是 molt_xxx」和「我喜欢 Indigo 配色」被平等对待
 
 ### RAG 最佳场景
-知识库问答、文档搜索、FAQ 自动回复——这些是 RAG 的甜点区。但**个人化不是检索问题**，是**身份建模问题**。
+知识库问答、文档搜索、FAQ 自动回复——这些是 RAG 的甜点区。但**个人化不是检索问题**，是**调教成果的资产化问题**。
 
 ## 方案二：Fine-Tuning —「改模型，赌泛化」
 
@@ -77,65 +77,60 @@ Fine-Tuning 的诱惑是巨大的：直接把你的偏好「刻」进模型权�
 ### Fine-Tuning 最佳场景
 企业内部的领域专家模型（法律、医疗、金融）——这些领域知识变化缓慢，值得一次性投入。对于**快速变化的个人偏好**，Fine-Tuning 是大炮打蚊子。
 
-## 方案三：Identity Layer —「建模身份，赌架构」
+## 方案三：灵魂资产备份 —「资产化，赌版本」
 
-这是 Moltable 选择的路线。不存文档、不改模型，而是在 LLM 和用户之间插入一个**身份抽象层**。
+这是 Moltable 选择的路线。不存文档、不改模型，也不在运行时插入任何中间层——Moltable **不运行你的 Agent**，它只做一件事：把你调教 AI 的成果打包成版本化、去重的备份。
 
 核心思路：
 
 ```
-用户 → Identity Layer (偏好/技能/Persona/记忆) → LLM
+你的调教成果（SOUL/Skills/MCP 配置/记忆）→ 备份仓库（版本化 + 去重）→ 换框架/换电脑一键还原
 ```
 
 ### 架构设计
 
-Identity Layer 不把「我是谁」当作一堆文档来检索，而是建模为一个**结构化的身份图谱**：
+Moltable 不把「你是谁」当作一堆文档来检索，而是当作一份需要资产化管理的**灵魂资产**来备份：
 
 ```
-Identity
-├── Preferences (偏好层)
-│   ├── response_style: "concise_bullet_points"
-│   ├── code_style: "functional_over_oop"
-│   └── language: "typescript_first"
-├── Personas (角色层)
-│   ├── "Architect" → 系统设计视角
-│   ├── "Reviewer" → 代码审查视角
-│   └── "Writer" → 内容创作视角
-├── Skills (能力层)
-│   ├── MCP 工具配置
-│   ├── 项目环境变量
-│   └── API Key 绑定
-└── Memories (记忆层)
-    ├── 关键决策记录
-    ├── 项目上下文
-    └── 团队协作偏好
+Profile（本体）
+├── 你本人，拥有所有数据的所有权
+└── 凭证（DID + VC，即将推出）
+
+Soul（化身，可备份）
+├── SOUL.md / AGENTS.md / USER.md
+├── config.yaml（MCP 配置，密钥脱敏）
+├── memories/（关键决策记录、项目上下文）
+└── skills/（技能与工作流）
+
+add-ref <名> <路径>
+└── 引用外部知识库一并备份
 ```
 
 ### 优势
-- **零延迟**：身份数据在对话开始时一次性注入，不需要每轮检索
-- **跨模型可移植**：同一份身份数据驱动 Claude、GPT、Gemini、Hermes——换模型即换模型，身份不丢失
-- **时效性优秀**：修改偏好即时生效（REST API 或 MCP 工具调用）
-- **结构化推理**：Identity Layer 理解「偏好冲突」——当你同时要求「详细」和「简洁」时，它能按优先级裁决
-- **成本极低**：只是一个结构化存储 + 规则引擎，不需要 GPU
+- **零运行时开销**：备份不参与对话，不增加任何推理延迟，也不需要 GPU
+- **跨框架可移植**：Hermes、OpenClaw、Claude、Codex 每实例一个备份源——换框架即换框架，调教成果不丢
+- **版本化管理**：每源独立版本库，快照 + 版本号 + 回滚
+- **增量去重**：sha256 内容寻址，相同内容只存一份
+- **你拥有数据**：随时导出/删除，绝不用来训练
 
 ### 局限性
-- **粒度有限**：Identity Layer 不能像 Fine-Tuning 那样捕捉「微妙语气」
-- **需要显式建模**：用户必须主动配置偏好（或 AI 自动推断）
-- **对纯知识类问题无增益**：如果你问「React 19 的新特性」，Identity Layer 帮不上忙——那是 RAG 的领域
+- **不提供运行时记忆**：备份不替 Agent 存取记忆，那是 Memory Layer 的事
+- **粒度有限**：备份的是调教成果，不能像 Fine-Tuning 那样捕捉「微妙语气」
+- **对纯知识类问题无增益**：如果你问「React 19 的新特性」，备份帮不上忙——那是 RAG 的领域
 
 ## 三方对比总表
 
-| 维度 | RAG | Fine-Tuning | Identity Layer |
+| 维度 | RAG | Fine-Tuning | 灵魂资产备份 |
 |------|-----|-------------|----------------|
-| **成本** | 低（向量DB） | 高（GPU 集群） | 极低（结构化存储） |
-| **时效性** | 即时（改文档） | 极差（需重训） | 即时（API 更新） |
-| **准确度** | 中（检索噪声） | 高（内化偏好） | 高（结构化裁决） |
-| **跨模型** | ✅ 天然支持 | ❌ 模型绑定 | ✅ 天然支持 |
-| **推理延迟** | +100-500ms（检索） | 0 | +10-50ms（注入） |
-| **上下文消耗** | 高（文档占 token） | 0 | 低（结构化 prompt） |
-| **纠错能力** | 改文档即可 | 需重训 | 改配置即可 |
-| **多 Agent** | 各自检索 | 各自训 | 一份身份，全部共享 |
-| **适用场景** | 知识检索 | 领域专家 | 个人化 Agent |
+| **成本** | 低（向量DB） | 高（GPU 集群） | 极低（增量去重存储） |
+| **时效性** | 即时（改文档） | 极差（需重训） | 即时（push/pull） |
+| **准确度** | 中（检索噪声） | 高（内化偏好） | 高（原样保留调教成果） |
+| **跨模型** | ✅ 天然支持 | ❌ 模型绑定 | ✅ 天然支持（每实例一源） |
+| **推理延迟** | +100-500ms（检索） | 0 | 0（不参与运行） |
+| **上下文消耗** | 高（文档占 token） | 0 | 0（不注入） |
+| **纠错能力** | 改文档即可 | 需重训 | 回滚到上一版本即可 |
+| **多 Agent** | 各自检索 | 各自训 | 每实例独立备份源 |
+| **适用场景** | 知识检索 | 领域专家 | 调教成果的版本管理 |
 
 ## 最佳实践：三层组合架构
 
@@ -143,8 +138,8 @@ Identity
 
 ```
 ┌─────────────────────────────────┐
-│         Identity Layer           │  ← 你是谁（偏好/角色/技能）
-│    (Moltable / 自建 Identity)    │
+│       灵魂资产备份层             │  ← 你的调教成果（不丢）
+│          (Moltable)              │
 ├─────────────────────────────────┤
 │           RAG Layer              │  ← 你知道什么（文档/知识库）
 │   (Pinecone / Weaviate / Milvus) │
@@ -154,13 +149,13 @@ Identity
 └─────────────────────────────────┘
 ```
 
-**Identity Layer 负责「我是谁」**——这是每次对话的基准线。  
+**灵魂资产备份负责「你调教过的成果」**——这是换电脑、换框架的保底。  
 **RAG 负责「我知道什么」**——特定领域的知识检索。  
 **Fine-Tuning 负责「我怎么说」**——在需要极致风格控制的场景下使用。
 
-mem0、Cognee、Zep 本质上在做「Memory Layer」，介于 RAG 和 Identity 之间。它们试图用向量检索来解决身份问题——但**身份不是检索出来的，是建模出来的**。
+mem0、Cognee、Zep 本质上在做「Memory Layer」，是运行时组件。它们试图用向量检索来解决个性化问题——但**调教成果不是检索出来的，是积累出来、然后备份下来的**。
 
-## 实战案例：3 分钟恢复完整 AI 环境
+## 实战案例：3 分钟备份完整 AI 环境
 
 假设你换了一台新 Mac。传统方式：
 
@@ -169,20 +164,23 @@ mem0、Cognee、Zep 本质上在做「Memory Layer」，介于 RAG 和 Identity 
 3. 重新告诉 Hermes 你的项目结构 → 又是几轮对话
 4. 每个 AI 都要走一遍 → **总计 2-3 小时**
 
-使用 Identity Layer + RAG 组合：
+使用 Moltable + RAG 组合：
 
 ```bash
 curl -sL https://moltable.ai/install.sh | bash
-moltable backup push
+moltable backup init   # 生成备份配置
+moltable backup push   # 打包上传
 ```
 
 两条命令，3 分钟。你的 Agent 灵魂资产完成备份：
-- ✅ 代码风格偏好（Identity → Preferences）
-- ✅ 项目知识库配置（Identity → Skills）
-- ✅ MCP 工具列表（Identity → Skills）
-- ✅ 关键决策记录（Identity → Memories）
-- ✅ Persona 配置（Identity → Personas）
-- ✅ RAG 知识库（外部向量数据库，按需检索）
+- ✅ SOUL.md（人格与行为规则）
+- ✅ AGENTS.md / USER.md（项目上下文与用户画像）
+- ✅ config.yaml（MCP 工具配置，密钥脱敏）
+- ✅ memories/（关键决策记录、项目上下文）
+- ✅ skills/（技能与工作流）
+- ✅ RAG 知识库（add-ref 引用外部知识库一并备份）
+
+新机器上 `moltable backup pull` 一条命令全部还原。
 
 这不是魔法，是架构选择。
 
@@ -192,26 +190,26 @@ moltable backup push
 |----------|---------|
 | 「我要让 AI 回答公司文档里的问题」 | RAG |
 | 「我要一个只写 Vim 风格代码的 AI」 | Fine-Tuning |
-| 「我要换 AI 助手像换手机壳一样简单」 | **Identity Layer** |
-| 「我都要」 | Identity + RAG +（可选）Fine-Tuning |
+| 「我不想换电脑/换框架后重新调教一遍 AI」 | **灵魂资产备份** |
+| 「我都要」 | 备份 + RAG +（可选）Fine-Tuning |
 
-Identity Layer 不是要取代 RAG 或 Fine-Tuning。它是在说：
+灵魂资产备份不是要取代 RAG 或 Fine-Tuning。它是在说：
 
-> **在检索文档之前，先让 AI 知道你是谁。**  
-> **在 Fine-Tune 模型之前，先让偏好可以跨模型迁移。**
+> **在检索文档之前，先确认你的调教成果有备份。**  
+> **在 Fine-Tune 模型之前，先让调教成果可以跨模型迁移。**
 
-这不是一个「谁更好」的问题。这是一个「架构放在哪一层」的问题。
+这不是一个「谁更好」的问题。这是一个「成果放在哪里才不丢」的问题。
 
-而答案正在变得越来越清晰：**身份层应该在 LLM 之上、RAG 之下的那个位置**。那是目前整个 AI 技术栈里最被忽视、也是最有价值的空白地带。
+而答案正在变得越来越清晰：**备份应该在调教之前就存在**。那是目前整个 AI 技术栈里最被忽视、也是最有价值的空白地带。
 
 ---
 
-**Moltable 正在填补这个空白。** 14 个 MCP 工具、跨平台 Persona 同步、3 分钟环境恢复——这是 Identity Layer 的工程实现。
+**Moltable 正在做这件事。** 一条命令备份灵魂资产、每源独立版本库、快照 + 版本号 + 回滚、sha256 增量去重、Free $0（3 备份源/100MB）起步——这是「换 Agent，不换灵魂」的工程实现。
 
 <Link href="/compare">查看 Moltable vs mem0 vs Zep 详细对比 →</Link>
 
 ---
 
-*本文是 Moltable「AI Identity 架构」系列的第 4 篇。上一篇：[Moltable vs mem0：Identity Layer 和 Memory Layer 的本质区别](/blog/moltable-vs-mem0-identity-vs-memory)*
+*本文是 Moltable「AI 灵魂资产备份」系列的第 4 篇。上一篇：[Moltable vs mem0：备份仓库和记忆层的本质区别](/blog/moltable-vs-mem0-identity-vs-memory)*
 
 </ArticleLayout>

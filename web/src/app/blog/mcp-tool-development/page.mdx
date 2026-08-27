@@ -1,7 +1,7 @@
 export const meta = {
   title: 'MCP 工具开发实战：从零构建 AI Agent 记忆缓存层',
   date: '2026-07-15',
-  description: '用 Python 从零构建 MCP Server：JSON-RPC 2.0、stdio/SSE 传输，到 search_memory、save_memory 记忆缓存层与生产部署，可运行。',
+  description: '用 Python 从零构建 MCP Server：JSON-RPC 2.0、stdio/SSE 传输，到记忆检索/保存工具与生产部署，可运行。',
   tags: ['MCP 协议', '开发实战', 'Python', 'AI Agent 记忆', '教程'],
   slug: 'mcp-tool-development',
 }
@@ -15,7 +15,7 @@ import Link from 'next/link'
 
 MCP（Model Context Protocol）已经成为 AI Agent 连接外部世界的标准协议——25K+ GitHub Stars，已被 Linux 基金会接纳。但大多数开发者只是**使用**现有的 MCP Server，很少有人自己写一个。
 
-这篇文章手把手教你用 Python 构建一个 MCP Server，为给 AI Agent 添加持久记忆能力。从协议理解到生产部署，全程可运行。
+这篇文章手把手教你用 Python 构建一个 MCP Server，为 AI Agent 添加持久记忆能力。从协议理解到生产部署，全程可运行。
 
 ## MCP 协议基础
 
@@ -29,11 +29,11 @@ MCP 基于 JSON-RPC 2.0，核心是三个方法：
 
 ## 实战：构建记忆缓存 MCP Server
 
-我们的目标是构建一个轻量级的记忆层，Agent 可以通过它：
+我们的目标是构建一个轻量级的记忆服务，Agent 可以通过它：
 
-- `search_memory`：语义搜索用户记忆
-- `save_memory`：保存新记忆（带冲突检测）
-- `auto_provision`：一键加载用户完整上下文
+- `recall`：语义搜索已保存的记忆
+- `remember`：保存新记忆（带冲突检测）
+- `memory_stats`：查看记忆库规模
 
 ### 项目搭建
 
@@ -64,8 +64,8 @@ collection = db.create_collection("memories")
 async def list_tools():
 return [
 {
-"name": "search_memory",
-"description": "语义搜索用户记忆",
+"name": "recall",
+"description": "语义搜索已保存的记忆",
 "inputSchema": {
 "type": "object",
 "properties": {
@@ -76,7 +76,7 @@ return [
 }
 },
 {
-"name": "save_memory",
+"name": "remember",
 "description": "保存新记忆，自动检测冲突",
 "inputSchema": {
 "type": "object",
@@ -85,22 +85,22 @@ return [
 "category": {
 "type": "string",
 "enum": ["preference","decision","fact",
-"project","insight","task","relationship"]
+"project","insight"]
 }
 },
 "required": ["content"]
 }
 },
 {
-"name": "auto_provision",
-"description": "一键获取用户完整上下文",
+"name": "memory_stats",
+"description": "查看记忆库规模与分类分布",
 "inputSchema": {"type": "object", "properties": {}}
 }
 ]
 
 @server.call_tool()
 async def call_tool(name: str, arguments: dict):
-if name == "search_memory":
+if name == "recall":
 # 向量搜索
 results = collection.query(
 query_texts=[arguments["query"]],
@@ -108,7 +108,7 @@ n_results=arguments.get("top_k", 5)
 )
 return [{"type": "text", "text": json.dumps(results, ensure_ascii=False)}]
 
-elif name == "save_memory":
+elif name == "remember":
 # 先检查冲突（相似度 > 0.9）
 existing = collection.query(
 query_texts=[arguments["content"]],
@@ -126,13 +126,12 @@ ids=[f"mem_{len(collection.get()['ids'])}"]
 )
 return [{"type": "text", "text": "✅ 记忆已保存"}]
 
-elif name == "auto_provision":
-# 加载所有记忆和规则
+elif name == "memory_stats":
+# 统计记忆库
 all_mems = collection.get()
 return [{"type": "text", "text": json.dumps({
-"profile": {"memories": all_mems["documents"]},
-"rules": ["代码审查时使用中文注释"],
-"message": "上下文加载完成"
+"total": len(all_mems["ids"]),
+"message": "统计完成"
 }, ensure_ascii=False)}]
 
 # SSE 传输
@@ -174,19 +173,19 @@ uvicorn.run(app, host="0.0.0.0", port=8000)`}
 用 curl 直接测试：
 
 ```
-{`# 测试 search_memory
+{`# 测试 recall
 curl -X POST http://localhost:8000/messages/ \\
 -H "Content-Type: application/json" \\
 -d '{"jsonrpc":"2.0","method":"tools/call",
-"params":{"name":"search_memory",
+"params":{"name":"recall",
 "arguments":{"query":"Python日志偏好"}},
 "id":1}'
 
-# 测试 save_memory
+# 测试 remember
 curl -X POST http://localhost:8000/messages/ \\
 -H "Content-Type: application/json" \\
 -d '{"jsonrpc":"2.0","method":"tools/call",
-"params":{"name":"save_memory",
+"params":{"name":"remember",
 "arguments":{"content":"用户喜欢用中文注释",
 "category":"preference"}},
 "id":2}'`}
@@ -199,10 +198,23 @@ curl -X POST http://localhost:8000/messages/ \\
 - **冲突检测升级**：用更精细的语义相似度阈值 + 人工确认流程
 - **多用户隔离**：按 user_id 分区，一个 Server 服务多个用户
 
-如果你不需要从零构建，Moltable 已经将这些功能打包为开箱即用的 MCP Server——注册即用，无需写一行代码。但对于想深入理解 MCP 协议的开发者来说，自己写一个是很好的学习方式。
+如果你不需要从零构建，也可以直接用现成的 MCP Server。但对于想深入理解 MCP 协议的开发者来说，自己写一个是很好的学习方式。
+
+写完别忘了一件事：你辛苦调教的这套资产——SOUL.md、skills/、config.yaml（MCP 配置）、memories/——值得一个版本化的保险箱。Moltable 就是干这个的：
+
+```
+curl -sL https://moltable.ai/install.sh | bash
+moltable backup init    # 生成备份配置
+moltable backup push    # 打包上传（bundle + manifest + sha256 去重）
+moltable backup pull    # 下载还原
+moltable backup sources # 查看备份源
+moltable add-ref <名> <路径>  # 引用外部知识库一并备份
+```
+
+Moltable 不运行你的 Agent，只备份你的调教成果：SOUL / Skills / MCP 配置（密钥自动脱敏）/ memories，换电脑、换框架（Hermes、OpenClaw、Claude、Codex 每实例一个备份源）都不丢。备份管理也支持 HTTP MCP 接入（https://api.moltable.ai/mcp，X-API-Key 认证）。开源 MIT。
 
 相关阅读：[AI 为什么总「失忆」？根因剖析与实操修复指南](/blog/ai-forgetfulness-fix)
 
-👉 [Moltable MCP Server — 开箱即用的记忆层](https://moltable.ai)
+👉 [Moltable — 换 Agent，不换灵魂：备份你的调教成果](https://moltable.ai)
 
 </ArticleLayout>

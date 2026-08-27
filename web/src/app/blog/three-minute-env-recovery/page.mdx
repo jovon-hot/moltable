@@ -1,8 +1,8 @@
 export const meta = {
   title: '换电脑不换脑子：3 分钟恢复完整 AI 开发环境',
   date: '2026-08-04',
-  description: '每一台新设备都是一次身份重置。从安装到恢复、从单机到多 Agent 同步，3 分钟让你的 Persona、偏好记忆与工具配置在新电脑上全部就位。',
-  tags: ['换机', '环境恢复', 'Persona', 'AI 身份层', '实战指南'],
+  description: '每一台新设备都是一次灵魂重置。从安装到恢复、从单机到多实例备份，3 分钟让你的 SOUL、Skills、记忆与工具配置在新电脑上全部就位。',
+  tags: ['换机', '环境恢复', '灵魂资产', '备份还原', '实战指南'],
   slug: 'three-minute-env-recovery',
 }
 
@@ -19,128 +19,113 @@ import Link from 'next/link'
 
 它不记得你了。
 
-这不是软件 bug，这是 AI Agent 行业最大的体验断层：**每一台新设备，都是一次身份重置。**
+这不是软件 bug，这是 AI Agent 行业最大的体验断层：**每一台新设备，都是一次调教成果归零。**
 
-Moltable 的目标就是消除这个断层。本文是一个完整实战指南：从安装到恢复，从单机到多 Agent 同步，一步不落。
+Moltable 的目标就是消除这个断层。本文是一个完整实战指南：从安装到备份，从单机到多实例，一步不落。
 
 ## 先看效果：3 分钟恢复了什么？
 
-用 Moltable 做完一次同步后，你换到任何新电脑，以下内容全部就位：
+用 Moltable 完成一次备份与还原后，你换到任何新电脑，以下内容全部就位：
 
-恢复项
-具体内容
-无 Moltable 的替代方案
+| 恢复项 | 具体内容 | 无 Moltable 的替代方案 |
+|---|---|---|
+| SOUL / 人格定义 | 代码审查员/战略顾问/写作教练等自定义人格 | 手动重写 prompt，每个 Agent 各写一遍 |
+| Skills | 你沉淀的技能与工作流 | 每次重新"教" |
+| 记忆 | 项目路径、技术栈、偏好（"TypeScript、tab 缩进、部署到 Railway"） | 每次对话重新陈述 |
+| MCP 配置 | 所有 MCP Server 的 URL，密钥脱敏 | 逐个手动配置 JSON |
+| 知识库引用 | 外部知识库（add-ref 纳入备份） | 重新整理路径 |
 
-Persona
-代码审查员/战略顾问/写作教练等自定义人格
-手动重写 prompt，每个 Agent 各写一遍
+## 第一步：注册并安装 CLI
 
-偏好记忆
-"TypeScript、tab 缩进、部署到 Railway"
-每次对话重新陈述
+去 [moltable.ai/register](/register) 注册，30 秒完成。然后一条命令安装 CLI：
 
-项目上下文
-项目路径、技术栈、关键决策记录
-新会话里一点点"教"
-
-MCP 配置
-所有 MCP Server 的 URL + API Key
-逐个手动配置 JSON
-
-工具偏好
-常用工具列表、搜索习惯
-Agent 随机选择，效率减半
-
-## 第一步：注册并获取 API Key
-
-去 [moltable.ai/register](/register) 注册，30 秒完成。你会得到一个 `molt_` 开头的 API Key。
-
-**Free 套餐就够用**——100 条记忆、2 个 Persona、1 个主机发现。日常开发完全覆盖。
-
-## 第二步：在第一台电脑上"播种"
-
-在你现有的主力机上，用 Claude Desktop 给 Moltable "喂"一遍你的偏好：
-
-```
-{`你：帮我记录我的开发偏好。
-
-Claude 调用 moltable 工具...
-
-记录完成：
-✅ 语言偏好：TypeScript > Python > Go
-✅ 代码风格：Prettier 默认配置、tab 缩进
-✅ 部署目标：Railway（主）、Vercel（前端）
-✅ 项目路径：~/work/my-saas/
-✅ 技术栈：Next.js 14 + Prisma + PostgreSQL + Redis`}
+```bash
+curl -sL https://moltable.ai/install.sh | bash
 ```
 
-这些记忆会永久存储在 Moltable 的向量数据库中，跨设备、跨 Agent 同步。
+**Free 套餐就够用**——3 个备份源、100MB，日常开发完全覆盖。
 
-## 第三步：在新电脑上一键恢复
+## 第二步：在第一台电脑上备份
 
-换到新 Mac 之后，你只需要一行命令：
+在你现有的主力机上，初始化并推送你的灵魂资产：
 
-```
-{`# 一条命令安装 Moltable CLI
-curl -sL https://moltable.ai/install.sh | bash`}
-```
-
-这条命令自动完成：检测 Python → 下载 CLI → 添加到 PATH。之后运行 `moltable backup push` 即可把 Agent 灵魂资产备份到云端。**不需要手动编辑任何 JSON。**
-
-备份同样适配其他 Agent：
-
-```
-{`# 首次备份
+```bash
+# 初始化备份配置
 moltable backup init
-moltable backup push`}
+
+# 打包上传
+moltable backup push
 ```
+
+备份自动包含：
+
+✅ SOUL.md、AGENTS.md、USER.md（人格与项目规则）
+✅ memories/（项目背景、偏好、历史决策）
+✅ skills/（沉淀的技能与工作流）
+✅ config.yaml（MCP 配置，密钥脱敏）
+✅ 自动排除对话流水账（state.db/WAL/FTS）和密钥（.env/*.key）
+
+## 第三步：在新电脑上一键还原
+
+换到新 Mac 之后，你只需要几行命令：
+
+```bash
+# 一条命令安装 Moltable CLI
+curl -sL https://moltable.ai/install.sh | bash
+
+# 拉取并还原备份源
+moltable backup pull
+```
+
+这条命令自动完成：检测 Python → 下载 CLI → 添加到 PATH。之后运行 `moltable backup pull` 即可把 Agent 灵魂资产还原到新电脑。**不需要手动编辑任何 JSON。**
+
+还原前可以用 `moltable sources` 确认备份源，还原后每个备份源都带版本号，随时可以回滚。
 
 ## 第四步：验证恢复效果
 
-接入后，打开 Claude Desktop，试试这些对话：
+还原后，打开 Claude Desktop，试试这些对话：
 
-```
-{`你：我现在是什么技术栈？
+```text
+你：我现在是什么技术栈？
 
-Claude（通过 Moltable）：
-根据你的偏好记录：
+Claude（还原后的记忆）：
 - 语言：TypeScript（主要）、Python、Go
 - 框架：Next.js 14 + Prisma
 - 数据库：PostgreSQL（Supabase）
-- 部署：Railway + Vercel`}
+- 部署：Railway + Vercel
 ```
 
-## 原理：Moltable 的身份三层架构
+## 原理：Moltable 的灵魂三层架构
 
-为什么 3 分钟能恢复这么多东西？因为 Moltable 不存对话，存的是**结构化身份数据**：
+为什么 3 分钟能恢复这么多东西？因为 Moltable 不备份对话流水账，备份的是**灵魂资产**：
 
-### Identity Layer（你是谁）
+### Profile（本体）
 
-email、设备指纹、API Key 绑定
+你是谁——账户与设备维度
 
-### Persona Layer（你怎么想）
+### Soul（化身：人格 + 记忆，可备份）
 
-角色特征、回答风格、模型偏好
+角色特征、回答风格、项目记忆、技能沉淀
 
-### Memory Layer（你知道什么）
+### 凭证（DID + VC，即将推出）
 
-偏好、项目上下文、工具配置
+可验证身份，为灵魂资产加上归属
 
-换设备时，Agent 通过 MCP 协议调用 `auto_provision` 工具，一次性拉取三层数据。这就是"3 分钟"的来源——不是魔法，是协议设计。
+技术上，每次 push 生成 bundle + manifest，sha256 内容寻址去重，只有变化的部分上传，备份包落在对象存储——这就是"3 分钟"的来源：不是魔法，是增量备份的设计。
 
-## 进阶：跨 Agent 同步
+## 进阶：多实例统一管理
 
-Moltable 的真正威力在于**一次配置，所有 Agent 共享**。
+Moltable 的真正价值在于**每个 Agent 实例都是一份独立的备份资产**。
 
-场景：你用 Claude 做架构设计、Cursor 写代码、Codex 做 code review。
+场景：你用 Claude 做架构设计、OpenClaw 写代码、Codex 做 code review。
 
-**有 Moltable**：Claude 建议 Redis Streams 架构 → 写入记忆 → Cursor 自动读取并生成代码 → Codex 按架构规范审查。**三个 Agent，一个大脑。**
+**有 Moltable**：三个实例各有独立备份源和版本历史。Claude 的架构决策记录在案，OpenClaw 的代码风格沉淀可回滚，Codex 的审查规范随时还原。**任何一台设备、任何一个实例出问题，pull 一下就好。**
 
 ## 常见问题
 
-### Q: 我的 API Key 安全吗？
+### Q: 我的密钥安全吗？
 
-Moltable 使用 PBKDF2-HMAC-SHA256 加盐哈希（10 万次迭代）保护 API Key，敏感配置加密后落盘，所有传输使用 TLS 加密。
+Moltable 备份会自动排除密钥文件（.env / *.key），config.yaml 里的 MCP 配置密钥脱敏后才会打包，所有传输使用 TLS 加密。
 
 ### Q: 能自托管吗？
 
@@ -148,27 +133,28 @@ Moltable 使用 PBKDF2-HMAC-SHA256 加盐哈希（10 万次迭代）保护 API K
 
 ### Q: 免费版够用吗？
 
-对于个人开发者，Free 套餐（100 条记忆、2 个 Persona）足够日常开发。跨项目、团队协作可免费试用 Pro 30 天（10,000 条记忆）。
+对于个人开发者，Free 套餐（$0，3 备份源 / 100MB）足够日常开发。多实例、团队协作可升级 Pro（$3/月，10 备份源 / 1GB）或 Ultra（$5/月，100 备份源 / 10GB），仅月付。
 
 ## 即刻开始
 
 换电脑是必然的。让 AI 失忆，不是必然的。
 
-```
-{`# 30 秒注册
+```bash
+# 30 秒注册
 open https://moltable.ai/register
 
 # 60 秒安装 Moltable CLI
 curl -sL https://moltable.ai/install.sh | bash
 
 # 首次备份你的 Agent 灵魂资产
+moltable backup init
 moltable backup push
 
 # 换机后一条命令恢复
-moltable backup pull`}
+moltable backup pull
 ```
 
-👉 [免费注册 Moltable — 让你的 AI 永远认识你](/register)
+👉 [免费注册 Moltable — 换 Agent，不换灵魂](/register)
 
 GitHub: [Moltable](https://github.com/jovon-hot/moltable) · MIT License
 

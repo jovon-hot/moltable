@@ -1,8 +1,8 @@
 export const meta = {
   title: '跨平台 Persona 管理：一个身份，多种人格',
   date: '2026-07-05',
-  description: 'Persona 不是 Prompt 模板：共享记忆、人格持久化、自我进化三层设计，让你在 Hermes、Claude、Cursor 之间跨平台使用同一套人格，附实战对比。',
-  tags: ['Persona', '跨平台', 'MCP 协议', 'AI 身份层', '人格管理', '实战'],
+  description: 'Persona 不是 Prompt 模板：SOUL、Skills、记忆与 MCP 配置才是真正的灵魂资产。跨平台、换电脑不丢调教成果，附实战对比。',
+  tags: ['Persona', '跨平台', 'MCP 协议', '灵魂资产', '人格管理', '实战'],
   slug: 'cross-platform-persona',
 }
 
@@ -15,36 +15,59 @@ import Link from 'next/link'
 
 想象一个场景：你是创业者，今天要做两个决策。第一个是"是否进入东南亚市场"——需要激进的分析师视角，先看机会再看风险。第二个是"审核供应商合同"——需要保守的审核员视角，逐项检查、红线标注。
 
-如果只有一个 AI，它要么激进要么保守，无法同时满足两种需求。这就是 Persona 系统要解决的问题。
+你花了几个月，在 Agent 里分别调教出这两种人格：战略顾问的思维框架、审核员的风险清单、各自的沟通风格和工具配置。它们是你最值钱的调教成果。
+
+但它们有一个致命问题：**它们是孤岛**。换一台电脑、换一个 Agent 框架，这些调教成果就全部归零——你又要从"你是一个战略顾问"开始，重新调一遍。
 
 ## Persona 不是 Prompt 模板
 
 很多人以为 Persona 就是一个预设的 System Prompt——"你是一个战略顾问，请用麦肯锡方法分析"。这只是表面。
 
-Moltable 的 Persona 系统比单纯的 Prompt 模板多三层：
+一个真正可用的"人格"，是长期调教结果的集合：
 
-- **共享记忆**：所有 Persona 共享同一套用户记忆。战略顾问和保守审核员都"知道"用户是 FOST 集团的 CEO、偏好数据驱动的报告、当前在做月度经营分析。但它们的输出完全不同。
-- **人格持久化**：Persona 不是即抛的。创建的 Persona 跨会话、跨 AI 平台存在。你在 Hermes 里用了"战略顾问"，下次在 Claude 里也能加载同一个 Persona。
-- **自我进化**：Persona 有版本历史（Git 式）。每次调整 traits 或 system_prompt，旧版本保留。你可以回到 v1，也可以 fork 出实验版本。
+- **SOUL / 人格定义**：角色、思维模式、沟通风格的完整定义文件
+- **Skills**：使用中沉淀下来的技能与工作流
+- **记忆**：项目背景、用户偏好、历史决策——对话中积累的隐性知识
+- **MCP 配置**：人格所依赖的工具连接，密钥自动脱敏
 
-## 实战：创建两个 Persona
+Prompt 模板只是其中一行，丢了可以重写；数月积累的记忆和技能，重写不出来。
 
-在 Moltable Dashboard 的 Persona 页，创建一个 Persona 只需三步：
+## 灵魂资产：给调教成果上保险
 
-- **命名**：如"战略顾问"
-- **定义 System Prompt**：描述思维模式和分析框架
-- **设置 Traits**：结构化的行为标签（如 style: "麦肯锡", risk: "激进"）
+Moltable 的定位很明确：**不运行你的 Agent，只备份你的调教成果**。它是你的灵魂资产版本仓库——一个"保险箱"，不是记忆层，也不是状态机。
 
-创建完成后，Agent 可以通过 MCP 工具随时切换：
+- **灵魂备份**：一条命令把 SOUL.md、AGENTS.md、USER.md、config.yaml（MCP 配置，密钥脱敏）、memories/、skills/ 打包成 bundle + manifest，上传到对象存储
+- **版本管理**：每份调教成果有独立版本库，快照 + 版本号，随时回滚
+- **增量去重**：sha256 内容寻址，只有变化的部分才上传，存储成本极低
+- **引用同步**：`add-ref` 把外部知识库一并纳入备份
+- **你拥有数据**：随时导出、随时删除，你的调教成果不会用来训练任何模型
 
-- `list_personas()` — 列出所有可用 Persona
-- `match_persona("如何进入东南亚市场？")` — 自动推荐最匹配的 Persona
-- `consult_persona("战略顾问", "分析东南亚市场")` — 用指定 Persona 回答问题
-- `compare_personas("这个问题", ["战略顾问", "保守审核员"])` — 多 Persona 同时回答并对比
+## 实战：备份两份调教成果
+
+一条命令安装 CLI：
+
+```bash
+curl -sL https://moltable.ai/install.sh | bash
+```
+
+然后为"战略顾问"和"保守审核员"各建一个备份源（每个框架实例就是一个备份源，Hermes、OpenClaw、Claude、Codex 均支持）：
+
+```bash
+# 初始化备份配置
+moltable backup init
+
+# 打包并上传当前实例的灵魂资产
+moltable backup push
+
+# 查看哪些实例在保护范围内
+moltable sources
+```
+
+你在 Claude 里调教出的审核员，和在 Hermes 里调教出的战略顾问，各自拥有独立的版本历史——互不覆盖，各自可回滚。
 
 ## 实际效果：同一问题，两种视角
 
-以"是否进入东南亚市场"为例：
+以"是否进入东南亚市场"为例——这正好说明为什么两种人格资产都值得备份：
 
 #### 战略顾问的视角
 
@@ -58,20 +81,29 @@ Moltable 的 Persona 系统比单纯的 Prompt 模板多三层：
 要求本地合资且外方持股不超过 49%；② 物流基础设施不均衡；
 ③ 汇率波动风险（印尼盾 2024 年贬值 8%）；④……建议先做 6 个月试点。
 
-这两个回答同时存在。用户不需要在两个 AI 之间切换——同一个 AI，两套思维，一次对比。
+两个回答同时存在。你不是在两个 AI 之间切换——是两份经过长期调教的视角，每一份都有备份、有版本号、可回滚。
 
-## 跨平台：一次创建，到处使用
+## 跨平台：一次备份，处处还原
 
-Persona 存储在 Moltable 云端。你在 Hermes 里创建的"战略顾问"，在 Claude Desktop 里也能加载。因为 Moltable 通过 MCP 协议暴露 Persona 数据，任何支持 MCP 的 AI 客户端都能调用。
+换电脑、换框架时，你不需要重新调教：
 
-这解决了 AI 时代最棘手的问题之一：数据孤岛。你的 ChatGPT 有你的对话历史，你的 Claude 有你的偏好，你的 Hermes 有你的项目记忆——但它们是分离的。Persona 系统让它们共享同一个身份定义。
+```bash
+# 新电脑上一条命令安装
+curl -sL https://moltable.ai/install.sh | bash
 
-目前支持 Hermes、Claude Desktop、Cursor。浏览器插件支持 ChatGPT 和 Gemini（通过注入侧边栏）。
+# 拉取并还原备份源
+moltable backup pull
+```
 
-## 未来：Persona Marketplace
+`pull` 会把备份源里的 SOUL、Skills、记忆、MCP 配置还原到新环境。还原前可以查看快照，还原错了可以回滚。
 
-Phase 3 规划中的 Persona Marketplace 将允许用户分享、交易 Persona。一个好的 Persona——比如"科技 IPO 路演顾问"——包含了特定领域的思维框架和沟通风格，是有价值的数字资产。
+这解决了 AI 时代最棘手的问题之一：**数据孤岛**。你的 ChatGPT 有对话历史，你的 Claude 有偏好，你的 Hermes 有项目记忆——它们天然是分离的。Moltable 不试图把它们合并成一个"大脑"，而是把每一份都打包、版本化、去重备份，让你在任何设备上都能找回自己的调教成果。
 
-想象一个场景：你需要做 SEO 优化。"SEO 专家"这个 Persona 已经在 Marketplace 上有 5000+ 用户验证过——你直接加载，不需要自己定义。
+支持框架：Hermes、OpenClaw、Claude、Codex（每个实例一个备份源）。备份源通过 HTTP MCP 暴露：`https://api.moltable.ai/mcp` + `X-API-Key` 请求头。
+
+## 未来：跨框架迁移与可验证身份
+
+- **跨框架迁移**（即将推出）：用自己的 LLM 把 Hermes 灵魂翻译成 OpenClaw / Claude / Codex 版本——同一份调教成果，换框架不再从零开始
+- **DID + VC 可验证身份**（即将推出）：Moltable 三层架构的顶层——Profile（本体）→ Soul（化身，人格 + 记忆，可备份）→ 凭证（DID + VC）——为灵魂资产加上可验证的归属
 
 </ArticleLayout>
