@@ -71,7 +71,10 @@ export default function PublicFooter() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-6 text-sm border-t border-ln-border-subtle text-ln-quaternary font-body">
-        &copy; 2026 {t.footer.copyright}
+        <p>&copy; 2026 BLOX Company Limited · {t.footer.copyright}</p>
+        <p className="mt-1">
+          香港土瓜灣土瓜灣道94號美華工業中心B座5樓11室 · <a href="mailto:hi@moltable.ai" className="hover:text-ln-secondary">hi@moltable.ai</a>
+        </p>
       </div>
     </footer>
   )

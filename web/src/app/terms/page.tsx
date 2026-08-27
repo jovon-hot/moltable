@@ -37,8 +37,8 @@ export default function TermsPage() {
             {lang === 'zh' ? '3. 使用限制' : '3. Usage Limits'}
           </h2>
           <p>{lang === 'zh'
-            ? '各套餐有明确的使用配额（Free: 3 个备份源 + 500MB 存储, Pro: 10 个备份源 + 10GB 存储）。超出配额可能导致服务降级。禁止滥用 API、反向工程或非法用途。'
-            : 'Each plan has defined usage quotas (Free: 3 backup sources + 500MB storage, Pro: 10 sources + 10GB). Exceeding quotas may result in service degradation. API abuse, reverse engineering, or illegal use is prohibited.'
+            ? '各套餐有明确的使用配额（Free: 10 个备份源 + 2GB 存储，Pro: 100 个备份源 + 50GB 存储，Team: 无限）。超出配额可能导致服务降级。禁止滥用 API、反向工程或非法用途。'
+            : 'Each plan has defined usage quotas (Free: 10 backup sources + 2GB storage, Pro: 100 sources + 50GB, Team: unlimited). Exceeding quotas may result in service degradation. API abuse, reverse engineering, or illegal use is prohibited.'
           }</p>
         </section>
 
@@ -69,6 +69,16 @@ export default function TermsPage() {
           <p>{lang === 'zh'
             ? 'Moltable 按"现状"提供服务，不提供任何明示或暗示的保证。我们不对因使用服务而产生的任何间接损失承担责任。最后更新：2026-08-01。'
             : 'Moltable is provided "as is" without warranties of any kind. We are not liable for any indirect damages arising from use of the service. Last updated: 2026-08-01.'
+          }</p>
+        </section>
+
+        <section>
+          <h2 className="text-base mb-3" style={{ color: '#ffffff', fontWeight: 590 }}>
+            {lang === 'zh' ? '7. 服务提供方' : '7. Service Provider'}
+          </h2>
+          <p>{lang === 'zh'
+            ? '本服务由 BLOX Company Limited 提供，注册地址：香港土瓜灣土瓜灣道94號美華工業中心B座5樓11室，公司注册编号：77235569。'
+            : 'This service is provided by BLOX Company Limited, registered at Room 11, 5/F, Block B, Mai Wah Industrial Building, 94 To Kwa Wan Road, To Kwa Wan, Hong Kong. Company Registration Number: 77235569.'
           }</p>
         </section>
       </div>

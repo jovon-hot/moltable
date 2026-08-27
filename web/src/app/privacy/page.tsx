@@ -67,8 +67,8 @@ export default function PrivacyPage() {
             {lang === 'zh' ? '6. 联系我们' : '6. Contact Us'}
           </h2>
           <p>{lang === 'zh'
-            ? '如有隐私相关问题，请联系：hi@moltable.ai。最后更新：2026-08-01。'
-            : 'For privacy-related inquiries, contact: hi@moltable.ai. Last updated: 2026-08-01.'
+            ? '如有隐私相关问题，请联系：hi@moltable.ai。数据控制方：BLOX Company Limited，注册地址：香港土瓜灣土瓜灣道94號美華工業中心B座5樓11室，公司注册编号：77235569。最后更新：2026-08-01。'
+            : 'For privacy-related inquiries, contact: hi@moltable.ai. Data controller: BLOX Company Limited, registered at Room 11, 5/F, Block B, Mai Wah Industrial Building, 94 To Kwa Wan Road, To Kwa Wan, Hong Kong. Company Registration Number: 77235569. Last updated: 2026-08-01.'
           }</p>
         </section>
       </div>
