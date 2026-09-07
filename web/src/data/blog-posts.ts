@@ -12,6 +12,14 @@ export interface BlogPost {
 
 const posts: BlogPost[] = [
   {
+    slug: 'agent-memory-stack-2026',
+    date: '2026-09-07',
+    title: 'The Agent Memory Stack in 2026: mem0, Zep, Letta, and the Case for Online Sync',
+    excerpt:
+      'The 2026 "agent memory" market is really four different layers wearing one label. A plain-English taxonomy of extraction memory (mem0, Zep), stateful agents (Letta), MCP memory servers — and the online-sync layer most of them are missing. Includes a selection table and the state-vs-sync mental model.',
+    tags: ['Agent Memory', 'Memory Stack', 'mem0', 'Zep', 'Letta', 'MCP', 'Online Sync'],
+  },
+  {
     slug: 'ai-agent-compliance-soc2-iso27001',
     date: '2026-08-27',
     title: 'AI Agent 合规进阶：SOC2 / ISO27001 与数据跨境清单',

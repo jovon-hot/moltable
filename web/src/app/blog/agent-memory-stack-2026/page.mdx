@@ -1,0 +1,90 @@
+export const meta = {
+  title: 'The Agent Memory Stack in 2026: mem0, Zep, Letta, and the Case for Online Sync',
+  date: '2026-09-07',
+  description: "A practical guide to the 2026 agent memory stack: mem0 vs Zep vs Letta vs MCP memory servers — and why cross-device online sync is the layer most memory tools are missing.",
+  tags: ['Agent Memory', 'Memory Stack', 'mem0', 'Zep', 'Letta', 'MCP', 'Online Sync'],
+  slug: 'agent-memory-stack-2026',
+}
+
+import ArticleLayout from '../_components/ArticleLayout'
+
+<ArticleLayout meta={meta}>
+
+Every few months in this industry, a word gets stretched until it means nothing. In 2024 it was "RAG". In 2026, it's **"agent memory"**.
+
+Open any Hacker News thread about AI agents and you'll find the same unresolved argument. One person says memory is a vector database. Another says it's an extraction pipeline. A third insists it's a self-editing context window. They're all right — and that's exactly the problem. "Memory" now covers at least four genuinely different layers of the stack, and most selection advice treats them as interchangeable.
+
+This post is the map we wish we'd had: a plain-English taxonomy of the 2026 agent memory stack, what each layer is actually good at, where each one silently fails, and how to decide what you're missing. We make the online-sync layer (Moltable), so we'll be explicit about our bias — but the taxonomy holds whether or not you ever use our product.
+
+## The four layers pretending to be one category
+
+### 1. Extraction-and-recall memory layers: mem0, Zep, LangChain Memory
+
+The most common thing people mean by "agent memory" is a **memory layer**: a service that watches a conversation, extracts facts and preferences ("the user is on team avocado", "she prefers Python 3.12"), embeds them, and retrieves the relevant ones on the next turn.
+
+- [mem0](https://github.com/mem0ai/mem0) is the best-known open-source player here — extraction pipelines plus a retrieval API over your choice of vector store.
+- Zep takes a different cut: it builds a temporal knowledge graph of the conversation, so retrieval can reason about *when* a fact was true, not just *that* it was said.
+- LangChain Memory (and every framework's built-in memory module) is the same idea, one layer closer to the app.
+
+**What this layer is for:** giving a single agent long-term recall inside a single runtime. Your chatbot remembers that you always book window seats.
+
+**Where it fails:** memory lives inside one product, one database, one API. Ask the *other* agent you use — the one running in a different terminal, on a different framework — and it still greets you like a stranger. The memory is the app's, not yours.
+
+### 2. Stateful agent frameworks: Letta (MemGPT)
+
+Letta takes the opposite bet: instead of bolting memory onto an agent, make the agent *own* its memory. The context window is organized into self-editing **memory blocks** — core memory for identity, archival memory for everything else — and the agent rewrites its own blocks to stay consistent. Its "dreaming" mode even spins up background sub-agents during idle time to review history and consolidate what it learned.
+
+**What this layer is for:** long-running, single-machine agent loops where the agent must actively reorganize its own context across sessions — research agents, personal assistants that run for weeks in one environment.
+
+**Where it fails:** the memory is inseparable from the runtime. It's stateful by design, which means it's *portable* by accident — change your machine, your framework, or your agent binary, and that carefully-consolidated self is left behind. We wrote the full comparison here: [Moltable vs Letta: stateful memory vs online sync](/blog/moltable-vs-letta-stateful-memory).
+
+### 3. MCP memory servers
+
+The Model Context Protocol added a third possibility: make memory a **tool any agent can call**. A memory MCP server exposes `save_memory` / `search_memory` operations, and any MCP-capable client — Claude, Cursor, Hermes, Gemini CLI — can read and write the same store over a standard interface.
+
+**What this layer is for:** escaping vendor lock-in at the *protocol* level. The memory outlives any single app because the interface is standard. It's the most genuinely interoperable option on this list, and it's young — most memory servers today are single-purpose, single-developer projects, and each one silos its data behind its own schema. (Our own MCP server follows this pattern: a URL + API key, `search_memory` / `save_memory` / `list_personas`, so any MCP client can reach your synced memory.)
+
+**Where it fails:** interop between *tools*, not continuity for *you*. The MCP memory server remembers what your agent told it — but if you move from Claude Code to Cursor, nothing follows you unless you carry the config and data yourself.
+
+### 4. The online sync layer: Moltable
+
+The fourth layer is the one most people don't realize is missing. Everything above optimizes how an agent stores and recalls information **inside one environment**. None of them solve the problem that actually erodes trust in AI: **you** move between devices and frameworks constantly, and your AI forgets you every time.
+
+Moltable is the online sync layer for AI agents. One account; the identity, memory, and Personas you've crafted for your AI stay in sync across Claude, Cursor, Codex, Hermes, and anything else you run — **your AI, always in sync**. File-level backup (versioned snapshots, rollback) is a built-in safety net, not the headline.
+
+**What this layer is for:** making the *relationship* portable. New laptop, new framework, new agent binary? One `auto_provision` and your context, Personas, and memory are back. It doesn't compete with the layers above — it sits under them, so a mem0 or Letta setup on one machine is no longer a silo that dies with that machine.
+
+## The state-vs-sync distinction
+
+Here's the mental model that cleared up months of confusion for us:
+
+- **State** is what an agent *is* — its context, its self-edited memory blocks, its current understanding. Letta-class tools make state better.
+- **Sync** is about the *relationship* between you and your agents — whether that state survives a device change, a framework switch, or a fresh terminal.
+
+These are orthogonal. You can run a stateful Letta-style memory on your laptop *and* sync your identity and Personas across machines. The reason the market conflates them is that both present as "my AI remembers me" — but one is a property of the runtime and the other is a property of the account.
+
+## Which layer do you actually need?
+
+| Your situation | Reach for | Why |
+|---|---|---|
+| One agent, one machine, deep long-running sessions | Letta / stateful frameworks | The agent actively maintains its own context |
+| A chatbot that should recall user facts across sessions | mem0 / Zep | Extraction + retrieval is exactly this job |
+| You want control over the vector infrastructure | Chroma / Pinecone / Qdrant under a memory layer | Own the index, own the pipeline |
+| You want any MCP client to share one memory store | An MCP memory server | Protocol-level interop |
+| You switch devices / frameworks / agents often | **An online sync layer (Moltable)** | Make the relationship portable, not just the data |
+| Two or more of the above | Stack them | They're layers, not rivals |
+
+The practical checklist we use:
+
+1. If you're searching for a "mem0 alternative" because mem0's recall isn't the problem but *your agent keeps losing you when you switch tools* — a different memory layer (Zep, LangChain, custom vector store) will disappoint you the same way. You're missing the sync layer, not a better extractor. This is the single most common mismatch we see.
+2. If you're evaluating Letta, ask not "can it remember" but "what happens to its memory when I change machines" — that answer decides whether you also need sync.
+3. If you're picking an MCP memory server, check what happens to the data when the server's schema or project dies. Protocol interop is worthless without data portability.
+4. Whatever you choose, make sure *your* identity data — Personas, preferences, configs — is in a layer that moves with you, not one that's rented to a single app.
+
+## Our bias, stated plainly
+
+We make the sync layer, so of course we think it's the missing piece. But the taxonomy above is why we built it the way we did: Moltable doesn't run your agents and doesn't host your vectors. It syncs the things you'd cry about losing — identity, memory, Personas, MCP configs — and treats file-level snapshots as insurance rather than the product. That's also why we keep publishing detailed comparisons ([vs mem0](/blog/moltable-vs-mem0-identity-vs-memory), [vs Zep](/blog/moltable-vs-zep-temporal-memory), [vs Letta](/blog/moltable-vs-letta-stateful-memory)) instead of claiming the whole category: the memory-stack market isn't a winner-take-all fight, and a stack that only has one layer is a stack that forgets you at the worst moment.
+
+The 2026 agent memory stack isn't one product. It's four layers doing four different jobs — and the question that matters isn't "which memory tool should I use?" It's "**which layer am I missing?**"
+
+</ArticleLayout>
