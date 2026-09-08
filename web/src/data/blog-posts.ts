@@ -12,6 +12,15 @@ export interface BlogPost {
 
 const posts: BlogPost[] = [
   {
+    slug: 'why-every-ai-agent-needs-an-account',
+    date: '2026-09-08',
+    title: '为什么每个 AI Agent 都需要一个「账号」？',
+    titleEn: 'Why Every AI Agent Needs an Account: Memory Is the App’s, the Account Is Yours',
+    excerpt:
+      '换机失忆不是记忆做得不够好，是记忆的归属错了。账号把「属于你的调教成果」从应用里剥离出来：一个账号，身份/记忆/Persona 跨设备、跨框架、跨 Agent 在线同步。Product Hunt 上线日的定位宣言篇。',
+    tags: ['AI Agent 记忆', 'Agent 在线同步', '宣言', 'Product Hunt'],
+  },
+  {
     slug: 'agent-memory-stack-2026',
     date: '2026-09-07',
     title: 'The Agent Memory Stack in 2026: mem0, Zep, Letta, and the Case for Online Sync',

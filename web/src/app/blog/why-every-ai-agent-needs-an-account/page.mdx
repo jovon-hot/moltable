@@ -1,0 +1,91 @@
+export const meta = {
+  title: '为什么每个 AI Agent 都需要一个「账号」？记忆是应用的，账号才是你的',
+  date: '2026-09-08',
+  description: '你的 AI 每次换设备都要重新认识你？因为记忆长在应用里，不属于你。账号才是解药：Moltable 给 AI Agent 一个账号，身份、记忆、Persona 跨设备、跨框架在线同步——你的 AI 永远顺手。',
+  tags: ['AI Agent 记忆', 'Agent 在线同步', '宣言', 'Product Hunt'],
+  slug: 'why-every-ai-agent-needs-an-account',
+}
+
+import ArticleLayout from '../_components/ArticleLayout'
+
+<ArticleLayout meta={meta}>
+
+# 为什么每个 AI Agent 都需要一个「账号」？
+
+> **English summary**: Your agents don't forget you because memory is broken — they forget you because memory belongs to the *app*, not to *you*. A vector store, a memory layer (mem0, Zep), even a stateful framework (Letta) all make memory better at remembering inside one runtime, but none of it follows you across devices, frameworks, or agents. Phones solved this decades ago with an account: your contacts and photos follow you, not your carrier. Agents need the same thing — an account that carries your identity, your preferences, and everything you've taught your AI, so it stays "you" on any machine. That's what Moltable builds. Today we launch on Product Hunt.
+
+先把话说破：**你的 AI 不是记性差，是「没有户口」。**
+
+数一下你每天在用的 AI Agent：Claude Code、Cursor、Hermes、ChatGPT、Codex……它们每一个都聪明得要命，但每一个都像第一天上班的实习生——不知道你的技术栈、不记得你的偏好、不认识你上周刚调教好的 Persona。你在 A 工具里花了三个月调教出来的默契，换到 B 工具，归零。
+
+这不是模型的错，不是记忆库的错。这是一个我们早就该问、却一直没人问的问题：
+
+**为什么每个 AI Agent 都需要一个账号？**
+
+---
+
+## 一、你雇了五个助理，他们从不交流
+
+把「用 AI」翻译成现实世界：你雇了五个能力超强的助理，每人负责一块业务。但他们有个共同的怪癖——**每个人上班第一天，都要你把简历、工作习惯、项目背景从头讲一遍**。你讲了五年，他们记了五年，可他们之间从不共享，换了新助理更是从零开始。
+
+你会说：这公司有病吧，为什么没有统一的员工档案？
+
+没错。**AI 世界缺的，就是这份「员工档案」——一个属于你、而不是属于某个助理的账号。**
+
+我们已经在「教 AI 记住你」上花了无数力气：RAG、向量库、记忆层、人格文件……但我们教的每一个字，都存进了**某一个应用自己的数据库**。你教会 ChatGPT 的偏好存在 OpenAI 的服务器里，教会 Cursor 的存在 Cursor 的配置里。它们记得越牢，你被绑得越死——因为那些记忆的**归属**，从来不是你的。
+
+## 二、记忆是应用的，账号才是你的
+
+2026 年的「Agent 记忆」市场很热闹，但拆开看，所有方案都在回答同一个问题：**怎么让记忆在某个运行环境里记得更牢**。
+
+- **mem0 / Zep**（抽取式记忆层）：从对话里抽事实、存向量库，让单个 Agent 跨会话记住你。
+- **Letta**（状态化 Agent）：让 Agent 自己维护会自我编辑的 memory blocks，上下文自我管理。
+- **MCP memory server**：把记忆变成标准工具，任何 MCP 客户端都能读写同一个库。
+
+它们都很有价值，我们昨天刚写过一篇英文长文把这四层拆开讲（[The Agent Memory Stack in 2026](https://www.moltable.ai/blog/agent-memory-stack-2026)）。但注意一个共同点：**这些记忆都住在应用里。** 换个客户端、换台电脑、换个框架——记忆留在原地，你一个人走向新设备。
+
+这就像：你的通讯录存在手机卡里，而不是存在你的名下。运营商一换，联系人全没。
+
+手机行业早就治好了这个病，药方朴素到没人记得它的伟大：**账号**。Apple ID、Google 账号——你换一百台手机，照片、通讯录、设置、App，全都跟着你走。从来没有人要求「把通讯录做得更好」，因为问题根本不在存储，在**归属**。
+
+AI Agent 需要的，是同一个东西：**一个账号，让「你调教出来的 AI」跟着你走，而不是跟着某个工具走。**
+
+## 三、一个账号，给 AI 三样东西
+
+| 没有账号（现状） | 有一个账号（Moltable） |
+|---|---|
+| 记忆属于某个应用 | 记忆属于你，跨应用一致 |
+| 换设备 = 重新调教 | 换设备 = 同步码一键恢复 |
+| 换框架 = 从头再来 | 身份/记忆/Persona 跨框架在线同步 |
+| 改坏了没法回溯 | 版本化快照 + 回滚兜底 |
+| 每个 Agent 各认识你一次 | 你调教一次，所有 Agent 受益 |
+
+拆开看，一个账号解决三件事：
+
+1. **身份**——你是谁：技术栈、偏好、工作习惯。不是「对话摘要」，是结构化、可复用的你。
+2. **调教成果**——你教会了它什么：Skills、Persona、MCP 配置、项目上下文。这些是你花几个月攒下的资产。
+3. **连续性**——在线同步：不是导出一份文件丢在网盘里，而是**活的**——多端双向同步、自动合并、每次改动都进版本库，改坏了随时回滚。
+
+第三点值得多说一句。很多人说「我自己 git 备份不就行了？」——备份是**照片**，同步是**活人**。照片记录你某个瞬间的样子，但它不会在你搬家后自己跟过来、不会在你两个设备各改一半时自动合并、更不会在你被悄悄改坏三天后告诉你「你回滚到周二的状态吧」。Git 是为代码设计的，而你的 Agent 是**正在被使用、正在被调教**的活资产——它需要的是账号级的同步，不是文件级的归档。
+
+（顺带说个真实见闻：有人的 AI 人格文件被静默覆写，三天后才发现。版本化快照 + 回滚，就是为这种「无声事故」准备的。）
+
+## 四、所以，为什么是「现在」
+
+因为 Agent 的数量终于跨过了临界点。一个人只有一个 ChatGPT 时，「重新调教」只是偶尔的 annoyance；当你有五个 Agent、两台设备、三个框架时，它变成每周都要付的税。工具越多，越需要一个统一的「你」。
+
+这也解释了为什么记忆层公司解决不了你的换机失忆——它们卖的是「让应用记住你」，而你要的是「让你被所有应用记住」。这是两个生意。
+
+## 五、我们做的东西
+
+[Moltable](https://www.moltable.ai) 就是给 AI Agent 的**账号体系**：一个账号，把你的身份、记忆、Persona、MCP 配置在线同步到每一台设备、每一个 Agent。我们不运行你的 Agent——你继续用你喜欢的工具；我们只负责一件事：**你调教出来的东西，永远跟着你走。**
+
+- 换新电脑？同步码一键恢复，3 分钟回到你熟悉的那个 AI（[实战指南](https://www.moltable.ai/blog/three-minute-env-recovery)）。
+- 记忆存在哪？文件级快照 + 版本回滚兜底，数据 100% 归你，MIT 开源。
+- 跨框架迁移？用你自己的 LLM 把调教成果翻译成另一套框架的版本——即将推出。
+
+**你的 AI，永远顺手。**（Your AI, always in sync.）
+
+今天，Moltable 正式登上 Product Hunt——如果你也受够了「每次换设备都重新认识你」的 AI，欢迎来看看我们给出的答案：给每个 AI Agent 一个账号。
+
+</ArticleLayout>
