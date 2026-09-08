@@ -242,18 +242,26 @@ async def root(request: Request):
 @app.get("/health")
 async def health(request: Request):
     db_ok = False
+    db_error = None
     if supabase is not None:
         try:
             supabase.table("users").select("id", count="exact").limit(1).execute()
             db_ok = True
-        except Exception:
-            pass
-    return {
+        except Exception as e:
+            # 之前 except: pass 吞掉异常 → DB 故障在 Railway 日志完全不可见 (2026-09-08 incident)
+            db_error = str(e)[:300]
+            logger.error("health: DB 检查失败 — %s", e, exc_info=True)
+    payload = {
         "status": "ok" if (db_ok or supabase is None) else "degraded",
         "db": db_ok,
         "db_required": supabase is not None,
+        "db_error": db_error,
         "error_count": get_error_count(),
     }
+    # degraded = 服务在线但 DB 不可用 — 用 503 让外部监控能区分, 而非假装 200 正常
+    if supabase is not None and not db_ok:
+        return JSONResponse(payload, status_code=503)
+    return payload
 
 
 if __name__ == "__main__":
