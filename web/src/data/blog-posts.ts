@@ -12,6 +12,15 @@ export interface BlogPost {
 
 const posts: BlogPost[] = [
   {
+    slug: 'cross-framework-migration-retrospective',
+    date: '2026-09-10',
+    title: '跨框架迁移复盘：把 168 个 Agent 从 OpenClaw 搬到 Hermes，我踩的 7 个坑',
+    titleEn: 'A Cross-Framework Migration Retrospective: Moving 168 Agents from OpenClaw to Hermes',
+    excerpt:
+      '168 个角色目录对不上 1 个总控灵魂，1.34GB 数据库里真记忆不到 1%，同名 cron 配置格式不兼容——第一人称复盘跨框架迁移 AI Agent 的 7 个坑，以及为什么迁移的原子单位不该是文件，而是账号。',
+    tags: ['Case Study', '跨框架迁移', 'Agent 在线同步', 'OpenClaw', 'Hermes'],
+  },
+  {
     slug: 'why-every-ai-agent-needs-an-account',
     date: '2026-09-08',
     title: '为什么每个 AI Agent 都需要一个「账号」？',
