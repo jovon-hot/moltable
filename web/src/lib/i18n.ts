@@ -28,7 +28,7 @@ export const translations = {
     how: {
       title: '三步开始',
       steps: [
-        { title: '安装 CLI', desc: 'curl -sL https://moltable.ai/install.sh | bash —— 一行命令接入 Moltable。' },
+        { title: '安装 CLI', desc: 'curl -sL https://www.moltable.ai/install.sh | bash —— 一行命令接入 Moltable。' },
         { title: '在线同步', desc: '连接 Agent，身份 / 记忆 / Persona 通过 MCP 自动同步到云端。' },
         { title: '换机 / 换 Agent', desc: '新 Agent 注册后 auto_provision 一键恢复，或用你自己的 LLM 跨框架迁移。' },
       ],
@@ -284,7 +284,7 @@ export const translations = {
       agentsDesc: '你同步到云端的 Agent 灵魂资产，每个 Agent 一个独立版本库。',
       agentsEmpty: '还没有同步任何 Agent',
       agentsEmptyDesc: '安装 CLI 后运行 moltable backup push，你的 Agent 就会出现在这里。',
-      agentsInstallCmd: 'curl -sL https://moltable.ai/install.sh | bash',
+      agentsInstallCmd: 'curl -sL https://www.moltable.ai/install.sh | bash',
       agentsInstallBtn: '查看安装教程',
       agentTypeHermes: 'Hermes',
       agentTypeClaude: 'Claude',
@@ -353,7 +353,7 @@ export const translations = {
     how: {
       title: 'Get Started in 3 Steps',
       steps: [
-        { title: 'Install CLI', desc: 'curl -sL https://moltable.ai/install.sh | bash — one command to connect to Moltable.' },
+        { title: 'Install CLI', desc: 'curl -sL https://www.moltable.ai/install.sh | bash — one command to connect to Moltable.' },
         { title: 'Live Sync', desc: 'Connect your agent — identity, memory and personas sync to the cloud over MCP.' },
         { title: 'New Device / Agent', desc: 'auto_provision restores everything in one call, or use your own LLM to migrate across frameworks.' },
       ],
@@ -609,7 +609,7 @@ export const translations = {
       agentsDesc: 'Your synced Agent soul assets, one versioned repo per agent.',
       agentsEmpty: 'No agents backed up yet',
       agentsEmptyDesc: 'Install the CLI and run moltable backup push — your agents will appear here.',
-      agentsInstallCmd: 'curl -sL https://moltable.ai/install.sh | bash',
+      agentsInstallCmd: 'curl -sL https://www.moltable.ai/install.sh | bash',
       agentsInstallBtn: 'View install guide',
       agentTypeHermes: 'Hermes',
       agentTypeClaude: 'Claude',

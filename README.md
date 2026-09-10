@@ -22,7 +22,7 @@ Moltable 是你调教 AI 的**在线同步层**。一个账号把你调教的成
 ## 一条命令接入
 
 ```bash
-curl -sL https://moltable.ai/install.sh | bash
+curl -sL https://www.moltable.ai/install.sh | bash
 
 moltable backup init        # 生成配置（备份兜底）
 moltable backup push        # 打包上传（快照 + 版本号 + 增量去重）
@@ -56,7 +56,7 @@ SOUL.md · AGENTS.md · USER.md · config.yaml（MCP 配置，密钥脱敏）· 
 | 记忆 | 100 条 | 1 万条 | 5 万条 |
 | 备份存储 | 100MB | 1GB | 10GB |
 | 价格 | $0 | **$3/月** | **$5/月** |
-| | [免费开始](https://moltable.ai/register) | [升级 Pro](https://moltable.ai/register) | [升级 Ultra](https://moltable.ai/register) |
+| | [免费开始](https://www.moltable.ai/register) | [升级 Pro](https://www.moltable.ai/register) | [升级 Ultra](https://www.moltable.ai/register) |
 
 无需信用卡 · 随时取消。
 

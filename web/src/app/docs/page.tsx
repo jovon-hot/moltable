@@ -681,7 +681,7 @@ export default function DocsPage() {
             <div className="space-y-6 text-base leading-relaxed text-ln-secondary font-body">
               <h3 className="text-lg font-ui text-ln-text">安装文件级备份 CLI（兜底能力）</h3>
               <p>在线同步之外的文件级备份兜底：一行命令安装 Moltable 备份工具（纯 Python stdlib，无第三方依赖）：</p>
-              <CodeBlock label="curl 安装" code={`curl -sL https://moltable.ai/install.sh | bash`} />
+              <CodeBlock label="curl 安装" code={`curl -sL https://www.moltable.ai/install.sh | bash`} />
               <p>安装后重开终端（或 <code className="text-ln-accent-hover bg-ln-raised px-1.5 py-0.5 rounded text-[13px] font-mono">source ~/.zshrc</code>），即可使用：</p>
               <CodeBlock label="moltable backup" code={`moltable backup init          # 生成配置 ~/.moltable/backup.json
 moltable backup push          # 扫描调教资产 → 上传快照
