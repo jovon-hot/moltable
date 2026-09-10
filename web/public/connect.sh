@@ -1,10 +1,10 @@
 #!/bin/bash
 # Moltable — 30秒接入脚本
-# curl -sL https://moltable.ai/connect.sh | bash
+# curl -sL https://www.moltable.ai/connect.sh | bash
 
 set -e
 
-# 支持位置参数传入 API Key：curl -sL https://moltable.ai/connect.sh | bash -s -- <KEY>
+# 支持位置参数传入 API Key：curl -sL https://www.moltable.ai/connect.sh | bash -s -- <KEY>
 MOLTABLE_KEY="${1:-$MOLTABLE_KEY}"
 
 MOLTABLE_API="${MOLTABLE_API:-https://api.moltable.ai}"
@@ -20,7 +20,7 @@ echo ""
 # Check for API key
 if [ -z "$MOLTABLE_KEY" ]; then
   echo "🔑  输入你的 Moltable API Key"
-  echo "    (注册地址: https://moltable.ai/register)"
+  echo "    (注册地址: https://www.moltable.ai/register)"
   echo ""
   read -p "  API Key: " MOLTABLE_KEY
   echo ""
@@ -53,7 +53,7 @@ if command -v hermes &> /dev/null; then
 else
   echo "⚠  Hermes 未检测到"
   echo "   请先安装 Hermes,或使用其他 MCP 客户端(Claude/Cursor)"
-  echo "   接入指引: https://moltable.ai/connect"
+  echo "   接入指引: https://www.moltable.ai/connect"
 fi
 
 echo ""

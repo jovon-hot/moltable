@@ -1,6 +1,6 @@
 #!/bin/bash
 # Moltable — Agent 在线同步 CLI 安装脚本
-# curl -sL https://moltable.ai/install.sh | bash
+# curl -sL https://www.moltable.ai/install.sh | bash
 #
 # 下载 moltable backup CLI（纯 Python stdlib，无第三方依赖）到 ~/.moltable/，
 # 并添加 `moltable` 命令到 shell（alias 或 PATH）。
@@ -8,7 +8,7 @@
 set -e
 
 INSTALL_DIR="${MOLTABLE_INSTALL_DIR:-$HOME/.moltable}"
-API_BASE="https://moltable.ai"
+API_BASE="https://www.moltable.ai"
 BIN_DIR="$INSTALL_DIR/bin"
 
 # ── 打印 banner ──────────────────────────────────
@@ -78,5 +78,5 @@ echo "    2. 初始化配置:        moltable backup init"
 echo "    3. 设置 API Key:      编辑 ~/.moltable/backup.json 写入 api_key"
 echo "    4. 首次备份:          moltable backup push"
 echo ""
-echo "  获取 API Key: https://moltable.ai/register"
+echo "  获取 API Key: https://www.moltable.ai/register"
 echo ""

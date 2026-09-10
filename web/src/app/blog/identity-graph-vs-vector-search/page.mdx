@@ -175,7 +175,7 @@ Here's the part the memory-architecture debates usually skip: everything above �
 That's why Moltable approaches this from a different direction. Moltable doesn't run a memory layer or a state machine — it's the **online sync layer** for your agents. One account keeps the assets you've actually tuned — SOUL.md, AGENTS.md, USER.md, config.yaml (MCP configuration, secrets masked), memories/, skills/ — in sync across devices and agents; MCP is the sync interface (search_memory / save_memory / auto_provision / list_personas), and `auto_provision` restores your context on a new machine with one call. File-level packaging into a versioned, deduplicated backup acts as the safety net. Conversation logs (state.db/WAL/FTS) and secrets (.env/*.key) are excluded automatically.
 
 ```bash
-curl -sL https://moltable.ai/install.sh | bash
+curl -sL https://www.moltable.ai/install.sh | bash
 moltable backup init   # generate config
 moltable backup push   # package & upload
 moltable backup pull   # restore on any machine
@@ -197,10 +197,10 @@ Whatever context architecture you settle on — flat vectors, an identity graph,
 
 ## Learn More
 
-- 📖 [Moltable Sync Documentation](https://moltable.ai/docs)
+- 📖 [Moltable Sync Documentation](https://www.moltable.ai/docs)
 - 🔬 [Persistent Identity in AI Agents (arXiv 2604.09588)](https://arxiv.org/html/2604.09588)
 - ⭐ [Moltable on GitHub](https://github.com/jovon-hot/moltable) — MIT licensed
-- 🚀 [Start Free — 3 agents / 100MB](https://moltable.ai/register)
+- 🚀 [Start Free — 3 agents / 100MB](https://www.moltable.ai/register)
 
 ---
 

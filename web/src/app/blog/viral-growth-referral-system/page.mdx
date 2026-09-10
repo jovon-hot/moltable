@@ -42,7 +42,7 @@ We set four goals before writing a line of code:
 Every authenticated user can generate an 8-character alphanumeric code derived from a UUID. The share URL is dead simple:
 
 ```
-https://moltable.ai/signup?ref=K7QX2M1A
+https://www.moltable.ai/signup?ref=K7QX2M1A
 ```
 
 The code is **idempotent**: generating again while a code is still pending returns the same code, so refreshing the dashboard never burns codes or creates orphaned links. One user, one active invite, always.

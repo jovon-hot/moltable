@@ -368,11 +368,11 @@ Content-Type: application/json`
           <div className="relative group">
             <pre className="p-4 rounded-lg text-sm font-mono overflow-x-auto" style={{ background: '#0D0D14', color: '#4338CA', lineHeight: 1.6 }}>
               {apiKey
-                ? `curl -sL https://moltable.ai/connect.sh | bash -s -- ${apiKey}`
-                : 'curl -sL https://moltable.ai/connect.sh | bash -s -- <你的API-KEY>'}
+                ? `curl -sL https://www.moltable.ai/connect.sh | bash -s -- ${apiKey}`
+                : 'curl -sL https://www.moltable.ai/connect.sh | bash -s -- <你的API-KEY>'}
             </pre>
             <button
-              onClick={() => handleCopy(`curl -sL https://moltable.ai/connect.sh | bash -s -- ${apiKey || '<你的API-KEY>'}`, 'oneline')}
+              onClick={() => handleCopy(`curl -sL https://www.moltable.ai/connect.sh | bash -s -- ${apiKey || '<你的API-KEY>'}`, 'oneline')}
               className="absolute top-3 right-3 p-1.5 rounded-md transition-all"
               style={{ background: 'rgba(255,255,255,0.06)', color: copied === 'oneline' ? '#4338CA' : '#888888' }}
             >
