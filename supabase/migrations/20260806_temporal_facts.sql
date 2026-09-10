@@ -19,11 +19,11 @@ CREATE TABLE IF NOT EXISTS temporal_facts (
     recorded_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     source_memory_id TEXT,                  -- FK to memories.id if auto-detected
     confidence  REAL NOT NULL DEFAULT 0.8,  -- 0.0-1.0
-    persona_id  TEXT,                       -- FK to personas.id if persona-scoped
-
-    -- Indexes for fast queries
-    CONSTRAINT temporal_facts_pkey PRIMARY KEY (id)
+    persona_id  TEXT                        -- FK to personas.id if persona-scoped
 );
+-- 2026-09-10 fix: 原文件同时有列级 PRIMARY KEY 和 CONSTRAINT temporal_facts_pkey PRIMARY KEY,
+-- 在空库上执行报 "multiple primary keys for table temporal_facts are not allowed"
+-- → 任何全新项目的重建都会卡在这一步。删除重复约束, 保留列级 PRIMARY KEY。
 
 -- Fast lookup: get timeline for a specific entity
 CREATE INDEX IF NOT EXISTS idx_temporal_user_entity

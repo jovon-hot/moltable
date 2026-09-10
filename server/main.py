@@ -239,6 +239,17 @@ async def root(request: Request):
     }
 
 
+@app.get("/healthz")
+async def healthz():
+    """存活探针 (liveness) — 只要进程活着就 200, 不查 DB。
+
+    2026-09-10: 与 /health 分离。railway.json 的 healthcheckPath 指向本端点,
+    否则 DB 故障时 /health 返回 503 → Railway 健康检查失败 → 部署被判 FAILED,
+    DB 故障期间任何修复性部署都会卡死(自锁死锁)。
+    """
+    return {"status": "alive"}
+
+
 @app.get("/health")
 async def health(request: Request):
     db_ok = False
