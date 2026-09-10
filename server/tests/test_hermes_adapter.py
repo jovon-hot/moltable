@@ -70,6 +70,46 @@ def test_scan_excludes_nested_db_and_git(tmp_path):
     assert "self/node_modules/pkg/index.js" not in keys
 
 
+def test_scan_excludes_hermes_runtime_and_internal_backups(tmp_path):
+    """Hermes 运行时产物 + 内部备份必须排除。
+
+    实测 2026-09-10：某真实工作区 911 文件 / 38.8MB，其中 30.6MB (79%) 是
+    skills/.curator_backups/ 下的 skills 全量 tarball（备份的备份，纯重复数据）。
+    免费版额度仅 100MB —— 不排除它 = 首次 push 烧掉 39% 额度并每周新增 ~6.4MB。
+    """
+    _write(tmp_path, "SOUL.md", b"# soul")
+    _write(tmp_path, "memories/MEMORY.md", b"# memory")
+    _write(tmp_path, "skills/real/SKILL.md", b"real skill")
+
+    # 内部备份（skills 全量副本）
+    _write(tmp_path, "skills/.curator_backups/2026-09-05T10-16-41Z/skills.tar.gz", b"x" * 5000)
+    _write(tmp_path, "skills/.curator_backups/2026-09-05T10-16-41Z/manifest.json", b"{}")
+    # 运行时状态 / 账本 / 锁
+    _write(tmp_path, "skills/.usage.json", b"{}")
+    _write(tmp_path, "skills/.usage.json.lock", b"")
+    _write(tmp_path, "skills/.curator_state", b"state")
+    _write(tmp_path, "skills/.curator_ledger.jsonl", b"{}\n")
+    _write(tmp_path, "skills/.bundled_manifest", b"manifest")
+    _write(tmp_path, "skills/.hub/lock.json", b"{}")
+    _write(tmp_path, "memories/MEMORY.md.lock", b"")
+
+    keys = set(scan_soul_assets(str(tmp_path)).keys())
+
+    # 真实灵魂资产保留
+    assert "self/SOUL.md" in keys
+    assert "self/memories/MEMORY.md" in keys
+    assert "self/skills/real/SKILL.md" in keys
+
+    # 运行时产物 / 内部备份一律排除
+    assert not [k for k in keys if ".curator_backups" in k], keys
+    assert not [k for k in keys if ".hub" in k], keys
+    assert not [k for k in keys if k.endswith(".lock")], keys
+    assert "self/skills/.usage.json" not in keys
+    assert "self/skills/.curator_state" not in keys
+    assert "self/skills/.curator_ledger.jsonl" not in keys
+    assert "self/skills/.bundled_manifest" not in keys
+
+
 def test_scan_references_logical_name(tmp_path):
     kb = tmp_path / "ailib"
     _write(kb, "00-raw/note.md", b"raw note")

@@ -23,6 +23,13 @@ DEFAULT_EXCLUDE = [
     "*.db", "*.db-wal", "*.db-shm", "*.sqlite", "*.sqlite-wal", "*.sqlite-shm",
     ".git", "node_modules", "__pycache__", ".venv", "venv",
     ".DS_Store", "*.pyc",
+    # Hermes 运行时产物 / 内部备份 —— 不是灵魂资产，且体积占一次 push 的绝大多数。
+    # 实测 2026-09-10：某工作区 911 文件 / 38.8MB，其中 30.6MB (79%) 是
+    # skills/.curator_backups/ 下的 skills 全量 tarball —— 即「备份的备份」，纯重复数据。
+    # 免费版仅 100MB 额度，不加这条规则 = 首次 push 就烧掉 39% 额度，且每周新增 ~6.4MB。
+    ".curator_backups", ".curator_state", ".curator_ledger.jsonl",
+    ".bundled_manifest", ".usage.json", "*.lock",
+    ".hub", ".atom", ".trash",
 ]
 
 # Hermes 的灵魂资产清单（相对 ~/.hermes/）
